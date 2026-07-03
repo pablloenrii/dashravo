@@ -9,3 +9,4 @@ export { useFinanceStore } from './finance.store';
 export { useGoalsStore } from './goals.store';
 export { useCSStore } from './cs.store';
 export { useToastStore } from './toast.store';
+export { useOfflineStore, initializeOfflineStore } from './offline.store';

@@ -1,16 +1,20 @@
 /**
  * RAVO OS — Main Entry Point
- *
- * Esta é a entrada principal da aplicação.
- * Será implementado na Fase 2: Modularização
- *
- * TODO:
- * - Implementar bootstrap da aplicação
- * - Carregar módulos
- * - Setup de listeners globais
- * - Inicializar Supabase
+ * v2.0 - Production Ready
  */
 
-console.log('🚀 RAVO OS v2.0 - Architecture Ready');
+console.log('🚀 RAVO OS v2.0 - Production Build');
 console.log('📚 Documentação: /docs/README.md');
 console.log('🔧 Próximo passo: Implementar módulos em src/modules/');
+
+// Setup básico
+const app = document.getElementById('app');
+if (app) {
+  app.innerHTML = `
+    <div style="padding: 20px; font-family: Arial;">
+      <h1>✅ RAVO OS v2.0</h1>
+      <p>Arquitetura pronta para desenvolvimento!</p>
+      <p>Próximo passo: Implementar módulos</p>
+    </div>
+  `;
+}

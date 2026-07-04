@@ -3,11 +3,12 @@
  * Lista de leads com status e ações
  */
 
-import { Lead } from '../store';
-import { Badge } from '@/components/ui';
+import { Lead, useCRMStore } from '../store';
+import { Badge, Button } from '@/components/ui';
 
 interface LeadsListProps {
   leads: Lead[];
+  onEdit?: (lead: Lead) => void;
 }
 
 const statusColors = {
@@ -18,7 +19,15 @@ const statusColors = {
   lost: 'bg-red-100 text-red-800',
 };
 
-export default function LeadsList({ leads }: LeadsListProps) {
+export default function LeadsList({ leads, onEdit }: LeadsListProps) {
+  const { deleteLead } = useCRMStore();
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Tem certeza que deseja deletar este lead?')) {
+      await deleteLead(id);
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
@@ -39,6 +48,9 @@ export default function LeadsList({ leads }: LeadsListProps) {
             <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
               Valor
             </th>
+            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+              Ações
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
@@ -54,6 +66,24 @@ export default function LeadsList({ leads }: LeadsListProps) {
               </td>
               <td className="px-6 py-4 text-sm text-gray-900">
                 {lead.value ? `$${lead.value.toFixed(2)}` : '-'}
+              </td>
+              <td className="px-6 py-4 text-sm">
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => onEdit?.(lead)}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() => handleDelete(lead.id)}
+                  >
+                    Deletar
+                  </Button>
+                </div>
               </td>
             </tr>
           ))}

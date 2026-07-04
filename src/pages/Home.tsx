@@ -3,6 +3,7 @@
  * Página inicial do dashboard
  */
 
+import { Link } from 'react-router-dom';
 import { Layout, Header } from '@/components/layout';
 import { Card, Button } from '@/components/ui';
 
@@ -55,13 +56,14 @@ export default function HomePage() {
               <div className="p-4">
                 <h3 className="text-lg font-bold text-gray-900">{module.title}</h3>
                 <p className="text-sm text-gray-600 mt-2">{module.description}</p>
-                <Button
-                  variant="primary"
-                  className="w-full mt-4"
-                  onClick={() => (window.location.href = module.href)}
-                >
-                  Acessar
-                </Button>
+                <Link to={module.href} className="w-full mt-4 block">
+                  <Button
+                    variant="primary"
+                    className="w-full"
+                  >
+                    Acessar
+                  </Button>
+                </Link>
               </div>
             </Card>
           ))}

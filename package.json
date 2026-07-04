@@ -14,26 +14,31 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "chart.js": "^4.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "@supabase/supabase-js": "^2.38.0",
-    "zustand": "^4.4.4",
     "zod": "^3.22.4",
-    "chart.js": "^4.4.1"
+    "zustand": "^4.4.4"
   },
   "devDependencies": {
-    "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
-    "@types/node": "^20.10.0",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@tailwindcss/postcss": "^4.3.2",
+    "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.1",
-    "@testing-library/jest-dom": "^6.1.5",
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.2.1",
     "@vitest/coverage-v8": "^0.34.6",
+    "autoprefixer": "^10.5.2",
     "eslint": "^8.55.0",
+    "jsdom": "^23.0.1",
+    "postcss": "^8.5.16",
+    "tailwindcss": "^4.3.2",
+    "terser": "^5.48.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
-    "vitest": "^0.34.6",
-    "jsdom": "^23.0.1"
+    "vitest": "^0.34.6"
   }
 }

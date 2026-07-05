@@ -1,10 +1,6 @@
-/**
- * RAVO OS — Login Page
- */
-
 import { useState } from 'react';
 import { Button, Input, Card, Alert } from '@/components/ui';
-import { supabase } from '@/services/supabase';
+import { sb as supabase } from '@/services/supabase';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -24,8 +20,6 @@ export default function LoginPage() {
       });
 
       if (error) throw error;
-
-      // Redirect to home
       window.location.href = '/';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao fazer login');
@@ -74,10 +68,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <p className="text-gray-600 text-sm">
-              Não tem conta?{' '}
-              <a href="/signup" className="text-blue-600 hover:underline font-medium">
-                Criar conta
-              </a>
+              Não tem conta? <a href="/signup" className="text-blue-600 hover:underline font-medium">Criar conta</a>
             </p>
           </div>
         </div>

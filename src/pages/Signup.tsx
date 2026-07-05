@@ -1,10 +1,6 @@
-/**
- * RAVO OS — Signup Page
- */
-
 import { useState } from 'react';
 import { Button, Input, Card, Alert } from '@/components/ui';
-import { supabase } from '@/services/supabase';
+import { sb as supabase } from '@/services/supabase';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -99,10 +95,7 @@ export default function SignupPage() {
 
           <div className="mt-6 text-center">
             <p className="text-gray-600 text-sm">
-              Já tem conta?{' '}
-              <a href="/login" className="text-blue-600 hover:underline font-medium">
-                Fazer login
-              </a>
+              Já tem conta? <a href="/login" className="text-blue-600 hover:underline font-medium">Fazer login</a>
             </p>
           </div>
         </div>

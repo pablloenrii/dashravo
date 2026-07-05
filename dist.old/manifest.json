@@ -1,0 +1,49 @@
+{
+  "name": "RAVO OS v2.0",
+  "short_name": "RAVO",
+  "description": "Financial Dashboard & CRM Platform with Real-Time Subscriptions",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#007bff",
+  "background_color": "#ffffff",
+  "icons": [],
+  "categories": ["business", "finance", "productivity"],
+  "shortcuts": [
+    {
+      "name": "CRM",
+      "short_name": "CRM",
+      "description": "Manage leads and customers",
+      "url": "/crm"
+    },
+    {
+      "name": "Finance",
+      "short_name": "Finance",
+      "description": "View financial reports",
+      "url": "/finance"
+    },
+    {
+      "name": "Goals",
+      "short_name": "Goals",
+      "description": "Track KPIs and goals",
+      "url": "/goals"
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["image/*", "application/pdf"]
+        }
+      ]
+    }
+  }
+}

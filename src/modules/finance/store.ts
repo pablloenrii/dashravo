@@ -3,7 +3,7 @@
  */
 
 import { create } from 'zustand';
-import { supabase } from '@/services/supabase';
+import { sb as supabase } from '@/services/supabase';
 
 export interface Transaction {
   id: string;

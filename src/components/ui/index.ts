@@ -1,6 +1,6 @@
 /**
  * RAVO OS — UI Components Index
- * Exporta todos os componentes básicos
+ * Exporta todos os componentes básicos e avançados
  */
 
 export { Button } from './Button';
@@ -17,3 +17,8 @@ export type { BadgeProps } from './Badge';
 
 export { Alert } from './Alert';
 export type { AlertProps } from './Alert';
+
+export { Tabs } from './Tabs';
+export { Modal } from './Modal';
+export { Tooltip } from '../Tooltip';
+export { Popover } from '../Popover';

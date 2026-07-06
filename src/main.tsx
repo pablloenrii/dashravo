@@ -1,6 +1,6 @@
 /**
  * RAVO OS v2.0 — Main Entry Point
- * Enterprise-grade React application with routing
+ * Professional operations dashboard
  */
 
 import React from 'react';
@@ -8,7 +8,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AppLayout } from './layouts/AppLayout';
-import HomePage from './pages/Home';
+import Dashboard from './pages/Dashboard';
 import LoginPage from './pages/Login';
 import SignupPage from './pages/Signup';
 import CRMPage from './modules/crm/pages/CRMPage';
@@ -17,10 +17,9 @@ import GoalsPage from './modules/goals/pages/GoalsPage';
 import CSPage from './modules/cs/pages/CSPage';
 import './index.css';
 
-// Log startup
-console.log('🚀 RAVO OS v2.0 - Enterprise Edition');
-console.log('📚 Documentação: /docs/README.md');
-console.log('🔧 Status: Enterprise-grade frontend com layout profissional');
+console.log('🚀 RAVO OS v2.0 - Professional Dashboard');
+console.log('📊 Real-time analytics and operations');
+console.log('🎯 Enterprise-grade system');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -29,7 +28,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/" element={<HomePage />} />
+          <Route
+            path="/"
+            element={
+              <AppLayout>
+                <Dashboard />
+              </AppLayout>
+            }
+          />
           <Route
             path="/crm"
             element={

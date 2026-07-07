@@ -1,24 +1,15 @@
 /**
- * RAVO OS — UI Components Index
- * Exporta todos os componentes básicos e avançados
+ * RAVO OS — UI Components
+ * Premium components library
  */
 
 export { Button } from './Button';
-export type { ButtonProps } from './Button';
-
 export { Input } from './Input';
-export type { InputProps } from './Input';
-
-export { Card, CardHeader, CardBody, CardFooter } from './Card';
-export type { CardProps } from './Card';
-
-export { Badge } from './Badge';
-export type { BadgeProps } from './Badge';
-
+export { Card } from './Card';
 export { Alert } from './Alert';
-export type { AlertProps } from './Alert';
+export { Badge } from './Badge';
 
-export { Tabs } from './Tabs';
-export { Modal } from './Modal';
-export { Tooltip } from '../Tooltip';
-export { Popover } from '../Popover';
+// New Premium Components
+export { Tabs, type Tab } from './Tabs';
+export { Toggle } from './Toggle';
+export { Progress } from './Progress';

@@ -1,130 +1,228 @@
-import { useState } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Bell, MessageSquare, ChevronDown, Menu } from 'lucide-react';
+import { CommandPalette } from '@/components/CommandPalette';
+import { SearchBar } from '@/components/SearchBar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { MobileMenu } from '@/components/MobileMenu';
 
 interface NavItem {
   path: string;
   label: string;
-  icon: string;
-  badge?: number;
 }
 
 const navItems: NavItem[] = [
-  { path: '/crm', label: 'CRM', icon: '👥', badge: 0 },
-  { path: '/finance', label: 'Finance', icon: '💰', badge: 0 },
-  { path: '/goals', label: 'Goals', icon: '🎯', badge: 0 },
-  { path: '/cs', label: 'Customer Success', icon: '⭐', badge: 0 },
+  { path: '/dashboard', label: 'Dashboard' },
+  { path: '/crm', label: 'CRM' },
+  { path: '/finance', label: 'Financeiro' },
+  { path: '/goals', label: 'Metas' },
+  { path: '/cs', label: 'Atendimento' },
 ];
 
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
-
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const location = useLocation();
 
-  const isActive = (path: string) => location.pathname === path;
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isActive = (path: string) => location.pathname.startsWith(path);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandOpen(true);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-slate-900 overflow-hidden">
-      {/* Sidebar */}
-      <aside
-        className={`
-          ${sidebarOpen ? 'w-64' : 'w-20'}
-          bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700
-          transition-all duration-300 flex flex-col shadow-sm
-          fixed left-0 top-0 h-screen z-40
-        `}
-      >
-        {/* Logo */}
-        <div className="px-6 py-6 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
-          <div className={`flex items-center gap-3 ${!sidebarOpen && 'justify-center w-full'}`}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-              R
-            </div>
-            {sidebarOpen && (
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">RAVO</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">v2.0</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`
-                flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
-                ${isActive(item.path)
-                  ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-700 dark:to-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                  : 'text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
-                }
-                ${!sidebarOpen && 'justify-center'}
-              `}
-              title={!sidebarOpen ? item.label : undefined}
-            >
-              <span className="text-xl flex-shrink-0">{item.icon}</span>
+    <>
+      <CommandPalette isOpen={commandOpen} onClose={() => setCommandOpen(false)} />
+      <MobileMenu
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        items={navItems}
+        isActive={isActive}
+      />
+      <div style={{ display: 'flex', height: '100vh', background: '#06070D', overflow: 'hidden' }}>
+        {/* Sidebar - Hidden on mobile */}
+        <aside style={{
+          width: sidebarOpen ? '16rem' : '5rem',
+          background: '#0B0E19',
+          borderRight: '0.5px solid rgba(255,255,255,0.04)',
+          display: isMobile ? 'none' : 'flex',
+          flexDirection: 'column',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          height: '100vh',
+          zIndex: 40,
+          transition: 'width 0.3s'
+        }}>
+          {/* Logo */}
+          <div style={{ padding: '16px 12px', borderBottom: '0.5px solid rgba(234, 106, 27, 0.15)' }}>
+            <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+              <div style={{
+                width: '44px', height: '44px', borderRadius: '10px',
+                background: 'linear-gradient(135deg, #EA6A1B 0%, #F77E2D 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontWeight: 'bold', fontSize: '22px',
+                boxShadow: '0 4px 16px rgba(234, 106, 27, 0.25)'
+              }}>R</div>
               {sidebarOpen && (
-                <>
-                  <span className="flex-1 font-medium">{item.label}</span>
-                  {item.badge > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
-                      {item.badge}
-                    </span>
-                  )}
-                </>
+                <div>
+                  <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#EA6A1B' }}>RAVO</h1>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#6B7280', fontWeight: '500' }}>INTELLIGENCE</p>
+                </div>
               )}
             </Link>
-          ))}
-        </nav>
+          </div>
 
-        {/* Footer */}
-        <div className="px-3 py-4 border-t border-gray-200 dark:border-slate-700 space-y-2">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-            title={sidebarOpen ? 'Collapse' : 'Expand'}
-          >
-            <span className="text-lg">{sidebarOpen ? '◄' : '►'}</span>
-          </button>
-        </div>
-      </aside>
+          {/* Nav */}
+          <nav style={{ flex: 1, padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  color: isActive(item.path) ? '#EA6A1B' : '#9CA3AF',
+                  background: isActive(item.path) ? 'rgba(234, 106, 27, 0.12)' : 'rgba(255,255,255,0.02)',
+                  borderLeft: isActive(item.path) ? '2.5px solid #EA6A1B' : '2.5px solid transparent',
+                  transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+                  fontSize: '13px',
+                  fontWeight: isActive(item.path) ? '600' : '500',
+                  cursor: 'pointer'
+                }}
+              >
+                {sidebarOpen && <span>{item.label}</span>}
+              </Link>
+            ))}
+          </nav>
 
-      {/* Main Content */}
-      <div className={`flex-1 flex flex-col ${sidebarOpen ? 'ml-64' : 'ml-20'} transition-all duration-300`}>
-        {/* Header */}
-        <header className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm sticky top-0 z-30">
-          <div className="px-8 py-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {navItems.find(item => isActive(item.path))?.label || 'Dashboard'}
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Bem-vindo ao RAVO OS v2.0 — Central de Operações Estratégicas
-              </p>
-            </div>
+          {/* Footer */}
+          <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '8px',
+                border: 'none',
+                color: '#94A3B8',
+                background: 'transparent',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              {sidebarOpen ? '◄' : '►'}
+            </button>
+          </div>
+        </aside>
 
-            <div className="flex items-center gap-4">
+        {/* Main */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          marginLeft: isMobile ? 0 : (sidebarOpen ? '16rem' : '5rem'),
+          transition: 'margin 0.3s'
+        }}>
+          {/* Header */}
+          <header style={{
+            background: '#0B0E19',
+            borderBottom: '0.5px solid rgba(255,255,255,0.04)',
+            height: '64px',
+            display: 'flex',
+            alignItems: 'center',
+            paddingLeft: isMobile ? '16px' : '32px',
+            paddingRight: isMobile ? '16px' : '32px',
+            gap: isMobile ? '12px' : '24px',
+            position: 'sticky',
+            top: 0,
+            zIndex: 30
+          }}>
+            {isMobile && (
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#9CA3AF',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 200ms ease-out',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#EBEBF0'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#9CA3AF'}
+              >
+                <Menu size={20} />
+              </button>
+            )}
+            {!isMobile && <Breadcrumb items={[{ label: 'Dashboard' }]} />}
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <SearchBar onSearchClick={() => setCommandOpen(true)} />
+              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(234, 106, 27, 0.08)', border: '0.5px solid rgba(234, 106, 27, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#EA6A1B'; e.currentTarget.style.background = 'rgba(234, 106, 27, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(234, 106, 27, 0.08)'; }}>
+                <Bell className="w-5 h-5" strokeWidth={1.5} />
+              </button>
+              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(234, 106, 27, 0.08)', border: '0.5px solid rgba(234, 106, 27, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#EA6A1B'; e.currentTarget.style.background = 'rgba(234, 106, 27, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(234, 106, 27, 0.08)'; }}>
+                <MessageSquare className="w-5 h-5" strokeWidth={1.5} />
+              </button>
+              <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.04)' }}></div>
+              <ThemeSwitcher />
               <ThemeToggle />
-              <button className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-xl hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">
-                👤
+              <button style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
+                color: '#EA6A1B', background: 'rgba(234, 106, 27, 0.12)',
+                border: '0.5px solid rgba(234, 106, 27, 0.2)', borderRadius: '6px',
+                cursor: 'pointer', transition: 'all 300ms ease-out'
+              }}>
+                <div style={{
+                  width: '24px', height: '24px', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #EA6A1B 0%, #F77E2D 100%)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white', fontSize: '11px', fontWeight: 'bold'
+                }}>P</div>
+                <ChevronDown className="w-4 h-4" strokeWidth={2} />
               </button>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="px-8 py-6">
-            {children}
-          </div>
-        </main>
+          {/* Content */}
+          <main style={{ flex: 1, overflowY: 'auto' }}>
+            <div style={{ padding: isMobile ? '16px' : '32px' }}>
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

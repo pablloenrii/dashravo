@@ -1,49 +1,23 @@
-/**
- * RAVO OS — Card Component
- * Componente Card reutilizável
- */
+import { ReactNode, HTMLAttributes } from 'react';
 
-import React, { ReactNode } from 'react';
-
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
-  hoverable?: boolean;
 }
 
-export const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ children, hoverable = false, className, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={`
-          bg-white rounded-lg shadow border border-gray-200
-          ${hoverable ? 'hover:shadow-lg transition-shadow duration-200 cursor-pointer' : ''}
-          ${className || ''}
-        `}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  }
-);
-
-Card.displayName = 'Card';
-
-export const CardHeader = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <div className={`px-6 py-4 border-b border-gray-200 ${className || ''}`}>
-    {children}
-  </div>
-);
-
-export const CardBody = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <div className={`px-6 py-4 ${className || ''}`}>
-    {children}
-  </div>
-);
-
-export const CardFooter = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <div className={`px-6 py-4 border-t border-gray-200 bg-gray-50 ${className || ''}`}>
-    {children}
-  </div>
-);
+export function Card({ className = '', children, ...props }: CardProps) {
+  return (
+    <div
+      className={`
+        bg-[#111827]
+        border border-[rgba(255,255,255,0.06)]
+        rounded-lg
+        shadow-sm
+        transition-all duration-200
+        ${className}
+      `}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}

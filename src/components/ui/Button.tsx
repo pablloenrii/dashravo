@@ -1,68 +1,36 @@
-/**
- * RAVO OS — Button Component
- * Componente Button reutilizável
- */
+import { ButtonHTMLAttributes, ReactNode } from 'react';
 
-import React, { ReactNode } from 'react';
-
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost';
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
-  isLoading?: boolean;
   children: ReactNode;
 }
 
-const variantStyles: Record<string, string> = {
-  primary: 'bg-blue-600 hover:bg-blue-700 text-white',
-  secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
-  danger: 'bg-red-600 hover:bg-red-700 text-white',
-  success: 'bg-green-600 hover:bg-green-700 text-white',
-  ghost: 'bg-transparent hover:bg-gray-100 text-gray-800',
-};
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  className = '',
+  ...props
+}: ButtonProps) {
+  const baseStyles = 'font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
 
-const sizeStyles: Record<string, string> = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-base',
-  lg: 'px-6 py-3 text-lg',
-};
+  const variantStyles = {
+    primary: 'bg-[#FF6200] text-white hover:bg-[#FF7A33]',
+    secondary: 'bg-[#111827] text-white border border-[rgba(255,255,255,0.06)] hover:bg-[#1F2937]',
+    danger: 'bg-[#EF4444] text-white hover:bg-red-700',
+    ghost: 'text-white hover:bg-[#111827]',
+  };
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      variant = 'primary',
-      size = 'md',
-      isLoading = false,
-      disabled,
-      className,
-      children,
-      ...props
-    },
-    ref
-  ) => {
-    return (
-      <button
-        ref={ref}
-        disabled={disabled || isLoading}
-        className={`
-          rounded-lg font-medium transition-colors duration-200
-          disabled:opacity-50 disabled:cursor-not-allowed
-          ${variantStyles[variant]}
-          ${sizeStyles[size]}
-          ${className || ''}
-        `}
-        {...props}
-      >
-        {isLoading ? (
-          <span className="flex items-center gap-2">
-            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-            {children}
-          </span>
-        ) : (
-          children
-        )}
-      </button>
-    );
-  }
-);
+  const sizeStyles = {
+    sm: 'px-3 py-1.5 text-sm',
+    md: 'px-4 py-2.5 text-base',
+    lg: 'px-6 py-3 text-lg',
+  };
 
-Button.displayName = 'Button';
+  return (
+    <button
+      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      {...props}
+    />
+  );
+}

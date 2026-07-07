@@ -1,19 +1,20 @@
-import { ReactNode, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 
-interface ModalProps {
+export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
-  children: ReactNode;
+  title?: string;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg';
-  footer?: ReactNode;
+  closeButton?: boolean;
 }
 
-const sizeClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-2xl',
+const sizeMap = {
+  sm: '400px',
+  md: '600px',
+  lg: '800px',
 };
 
 export function Modal({
@@ -21,72 +22,132 @@ export function Modal({
   onClose,
   title,
   children,
-  size = 'md',
   footer,
+  size = 'md',
+  closeButton = true,
 }: ModalProps) {
   useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
     if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
     }
     return () => {
+      document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
     <>
-      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-fade-in"
         onClick={onClose}
-        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 50,
+          animation: 'fadeIn 200ms ease-out',
+        }}
       />
 
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+      <div
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: `min(calc(100% - 32px), ${sizeMap[size]})`,
+          maxHeight: '90vh',
+          background: 'rgba(11, 14, 25, 0.85)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06), 0 20px 40px rgba(0, 0, 0, 0.6)',
+          borderRadius: '12px',
+          zIndex: 51,
+          animation: 'slideUp 300ms ease-out',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {(title || closeButton) && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '20px 24px',
+              borderBottom: '0.5px solid rgba(255,255,255,0.04)',
+            }}
+          >
+            {title && (
+              <h2
+                style={{
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#EBEBF0',
+                  margin: 0,
+                }}
+              >
+                {title}
+              </h2>
+            )}
+            {closeButton && (
+              <button
+                onClick={onClose}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#9CA3AF',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  transition: 'all 200ms ease-out',
+                  marginLeft: 'auto',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#EBEBF0'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#9CA3AF'}
+              >
+                <X size={20} />
+              </button>
+            )}
+          </div>
+        )}
+
         <div
-          className={`
-            ${sizeClasses[size]} w-full
-            bg-var(--bg-primary) rounded-lg shadow-xl
-            border border-var(--border-primary)
-            overflow-hidden
-            animate-slide-up
-          `}
-          onClick={(e) => e.stopPropagation()}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
+          style={{
+            flex: 1,
+            overflow: 'auto',
+            padding: '24px',
+            color: '#EBEBF0',
+            fontSize: '14px',
+            lineHeight: '1.6',
+          }}
         >
-          {/* Header */}
-          <div className="px-6 py-4 border-b border-var(--border-primary) flex items-center justify-between">
-            <h2 id="modal-title" className="text-lg font-bold">
-              {title}
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-var(--bg-secondary) rounded transition-colors text-var(--text-secondary) hover:text-var(--text-primary)"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" strokeWidth={2} />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-            {children}
-          </div>
-
-          {/* Footer */}
-          {footer && (
-            <div className="px-6 py-4 border-t border-var(--border-primary) bg-var(--bg-secondary) flex justify-end gap-3">
-              {footer}
-            </div>
-          )}
+          {children}
         </div>
+
+        {footer && (
+          <div
+            style={{
+              padding: '16px 24px',
+              borderTop: '0.5px solid rgba(255,255,255,0.04)',
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'flex-end',
+            }}
+          >
+            {footer}
+          </div>
+        )}
       </div>
     </>
   );

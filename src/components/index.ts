@@ -1,20 +1,38 @@
-/**
- * RAVO OS — Components Index
- * Exporta todos os componentes
- */
+// Layout
+export { AppLayout } from './AppLayout';
+export { Breadcrumb } from './Breadcrumb';
 
-// UI Components
-export * from './ui';
+// Components
+export { Badge } from './Badge';
+export { Button } from './Button';
+export { KPICardMinimal } from './KPICardMinimal';
+export { Table } from './Table';
+export { MobileMenu } from './MobileMenu';
 
-// Layout Components
-export * from './layout';
+// Forms
+export { Input } from './Input';
 
-// Form Components
-export * from './form';
+// Dialogs & Overlays
+export { Modal } from './Modal';
+export { Dropdown } from './Dropdown';
 
-// State Components
-export * from './state';
+// Navigation
+export { Tabs } from './Tabs';
 
-// Error Boundary
-export { ErrorBoundary } from './ErrorBoundary';
-export type { } from './ErrorBoundary';
+// Feedback
+export { Alert } from './Alert';
+export { Skeleton } from './Skeleton';
+export { EmptyState } from './EmptyState';
+export { ProgressBar } from './ProgressBar';
+export { SkeletonCard } from './SkeletonCard';
+export { ErrorBoundaryVisual } from './ErrorBoundaryVisual';
+
+// Charts
+export { ChartTooltip } from './ChartTooltip';
+export { ChartGradients, gradientMap } from './ChartGradients';
+
+// Others
+export { SearchBar } from './SearchBar';
+export { CommandPalette } from './CommandPalette';
+export { ThemeToggle } from './ThemeToggle';
+export { ThemeSwitcher } from './ThemeSwitcher';

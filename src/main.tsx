@@ -11,10 +11,11 @@ import { AppLayout } from './layouts/AppLayout';
 import Dashboard from './pages/Dashboard';
 import LoginPage from './pages/Login';
 import SignupPage from './pages/Signup';
-import CRMPage from './modules/crm/pages/CRMPage';
-import FinancePage from './modules/finance/pages/FinancePage';
-import GoalsPage from './modules/goals/pages/GoalsPage';
-import CSPage from './modules/cs/pages/CSPage';
+import CRMPage from './pages/CRMPage';
+import FinancePage from './pages/FinancePage';
+import GoalsPage from './pages/GoalsPage';
+import CSPage from './pages/CSPage';
+import './styles/minimalist.css';
 import './index.css';
 
 console.log('🚀 RAVO OS v2.0 - Professional Dashboard');
@@ -30,6 +31,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/signup" element={<SignupPage />} />
           <Route
             path="/"
+            element={
+              <AppLayout>
+                <Dashboard />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/dashboard"
             element={
               <AppLayout>
                 <Dashboard />

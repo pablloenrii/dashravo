@@ -1,7 +1,7 @@
 {
   "name": "ravo-os",
-  "version": "2.0.0",
-  "description": "RAVO | Central de Operações Estratégicas — Dashboard executivo profissional",
+  "version": "4.0.0",
+  "description": "RAVO - Enterprise AI Operating System",
   "author": "RAVO Company",
   "license": "MIT",
   "scripts": {
@@ -16,6 +16,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0",
     "chart.js": "^4.4.1",
+    "framer-motion": "^10.16.4",
     "lucide-react": "^1.23.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

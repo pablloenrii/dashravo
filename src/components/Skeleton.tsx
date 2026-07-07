@@ -1,32 +1,40 @@
-interface SkeletonProps {
-  className?: string;
+import React from 'react';
+
+export interface SkeletonProps {
+  width?: string | number;
+  height?: string | number;
+  variant?: 'text' | 'circular' | 'rectangular';
   count?: number;
-  height?: 'sm' | 'md' | 'lg';
+  style?: React.CSSProperties;
 }
 
-const heightClasses = {
-  sm: 'h-4',
-  md: 'h-6',
-  lg: 'h-12',
-};
+export function Skeleton({
+  width = '100%',
+  height = '20px',
+  variant = 'rectangular',
+  count = 1,
+  style,
+}: SkeletonProps) {
+  const skeletons = Array.from({ length: count });
 
-export function Skeleton({ className, count = 1, height = 'md' }: SkeletonProps) {
-  const heightClass = heightClasses[height];
+  const baseStyle: React.CSSProperties = {
+    background: 'linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 100%)',
+    backgroundSize: '200% 100%',
+    animation: 'shimmer 2s infinite',
+    borderRadius: variant === 'circular' ? '50%' : variant === 'text' ? '4px' : '8px',
+    ...style,
+  };
 
   return (
     <>
-      {Array.from({ length: count }).map((_, i) => (
+      {skeletons.map((_, idx) => (
         <div
-          key={i}
-          className={`
-            ${heightClass}
-            bg-gradient-to-r from-var(--bg-secondary) via-var(--bg-tertiary) to-var(--bg-secondary)
-            rounded animate-pulse
-            ${className || 'mb-3'}
-          `}
+          key={idx}
           style={{
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 2s infinite',
+            width,
+            height: variant === 'circular' ? width : height,
+            ...baseStyle,
+            marginBottom: idx < count - 1 ? '8px' : 0,
           }}
         />
       ))}
@@ -38,32 +46,5 @@ export function Skeleton({ className, count = 1, height = 'md' }: SkeletonProps)
         }
       `}</style>
     </>
-  );
-}
-
-export function SkeletonCard() {
-  return (
-    <div className="card p-6">
-      <Skeleton height="lg" className="mb-4 w-1/3" />
-      <Skeleton count={3} />
-      <Skeleton height="sm" className="mt-6 w-1/4" />
-    </div>
-  );
-}
-
-export function SkeletonTable({ rows = 5 }: { rows?: number }) {
-  return (
-    <div className="card">
-      <div className="p-6 space-y-4">
-        <Skeleton height="md" className="w-1/4" />
-        {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex gap-4">
-            <Skeleton height="sm" className="flex-1" />
-            <Skeleton height="sm" className="w-1/3" />
-            <Skeleton height="sm" className="w-1/4" />
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }

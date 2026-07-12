@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronUp, ChevronDown, MoreVertical, Check, Minus } from 'lucide-react';
+import { ChevronUp, ChevronDown, Check, Minus } from 'lucide-react';
 
 export interface TableColumn<T> {
   key: keyof T;

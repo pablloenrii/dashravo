@@ -9,30 +9,7 @@ import { Table, TableColumn } from '@/components/Table';
 import { ChartTooltip } from '@/components/ChartTooltip';
 import { colorSystem } from '@/styles/color-system';
 import { colorSystemPremium } from '@/styles/color-system-premium';
-
-const dadosAtendimentos = [
-  { dia: 'Segunda', recebidos: 145, resolvidos: 142, pendentes: 3 },
-  { dia: 'Terça', recebidos: 168, resolvidos: 165, pendentes: 3 },
-  { dia: 'Quarta', recebidos: 152, resolvidos: 151, pendentes: 1 },
-  { dia: 'Quinta', recebidos: 178, resolvidos: 175, pendentes: 3 },
-  { dia: 'Sexta', recebidos: 195, resolvidos: 192, pendentes: 3 },
-];
-
-const dadosSatisfacao = [
-  { semana: 'Sem 1', nps: 68, satisfacao: 85 },
-  { semana: 'Sem 2', nps: 72, satisfacao: 87 },
-  { semana: 'Sem 3', nps: 75, satisfacao: 89 },
-  { semana: 'Sem 4', nps: 78, satisfacao: 91 },
-];
-
-const tickets = [
-  { ticketId: '#TKT-2451', cliente: 'Acme Corp', assunto: 'Erro na integração', prioridade: 'alta', tempo: '2h 15m' },
-  { ticketId: '#TKT-2450', cliente: 'TechStart', assunto: 'Fatura em duplicata', prioridade: 'média', tempo: '1h 30m' },
-  { ticketId: '#TKT-2449', cliente: 'WebFlow', assunto: 'Reset de senha', prioridade: 'baixa', tempo: '45m' },
-  { ticketId: '#TKT-2448', cliente: 'CloudSys', assunto: 'Dúvida sobre recurso', prioridade: 'baixa', tempo: '1h 10m' },
-  { ticketId: '#TKT-2447', cliente: 'DataCore', assunto: 'Upgrade de plano', prioridade: 'média', tempo: '3h 20m' },
-  { ticketId: '#TKT-2446', cliente: 'SoftWare Inc', assunto: 'API timeout', prioridade: 'alta', tempo: '1h 45m' },
-];
+import { useTicketsData, useAttendanceChartData, useSatisfactionData } from '@/hooks/usePagesQueries';
 
 const getPrioridadeColor = (prioridade: string) => {
   switch (prioridade) {
@@ -47,7 +24,48 @@ const getPrioridadeColor = (prioridade: string) => {
 
 export function CSPage() {
   const [showAlert, setShowAlert] = useState(true);
-  const [loading, setLoading] = useState(false);
+
+  // Fetch data from Supabase
+  const { data: tickets, loading: loadingTickets, error: errorTickets } = useTicketsData();
+  const { data: dadosAtendimentos, loading: loadingAttendance, error: errorAttendance } = useAttendanceChartData();
+  const { data: dadosSatisfacao, loading: loadingSatisfaction, error: errorSatisfaction } = useSatisfactionData();
+
+  // Show error state
+  if (errorTickets || errorAttendance || errorSatisfaction) {
+    return (
+      <div style={{ padding: '16px', maxWidth: '1400px', margin: '0 auto' }}>
+        <div style={{
+          color: '#FF6B6B',
+          fontSize: '14px',
+          background: 'rgba(255, 107, 107, 0.1)',
+          padding: '16px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255, 107, 107, 0.2)',
+          marginBottom: '16px'
+        }}>
+          Erro ao carregar dados de atendimento: {errorTickets || errorAttendance || errorSatisfaction}
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (loadingTickets || loadingAttendance || loadingSatisfaction) {
+    return (
+      <div style={{
+        padding: '16px',
+        textAlign: 'center',
+        minHeight: '400px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{ color: '#A1A1A6', fontSize: '14px' }}>
+          ⏳ Carregando dados de atendimento...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '16px', maxWidth: '1400px', margin: '0 auto' }}>
@@ -87,40 +105,52 @@ export function CSPage() {
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginBottom: '16px' }}>
-        <KPICardMinimal title="Tickets Recebidos" value="838" unit="este mês" icon={<MessageSquare />} color={colorSystem.customers.primary} trend={{ direction: 'up', percentage: 12 }} />
-        <KPICardMinimal title="Taxa de Resolução" value="99.6%" unit="resolvidos" icon={<TrendingUp />} color={colorSystem.success} trend={{ direction: 'up', percentage: 2 }} />
-        <KPICardMinimal title="NPS Score" value="78" unit="este mês" icon={<BarChart3 />} color={colorSystem.conversion.primary} trend={{ direction: 'up', percentage: 5 }} />
-        <KPICardMinimal title="Tempo Médio" value="1h 30m" unit="por ticket" icon={<Clock />} color={colorSystem.automation.primary} trend={{ direction: 'down', percentage: 8 }} />
+        <KPICardMinimal title="Tickets Recebidos" value={dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0)} unit="tickets" icon={<MessageSquare />} color={colorSystem.customers.primary} />
+        <KPICardMinimal title="Taxa de Resolução" value={dadosAtendimentos.length > 0 ? ((dadosAtendimentos.reduce((sum, a) => sum + (a.resolvidos || 0), 0) / dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0)) * 100).toFixed(1) : 0} unit="%" icon={<TrendingUp />} color={colorSystem.success} />
+        <KPICardMinimal title="NPS Score" value={dadosSatisfacao.length > 0 ? dadosSatisfacao[dadosSatisfacao.length - 1].nps : 0} unit="pontos" icon={<BarChart3 />} color={colorSystem.conversion.primary} />
+        <KPICardMinimal title="Tempo Médio" value={tickets.length > 0 ? (tickets.length / dadosAtendimentos.length).toFixed(1) : 0} unit="horas" icon={<Clock />} color={colorSystem.automation.primary} />
       </div>
 
       {/* Gráficos */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px', marginBottom: '16px' }}>
         <div style={{ background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 8px 0' }}>Atendimentos Diários</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={dadosAtendimentos}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey="dia" stroke="#86868B" style={{ fontSize: '11px' }} />
-              <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
-              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <Bar dataKey="recebidos" fill={colorSystem.customers.primary} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="resolvidos" fill={colorSystem.success} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {dadosAtendimentos.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={dadosAtendimentos}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                <XAxis dataKey="dia" stroke="#86868B" style={{ fontSize: '11px' }} />
+                <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                <Bar dataKey="recebidos" fill={colorSystem.customers.primary} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="resolvidos" fill={colorSystem.success} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', fontSize: '13px' }}>
+              Nenhum dado disponível
+            </div>
+          )}
         </div>
 
         <div style={{ background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 8px 0' }}>Satisfação</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={dadosSatisfacao}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey="semana" stroke="#86868B" style={{ fontSize: '11px' }} />
-              <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
-              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <Line type="monotone" dataKey="nps" stroke={colorSystem.conversion.primary} dot={false} />
-              <Line type="monotone" dataKey="satisfacao" stroke={colorSystem.success} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+          {dadosSatisfacao.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={dadosSatisfacao}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                <XAxis dataKey="semana" stroke="#86868B" style={{ fontSize: '11px' }} />
+                <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                <Line type="monotone" dataKey="nps" stroke={colorSystem.conversion.primary} dot={false} />
+                <Line type="monotone" dataKey="satisfacao" stroke={colorSystem.success} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', fontSize: '13px' }}>
+              Nenhum dado disponível
+            </div>
+          )}
         </div>
       </div>
 
@@ -129,16 +159,17 @@ export function CSPage() {
         <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#EBEBF0', margin: '0 0 12px 0' }}>
           Tickets em Aberto
         </h3>
+        {tickets.length > 0 ? (
         <Table<typeof tickets[0]>
           columns={[
             {
-              key: 'ticketId',
+              key: 'id',
               label: 'ID',
               sortable: true,
               width: '15%',
               render: (value) => (
                 <span style={{ color: colorSystemPremium.data.blue, fontWeight: '600' }}>
-                  {value}
+                  {String(value).slice(0, 8)}
                 </span>
               ),
             },
@@ -170,7 +201,7 @@ export function CSPage() {
               ),
             },
             {
-              key: 'tempo',
+              key: 'tempo_resposta',
               label: 'Tempo',
               sortable: true,
               align: 'right',
@@ -188,9 +219,13 @@ export function CSPage() {
           hoverable={true}
           striped={true}
         />
+        ) : (
+          <div style={{ background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '32px', textAlign: 'center', color: '#6B7280', fontSize: '13px' }}>
+            Nenhum ticket disponível
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-export default CSPage;

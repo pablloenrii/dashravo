@@ -125,6 +125,27 @@ h4 {
   color: var(--text-primary);
 }
 
+/* Heading 5 - Subtitle */
+h5 {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+/* Heading 6 - Label */
+h6 {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
 /* Body - Primary */
 p, body {
   font-size: 14px;
@@ -398,9 +419,110 @@ tr:hover {
 .text-warning { color: var(--warning); }
 .text-danger { color: var(--danger); }
 
+/* Semantic Data Colors */
+.text-positive { color: #10B981; }
+.text-negative { color: #EF4444; }
+.text-neutral { color: #6B7280; }
+.text-info { color: #3B82F6; }
+.text-warning-semantic { color: #F59E0B; }
+.text-critical { color: #DC2626; }
+
+/* Background Colors for Data */
+.bg-positive { background: rgba(16, 185, 129, 0.08); color: #10B981; }
+.bg-negative { background: rgba(239, 68, 68, 0.08); color: #EF4444; }
+.bg-neutral { background: rgba(107, 114, 128, 0.08); color: #6B7280; }
+.bg-info { background: rgba(59, 130, 246, 0.08); color: #3B82F6; }
+.bg-warning-semantic { background: rgba(245, 158, 11, 0.08); color: #F59E0B; }
+.bg-critical { background: rgba(220, 38, 38, 0.08); color: #DC2626; }
+
 /* Opacity states */
+.opacity-25 { opacity: 0.25; }
 .opacity-50 { opacity: 0.5; }
+.opacity-60 { opacity: 0.6; }
 .opacity-75 { opacity: 0.75; }
+
+/* Link Hover States - Subtle refinement */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: all 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  opacity: 0.95;
+}
+
+/* Dividers - Premium */
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 16px 0;
+}
+
+.divider-subtle {
+  height: 0.5px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Premium Spacing - 4px Grid */
+.gap-2 { gap: 2px; }
+.gap-4 { gap: 4px; }
+.gap-6 { gap: 6px; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.gap-20 { gap: 20px; }
+.gap-24 { gap: 24px; }
+
+.p-2 { padding: 2px; }
+.p-4 { padding: 4px; }
+.p-6 { padding: 6px; }
+.p-8 { padding: 8px; }
+.p-12 { padding: 12px; }
+.p-16 { padding: 16px; }
+.p-20 { padding: 20px; }
+.p-24 { padding: 24px; }
+
+.m-2 { margin: 2px; }
+.m-4 { margin: 4px; }
+.m-6 { margin: 6px; }
+.m-8 { margin: 8px; }
+.m-12 { margin: 12px; }
+.m-16 { margin: 16px; }
+.m-20 { margin: 20px; }
+.m-24 { margin: 24px; }
+
+/* Elevation System - Premium Depth */
+.elevation-0 {
+  box-shadow: none;
+}
+
+.elevation-1 {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.elevation-2 {
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.elevation-3 {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.elevation-4 {
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+}
 
 /* Glassmorphism Premium */
 .glassmorphism {
@@ -578,6 +700,64 @@ table tbody tr:nth-child(5) { animation-delay: 200ms; }
 /* Chart card entrance */
 .chart-card {
   animation: slideUp 400ms ease-out;
+}
+
+/* Premium Hover Effects */
+.hover-lift {
+  transition: all 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.hover-glow {
+  transition: all 200ms ease-out;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(234, 106, 27, 0.2);
+}
+
+.hover-brighten {
+  transition: all 200ms ease-out;
+}
+
+.hover-brighten:hover {
+  opacity: 0.9;
+  filter: brightness(1.1);
+}
+
+/* Text Selection - Premium */
+::selection {
+  background: rgba(234, 106, 27, 0.3);
+  color: var(--text-primary);
+}
+
+::-moz-selection {
+  background: rgba(234, 106, 27, 0.3);
+  color: var(--text-primary);
+}
+
+/* Scrollbar - Premium */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  transition: all 200ms ease-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* ===== RESPONSIVE DESIGN ===== */

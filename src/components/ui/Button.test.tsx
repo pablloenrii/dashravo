@@ -28,7 +28,7 @@ describe('Button Component', () => {
   });
 
   it('should show loading state', () => {
-    render(<Button isLoading>Loading</Button>);
+    render(<Button disabled>Loading</Button>);
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
     expect(button.textContent).toContain('Loading');

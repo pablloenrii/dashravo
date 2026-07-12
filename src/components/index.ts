@@ -1,5 +1,5 @@
 // Layout
-export { AppLayout } from './AppLayout';
+export { AppLayout } from '../layouts/AppLayout';
 export { Breadcrumb } from './Breadcrumb';
 
 // Components
@@ -27,12 +27,8 @@ export { ProgressBar } from './ProgressBar';
 export { SkeletonCard } from './SkeletonCard';
 export { ErrorBoundaryVisual } from './ErrorBoundaryVisual';
 
-// Charts
-export { ChartTooltip } from './ChartTooltip';
-export { ChartGradients, gradientMap } from './ChartGradients';
+// Data Display
+export { NumberDisplay } from './NumberDisplay';
+export { TrendBadge } from './TrendBadge';
+export { Sparkline } from './Sparkline';
 
-// Others
-export { SearchBar } from './SearchBar';
-export { CommandPalette } from './CommandPalette';
-export { ThemeToggle } from './ThemeToggle';
-export { ThemeSwitcher } from './ThemeSwitcher';

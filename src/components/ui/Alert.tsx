@@ -35,8 +35,8 @@ export function Alert({
       text: 'text-[#F59E0B]',
     },
     info: {
-      container: 'bg-[rgba(59,130,246,0.1)] border border-[#3B82F6]',
-      text: 'text-[#3B82F6]',
+      container: 'bg-[rgba(255, 98, 0,0.1)] border border-[#FF6200]',
+      text: 'text-[#FF6200]',
     },
   };
 

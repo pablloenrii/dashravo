@@ -13,20 +13,20 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const variantStyles: Record<ButtonVariant, string> = {
   primary: `
-    background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%);
+    background: linear-gradient(135deg, #FF6200 0%, #CC4E00 100%);
     color: white;
-    border: 1px solid rgba(59, 130, 246, 0.5);
+    border: 1px solid rgba(255, 98, 0, 0.5);
     &:hover {
-      background: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      background: linear-gradient(135deg, #E55A2B 0%, #1E3A8A 100%);
+      box-shadow: 0 4px 12px rgba(255, 98, 0, 0.3);
     }
   `,
   secondary: `
-    background: rgba(59, 130, 246, 0.08);
-    color: #3B82F6;
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: rgba(255, 98, 0, 0.08);
+    color: #FF6200;
+    border: 1px solid rgba(255, 98, 0, 0.3);
     &:hover {
-      background: rgba(59, 130, 246, 0.15);
+      background: rgba(255, 98, 0, 0.15);
     }
   `,
   ghost: `
@@ -79,15 +79,15 @@ export function Button({
   const variantStyle: React.CSSProperties =
     variant === 'primary'
       ? {
-          background: 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
+          background: 'linear-gradient(135deg, #FF6200 0%, #CC4E00 100%)',
           color: 'white',
-          border: '1px solid rgba(59, 130, 246, 0.5)',
+          border: '1px solid rgba(255, 98, 0, 0.5)',
         }
       : variant === 'secondary'
       ? {
-          background: 'rgba(59, 130, 246, 0.08)',
-          color: '#3B82F6',
-          border: '1px solid rgba(59, 130, 246, 0.3)',
+          background: 'rgba(255, 98, 0, 0.08)',
+          color: '#FF6200',
+          border: '1px solid rgba(255, 98, 0, 0.3)',
         }
       : variant === 'danger'
       ? {
@@ -121,11 +121,11 @@ export function Button({
         if (!disabled && !loading) {
           if (variant === 'primary') {
             e.currentTarget.style.background =
-              'linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%)';
+              'linear-gradient(135deg, #E55A2B 0%, #1E3A8A 100%)';
             e.currentTarget.style.boxShadow =
-              '0 4px 12px rgba(59, 130, 246, 0.3)';
+              '0 4px 12px rgba(255, 98, 0, 0.3)';
           } else if (variant === 'secondary') {
-            e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)';
+            e.currentTarget.style.background = 'rgba(255, 98, 0, 0.15)';
           } else if (variant === 'danger') {
             e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
           } else {
@@ -137,10 +137,10 @@ export function Button({
       onMouseLeave={(e) => {
         if (variant === 'primary') {
           e.currentTarget.style.background =
-            'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)';
+            'linear-gradient(135deg, #FF6200 0%, #CC4E00 100%)';
           e.currentTarget.style.boxShadow = 'none';
         } else if (variant === 'secondary') {
-          e.currentTarget.style.background = 'rgba(59, 130, 246, 0.08)';
+          e.currentTarget.style.background = 'rgba(255, 98, 0, 0.08)';
         } else if (variant === 'danger') {
           e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
         } else {

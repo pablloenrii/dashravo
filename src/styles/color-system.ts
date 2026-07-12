@@ -5,7 +5,7 @@
 
 export const colorSystem = {
   // Primary Colors (3 only)
-  primary: '#3B82F6',      // Blue
+  primary: '#FF6200',      // Blue
   success: '#10B981',      // Green
   warning: '#F59E0B',      // Amber (for attention)
 
@@ -25,14 +25,14 @@ export const colorSystem = {
 
   // Legacy nested objects (keeping for backward compatibility but using primary colors)
   customers: {
-    primary: '#3B82F6',
-    light: 'rgba(59, 130, 246, 0.1)',
-    dark: '#1E40AF'
+    primary: '#FF6200',
+    light: 'rgba(255, 98, 0, 0.1)',
+    dark: '#CC4E00'
   },
   pipeline: {
-    primary: '#3B82F6',
-    light: 'rgba(59, 130, 246, 0.1)',
-    dark: '#1E40AF'
+    primary: '#FF6200',
+    light: 'rgba(255, 98, 0, 0.1)',
+    dark: '#CC4E00'
   },
   conversion: {
     primary: '#10B981',
@@ -40,9 +40,9 @@ export const colorSystem = {
     dark: '#047857'
   },
   revenue: {
-    primary: '#3B82F6',
-    light: 'rgba(59, 130, 246, 0.1)',
-    dark: '#1E40AF'
+    primary: '#FF6200',
+    light: 'rgba(255, 98, 0, 0.1)',
+    dark: '#CC4E00'
   },
   churn: {
     primary: '#F59E0B',

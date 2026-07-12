@@ -25,9 +25,9 @@ const colorPalettes = {
     light: 'rgba(255,98,0,0.1)',
   },
   blue: {
-    primary: '#3B82F6',
-    hover: '#2563EB',
-    light: 'rgba(59,130,246,0.1)',
+    primary: '#FF6200',
+    hover: '#E55A2B',
+    light: 'rgba(255, 98, 0,0.1)',
   },
   purple: {
     primary: '#A855F7',

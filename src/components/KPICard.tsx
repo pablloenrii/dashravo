@@ -38,9 +38,9 @@ const colorClasses = {
     icon: 'text-[#EF4444]',
   },
   info: {
-    bg: 'bg-[rgba(59,130,246,0.1)]',
-    text: 'text-[#3B82F6]',
-    icon: 'text-[#3B82F6]',
+    bg: 'bg-[rgba(255, 98, 0,0.1)]',
+    text: 'text-[#FF6200]',
+    icon: 'text-[#FF6200]',
   },
 };
 

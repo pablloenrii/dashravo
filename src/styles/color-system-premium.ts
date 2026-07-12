@@ -32,7 +32,7 @@ export const colorSystemPremium = {
     success: '#10B981',      // Green - calm
     warning: '#F59E0B',      // Amber - noticeable
     danger: '#EF4444',       // Red - critical
-    info: '#3B82F6',         // Blue - informational
+    info: '#FF6200',         // Blue - informational
     processing: '#6366F1',   // Indigo - in progress
   },
 
@@ -42,7 +42,7 @@ export const colorSystemPremium = {
     cyan: '#06B6D4',         // Customers - refined cyan
     purple: '#A78BFA',       // Conversion - softer purple
     green: '#10B981',        // Success - calm green
-    blue: '#3B82F6',         // Pipeline - professional blue
+    blue: '#FF6200',         // Pipeline - professional blue
     amber: '#D97706',        // Automation - warm amber
     pink: '#EC4899',         // Alternative - sophisticated pink
     slate: '#64748B',        // Neutral data - slate

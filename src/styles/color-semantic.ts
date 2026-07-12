@@ -66,14 +66,14 @@ export const colorSemantic = {
 
   // Info - Informação, Contexto
   info: {
-    primary: '#3B82F6',      // Azul
+    primary: '#FF6200',      // Azul
     light: '#93C5FD',        // Azul claro
     lighter: '#DBEAFE',      // Azul muito claro
-    dark: '#1E40AF',         // Azul escuro
-    bg: 'rgba(59, 130, 246, 0.08)',     // Fundo
-    border: 'rgba(59, 130, 246, 0.2)',  // Border
-    text: '#3B82F6',
-    glow: 'rgba(59, 130, 246, 0.3)',
+    dark: '#CC4E00',         // Azul escuro
+    bg: 'rgba(255, 98, 0, 0.08)',     // Fundo
+    border: 'rgba(255, 98, 0, 0.2)',  // Border
+    text: '#FF6200',
+    glow: 'rgba(255, 98, 0, 0.3)',
   },
 
   // Sucesso - Confirmação, Completado

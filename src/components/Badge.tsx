@@ -16,9 +16,9 @@ const variantStyles: Record<BadgeVariant, { bg: string; text: string; border: st
     border: 'rgba(255,255,255,0.2)',
   },
   primary: {
-    bg: 'rgba(59, 130, 246, 0.12)',
-    text: '#3B82F6',
-    border: 'rgba(59, 130, 246, 0.3)',
+    bg: 'rgba(255, 98, 0, 0.12)',
+    text: '#FF6200',
+    border: 'rgba(255, 98, 0, 0.3)',
   },
   success: {
     bg: 'rgba(16, 185, 129, 0.12)',
@@ -36,9 +36,9 @@ const variantStyles: Record<BadgeVariant, { bg: string; text: string; border: st
     border: 'rgba(239, 68, 68, 0.3)',
   },
   info: {
-    bg: 'rgba(59, 130, 246, 0.12)',
-    text: '#3B82F6',
-    border: 'rgba(59, 130, 246, 0.3)',
+    bg: 'rgba(255, 98, 0, 0.12)',
+    text: '#FF6200',
+    border: 'rgba(255, 98, 0, 0.3)',
   },
 };
 

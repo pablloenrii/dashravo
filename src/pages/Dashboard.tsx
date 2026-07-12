@@ -45,15 +45,15 @@ export default function Dashboard() {
 
       {/* KPIs — Primeira linha */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-        <KPICard title="MRR" value={fmtK(currentMRR)} unit="/mês" color="#3B82F6" icon={<DollarSign size={20} />} loading={mrr.loading} />
-        <KPICard title="ARR" value={fmtK(currentARR)} unit="/ano" color="#3B82F6" icon={<Wallet size={20} />} loading={mrr.loading} />
+        <KPICard title="MRR" value={fmtK(currentMRR)} unit="/mês" color="#FF6200" icon={<DollarSign size={20} />} loading={mrr.loading} />
+        <KPICard title="ARR" value={fmtK(currentARR)} unit="/ano" color="#FF6200" icon={<Wallet size={20} />} loading={mrr.loading} />
         <KPICard title="Clientes Ativos" value={activeCustomers.toFixed(0)} unit="clientes" color="#10B981" icon={<Users size={20} />} loading={metrics.loading} />
       </div>
 
       {/* KPIs — Segunda linha */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '32px' }}>
         <KPICard title="Churn Rate" value={currentChurn.toFixed(1)} unit="%" color="#10B981" icon={<Target size={20} />} loading={churn.loading} />
-        <KPICard title="NRR" value={currentNRR.toFixed(0)} unit="%" color="#3B82F6" icon={<Percent size={20} />} loading={churn.loading} />
+        <KPICard title="NRR" value={currentNRR.toFixed(0)} unit="%" color="#FF6200" icon={<Percent size={20} />} loading={churn.loading} />
         <KPICard title="LTV/CAC" value={String(ltvCac)} unit="razão" color="#10B981" icon={<TrendingUp size={20} />} loading={metrics.loading} />
       </div>
 
@@ -69,7 +69,7 @@ export default function Dashboard() {
                 <XAxis dataKey="mes" stroke="#86868B" style={{ fontSize: '11px' }} />
                 <YAxis stroke="#86868B" style={{ fontSize: '11px' }} tickFormatter={fmtK} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Line type="monotone" dataKey="mrr" stroke="#3B82F6" dot={false} strokeWidth={2} name="MRR" />
+                <Line type="monotone" dataKey="mrr" stroke="#FF6200" dot={false} strokeWidth={2} name="MRR" />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -102,7 +102,7 @@ export default function Dashboard() {
                 <XAxis dataKey="mes" stroke="#86868B" style={{ fontSize: '11px' }} />
                 <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Line type="monotone" dataKey="churn_rate" stroke="#3B82F6" dot={false} strokeWidth={2} name="Churn %" />
+                <Line type="monotone" dataKey="churn_rate" stroke="#FF6200" dot={false} strokeWidth={2} name="Churn %" />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -118,7 +118,7 @@ export default function Dashboard() {
                 <XAxis type="number" stroke="#86868B" style={{ fontSize: '11px' }} />
                 <YAxis type="category" dataKey="estagio" stroke="#86868B" style={{ fontSize: '11px' }} width={90} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Bar dataKey="quantidade" fill="#3B82F6" radius={[0, 4, 4, 0]} name="Contatos" />
+                <Bar dataKey="quantidade" fill="#FF6200" radius={[0, 4, 4, 0]} name="Contatos" />
               </BarChart>
             </ResponsiveContainer>
           )}

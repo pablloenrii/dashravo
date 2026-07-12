@@ -131,8 +131,8 @@ export default function CRMPage() {
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-        <KPICard title="Contatos" value={contacts.loading ? '…' : list.length.toString()} unit="total" icon={<Users size={20} />} color="#3B82F6" />
-        <KPICard title="Pipeline" value={contacts.loading ? '…' : (totalPipeline / 1000).toFixed(0)} unit="K" icon={<DollarSign size={20} />} color="#3B82F6" />
+        <KPICard title="Contatos" value={contacts.loading ? '…' : list.length.toString()} unit="total" icon={<Users size={20} />} color="#FF6200" />
+        <KPICard title="Pipeline" value={contacts.loading ? '…' : (totalPipeline / 1000).toFixed(0)} unit="K" icon={<DollarSign size={20} />} color="#FF6200" />
         <KPICard title="Conversão" value={contacts.loading ? '…' : conversionRate} unit="%" icon={<TrendingUp size={20} />} color="#10B981" />
         <KPICard title="Oportunidades" value={contacts.loading ? '…' : opportunitiesCount.toString()} unit="abertas" icon={<Target size={20} />} color="#F59E0B" />
       </div>
@@ -149,7 +149,7 @@ export default function CRMPage() {
                 <XAxis dataKey="mes" stroke="#86868B" style={{ fontSize: '11px' }} />
                 <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
                 <Tooltip content={<ChartTooltip />} />
-                <Line type="monotone" dataKey="novos" stroke="#3B82F6" dot={false} name="Novos" />
+                <Line type="monotone" dataKey="novos" stroke="#FF6200" dot={false} name="Novos" />
                 <Line type="monotone" dataKey="ativos" stroke="#10B981" dot={false} name="Ativos" />
               </LineChart>
             </ResponsiveContainer>
@@ -210,7 +210,7 @@ export default function CRMPage() {
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{
                         width: '32px', height: '32px', borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
+                        background: 'linear-gradient(135deg, #FF6200 0%, #CC4E00 100%)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: 'white', fontSize: '11px', fontWeight: '700'
                       }}>
@@ -230,7 +230,7 @@ export default function CRMPage() {
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                        <button onClick={() => handleOpenModal(contact)} style={actionBtnStyle('#3B82F6')} aria-label={`Editar ${contact.nome}`}>
+                        <button onClick={() => handleOpenModal(contact)} style={actionBtnStyle('#FF6200')} aria-label={`Editar ${contact.nome}`}>
                           <Edit2 size={16} />
                         </button>
                         <button onClick={() => handleDelete(contact.id)} style={actionBtnStyle('#F59E0B')} aria-label={`Deletar ${contact.nome}`}>

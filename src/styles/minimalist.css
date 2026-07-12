@@ -31,7 +31,7 @@
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
-  --info: #3B82F6;
+  --info: #FF6200;
   --processing: #6366F1;
 
   /* Data Colors */
@@ -39,7 +39,7 @@
   --data-cyan: #06B6D4;
   --data-purple: #A78BFA;
   --data-green: #10B981;
-  --data-blue: #3B82F6;
+  --data-blue: #FF6200;
   --data-amber: #D97706;
 
   /* Typography - Premium */
@@ -423,7 +423,7 @@ tr:hover {
 .text-positive { color: #10B981; }
 .text-negative { color: #EF4444; }
 .text-neutral { color: #6B7280; }
-.text-info { color: #3B82F6; }
+.text-info { color: #FF6200; }
 .text-warning-semantic { color: #F59E0B; }
 .text-critical { color: #DC2626; }
 
@@ -431,7 +431,7 @@ tr:hover {
 .bg-positive { background: rgba(16, 185, 129, 0.08); color: #10B981; }
 .bg-negative { background: rgba(239, 68, 68, 0.08); color: #EF4444; }
 .bg-neutral { background: rgba(107, 114, 128, 0.08); color: #6B7280; }
-.bg-info { background: rgba(59, 130, 246, 0.08); color: #3B82F6; }
+.bg-info { background: rgba(255, 98, 0, 0.08); color: #FF6200; }
 .bg-warning-semantic { background: rgba(245, 158, 11, 0.08); color: #F59E0B; }
 .bg-critical { background: rgba(220, 38, 38, 0.08); color: #DC2626; }
 

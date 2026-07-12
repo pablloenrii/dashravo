@@ -37,9 +37,9 @@ export default function FinancePage() {
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '32px' }}>
-        <KPICard title="Receita (6m)" value={finance.loading ? '…' : fmtK(totalRevenue)} unit="" color="#3B82F6" icon={<DollarSign size={20} />} />
+        <KPICard title="Receita (6m)" value={finance.loading ? '…' : fmtK(totalRevenue)} unit="" color="#FF6200" icon={<DollarSign size={20} />} />
         <KPICard title="Lucro (6m)" value={finance.loading ? '…' : fmtK(profit)} unit="" color="#10B981" icon={<TrendingUp size={20} />} />
-        <KPICard title="Margem" value={finance.loading ? '…' : margin} unit="%" color="#3B82F6" icon={<Percent size={20} />} />
+        <KPICard title="Margem" value={finance.loading ? '…' : margin} unit="%" color="#FF6200" icon={<Percent size={20} />} />
         <KPICard title="Caixa (4 sem)" value={cashFlow.loading ? '…' : fmtK(cash)} unit="" color="#10B981" icon={<Wallet size={20} />} />
       </div>
 

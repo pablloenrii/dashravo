@@ -83,14 +83,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
               <div style={{
                 width: '44px', height: '44px', borderRadius: '10px',
-                background: 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
+                background: 'linear-gradient(135deg, #FF6200 0%, #CC4E00 100%)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'white', fontWeight: 'bold', fontSize: '22px',
-                boxShadow: '0 4px 16px rgba(59, 130, 246, 0.25)'
+                boxShadow: '0 4px 16px rgba(255, 98, 0, 0.25)'
               }}>R</div>
               {sidebarOpen && (
                 <div>
-                  <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#3B82F6' }}>RAVO</h1>
+                  <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#FF6200' }}>RAVO</h1>
                   <p style={{ margin: 0, fontSize: '11px', color: '#6B7280', fontWeight: '500' }}>INTELLIGENCE</p>
                 </div>
               )}
@@ -110,9 +110,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   padding: '10px 12px',
                   borderRadius: '8px',
                   textDecoration: 'none',
-                  color: isActive(item.path) ? '#3B82F6' : '#9CA3AF',
-                  background: isActive(item.path) ? 'rgba(59, 130, 246, 0.12)' : 'rgba(255,255,255,0.02)',
-                  borderLeft: isActive(item.path) ? '2.5px solid #3B82F6' : '2.5px solid transparent',
+                  color: isActive(item.path) ? '#FF6200' : '#9CA3AF',
+                  background: isActive(item.path) ? 'rgba(255, 98, 0, 0.12)' : 'rgba(255,255,255,0.02)',
+                  borderLeft: isActive(item.path) ? '2.5px solid #FF6200' : '2.5px solid transparent',
                   transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
                   fontSize: '13px',
                   fontWeight: isActive(item.path) ? '600' : '500',
@@ -189,10 +189,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
             {!isMobile && <Breadcrumb items={[{ label: 'Dashboard' }]} />}
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
               <SearchBar onSearchClick={() => setCommandOpen(true)} />
-              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(59, 130, 246, 0.08)', border: '0.5px solid rgba(59, 130, 246, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#3B82F6'; e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(59, 130, 246, 0.08)'; }}>
+              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(255, 98, 0, 0.08)', border: '0.5px solid rgba(255, 98, 0, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#FF6200'; e.currentTarget.style.background = 'rgba(255, 98, 0, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(255, 98, 0, 0.08)'; }}>
                 <Bell className="w-5 h-5" strokeWidth={1.5} />
               </button>
-              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(59, 130, 246, 0.08)', border: '0.5px solid rgba(59, 130, 246, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#3B82F6'; e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(59, 130, 246, 0.08)'; }}>
+              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(255, 98, 0, 0.08)', border: '0.5px solid rgba(255, 98, 0, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#FF6200'; e.currentTarget.style.background = 'rgba(255, 98, 0, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(255, 98, 0, 0.08)'; }}>
                 <MessageSquare className="w-5 h-5" strokeWidth={1.5} />
               </button>
               <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.04)' }}></div>
@@ -205,14 +205,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 title="Sair"
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
-                  color: '#3B82F6', background: 'rgba(59, 130, 246, 0.12)',
-                  border: '0.5px solid rgba(59, 130, 246, 0.2)', borderRadius: '6px',
+                  color: '#FF6200', background: 'rgba(255, 98, 0, 0.12)',
+                  border: '0.5px solid rgba(255, 98, 0, 0.2)', borderRadius: '6px',
                   cursor: 'pointer', transition: 'all 300ms ease-out'
                 }}
               >
                 <div style={{
                   width: '24px', height: '24px', borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
+                  background: 'linear-gradient(135deg, #FF6200 0%, #CC4E00 100%)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: 'white', fontSize: '11px', fontWeight: 'bold'
                 }}>P</div>

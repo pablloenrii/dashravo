@@ -31,9 +31,9 @@ const typeStyles = {
     icon: AlertCircle,
   },
   info: {
-    bg: 'rgba(59, 130, 246, 0.1)',
-    border: 'rgba(59, 130, 246, 0.3)',
-    color: '#3B82F6',
+    bg: 'rgba(255, 98, 0, 0.1)',
+    border: 'rgba(255, 98, 0, 0.3)',
+    color: '#FF6200',
     icon: Info,
   },
 };

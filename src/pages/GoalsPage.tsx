@@ -36,10 +36,10 @@ export default function GoalsPage() {
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '32px' }}>
-        <KPICard title="Progresso Médio" value={goals.loading ? '…' : avgProgress} unit="%" color="#3B82F6" icon={<TrendingUp size={20} />} />
+        <KPICard title="Progresso Médio" value={goals.loading ? '…' : avgProgress} unit="%" color="#FF6200" icon={<TrendingUp size={20} />} />
         <KPICard title="Metas Atingidas" value={goals.loading ? '…' : completedGoals.toString()} unit={`/${list.length}`} color="#10B981" icon={<Target size={20} />} />
         <KPICard title="Atenção" value={goals.loading ? '…' : warningGoals.toString()} unit="metas" color="#F59E0B" icon={<AlertCircle size={20} />} />
-        <KPICard title="No Prazo" value={goals.loading ? '…' : onTrackGoals.toString()} unit="metas" color="#3B82F6" icon={<Zap size={20} />} />
+        <KPICard title="No Prazo" value={goals.loading ? '…' : onTrackGoals.toString()} unit="metas" color="#FF6200" icon={<Zap size={20} />} />
       </div>
 
       {/* Gráfico de progresso semanal */}
@@ -55,7 +55,7 @@ export default function GoalsPage() {
               <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
               <Bar dataKey="meta" fill="rgba(255,255,255,0.1)" name="Meta" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="atingido" fill="#3B82F6" name="Atingido" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="atingido" fill="#FF6200" name="Atingido" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}

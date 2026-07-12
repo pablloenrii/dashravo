@@ -34,12 +34,5 @@
     }
   },
   "include": ["src"],
-  "exclude": [
-    "src/modules",
-    "src/pages/DashboardPremium.tsx",
-    "src/pages/DashboardMinimal.tsx",
-    "src/pages/CSPage.tsx",
-    "src/sw.ts"
-  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

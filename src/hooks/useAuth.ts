@@ -92,7 +92,7 @@ export function useAuth(): UseAuthReturn {
  * return <Dashboard user={user} />;
  */
 export function useAuthGuard() {
-  const { user, isInitializing } = useAuthStore();
+  const { user, isInitializing, isAuthenticated } = useAuthStore();
 
   // TODO: Implementar redirecionamento para login
   // if (!isInitializing && !isAuthenticated) {

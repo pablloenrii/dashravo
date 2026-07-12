@@ -145,7 +145,7 @@ export const useCRMStore = create<CRMStore>()(
         leads,
         selectedLead:
           get().selectedLead?.id === id
-            ? { ...get().selectedLead!, ...updates }
+            ? { ...get().selectedLead, ...updates }
             : get().selectedLead,
       });
     },

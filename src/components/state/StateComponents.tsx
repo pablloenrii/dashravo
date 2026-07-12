@@ -3,7 +3,7 @@
  * Componentes para Loading, Empty e Error states
  */
 
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 
 // Loading Spinner
 export const LoadingSpinner = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {

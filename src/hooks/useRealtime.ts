@@ -5,12 +5,7 @@
 import { useEffect, useState } from 'react';
 import { realtimeManager } from '../services/realtime';
 
-interface RealtimeItem {
-  id: string | number;
-  [key: string]: unknown;
-}
-
-export function useRealtime<T extends RealtimeItem>(
+export function useRealtime<T>(
   tableName: string,
   initialData: T[] = []
 ) {
@@ -20,53 +15,38 @@ export function useRealtime<T extends RealtimeItem>(
 
   useEffect(() => {
     setIsLoading(true);
-    let isMounted = true;
-    let unsubscribe: (() => void) | null = null;
 
     try {
-      unsubscribe = realtimeManager.subscribe(tableName, {
-        onInsert: (newItem: T) => {
-          if (isMounted) {
-            setData((prev) => [newItem, ...prev]);
-            console.log(`✅ Novo item adicionado em ${tableName}`);
-          }
+      const unsubscribe = realtimeManager.subscribe(tableName, {
+        onInsert: (newItem) => {
+          setData((prev) => [newItem, ...prev]);
+          console.log(`✅ Novo item adicionado em ${tableName}`);
         },
-        onUpdate: (updatedItem: T) => {
-          if (isMounted) {
-            setData((prev) =>
-              prev.map((item) =>
-                item.id === updatedItem.id ? updatedItem : item
-              )
-            );
-            console.log(`✏️ Item atualizado em ${tableName}`);
-          }
+        onUpdate: (updatedItem) => {
+          setData((prev) =>
+            prev.map((item) =>
+              (item as any).id === (updatedItem as any).id ? updatedItem : item
+            )
+          );
+          console.log(`✏️ Item atualizado em ${tableName}`);
         },
-        onDelete: (deletedItem: T) => {
-          if (isMounted) {
-            setData((prev) =>
-              prev.filter((item) => item.id !== deletedItem.id)
-            );
-            console.log(`🗑️ Item deletado em ${tableName}`);
-          }
+        onDelete: (deletedItem) => {
+          setData((prev) =>
+            prev.filter((item) => (item as any).id !== (deletedItem as any).id)
+          );
+          console.log(`🗑️ Item deletado em ${tableName}`);
         },
       });
 
-      if (isMounted) {
-        setIsLoading(false);
-      }
-    } catch (err) {
-      if (isMounted) {
-        setError(err instanceof Error ? err.message : 'Erro desconhecido');
-        setIsLoading(false);
-      }
-    }
+      setIsLoading(false);
 
-    return () => {
-      isMounted = false;
-      if (unsubscribe) {
+      return () => {
         unsubscribe();
-      }
-    };
+      };
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      setIsLoading(false);
+    }
   }, [tableName]);
 
   return { data, isLoading, error };

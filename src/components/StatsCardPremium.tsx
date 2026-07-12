@@ -19,7 +19,7 @@ const colorClasses = {
   info: 'from-blue-500 to-blue-600 bg-blue-50 dark:bg-blue-950/30',
 };
 
-export const textColorMap = {
+const textColorMap = {
   primary: 'text-orange-600 dark:text-orange-400',
   success: 'text-green-600 dark:text-green-400',
   warning: 'text-yellow-600 dark:text-yellow-400',
@@ -35,6 +35,7 @@ export function StatsCardPremium({
   color = 'primary',
 }: StatsCardProps) {
   const gradientClass = colorClasses[color];
+  const textColorClass = textColorMap[color];
 
   return (
     <div className="card p-6 bg-var(--bg-primary) hover:shadow-md transition-all">

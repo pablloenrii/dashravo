@@ -1,8 +1,5 @@
 import { useState } from 'react';
-import { Button } from '@/components/Button';
-import { Input } from '@/components/Input';
-import { Alert } from '@/components/Alert';
-import { Card } from '@/components/ui/Card';
+import { Button, Input, Card, Alert } from '@/components/ui';
 import { sb as supabase } from '@/services/supabase';
 
 export default function LoginPage() {

@@ -209,7 +209,7 @@ class AuthService {
    * Ouvir mudanças de autenticação
    */
   onAuthStateChange(callback: (user: User | null) => void) {
-    const { data } = sb.auth.onAuthStateChange(async (_event, session) => {
+    const { data } = sb.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         const user = await this.getCurrentUser();
         callback(user);

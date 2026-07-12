@@ -3,7 +3,7 @@
  * Configuração global para testes
  */
 
-import { afterEach, vi, beforeAll } from 'vitest';
+import { expect, afterEach, vi, beforeAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 

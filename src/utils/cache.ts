@@ -34,7 +34,7 @@ class CacheManager {
   /**
    * Set do cache
    */
-  set<T>(key: string, data: T, _config: CacheConfig = {}): void {
+  set<T>(key: string, data: T, config: CacheConfig = {}): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),

@@ -9,11 +9,6 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  define: {
-    // Constante em build: sem a flag, o código de mock é eliminado
-    // do bundle de produção (dead-code elimination do import dinâmico).
-    'import.meta.env.VITE_USE_MOCK': JSON.stringify(process.env.VITE_USE_MOCK ?? 'false'),
-  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

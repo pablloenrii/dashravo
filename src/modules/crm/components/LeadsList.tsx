@@ -4,8 +4,7 @@
  */
 
 import { Lead, useCRMStore } from '../store';
-import { Badge } from '@/components/Badge';
-import { Button } from '@/components/Button';
+import { Badge, Button } from '@/components/ui';
 
 interface LeadsListProps {
   leads: Lead[];

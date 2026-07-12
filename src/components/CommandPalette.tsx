@@ -38,6 +38,13 @@ const commands: CommandItem[] = [
     category: 'Navegação',
     action: () => window.location.href = '/goals',
   },
+  {
+    id: 'cs',
+    title: 'Ir para Customer Success',
+    description: 'Gerenciar tickets',
+    category: 'Navegação',
+    action: () => window.location.href = '/cs',
+  },
 ];
 
 export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
@@ -49,25 +56,16 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     cmd.description?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Evita índice fora do range quando o filtro muda (fonte do TypeError histórico)
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [search]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        if (filtered.length > 0) {
-          setSelectedIndex(prev => (prev + 1) % filtered.length);
-        }
+        setSelectedIndex(prev => (prev + 1) % filtered.length);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (filtered.length > 0) {
-          setSelectedIndex(prev => (prev - 1 + filtered.length) % filtered.length);
-        }
+        setSelectedIndex(prev => (prev - 1 + filtered.length) % filtered.length);
       } else if (e.key === 'Enter') {
         e.preventDefault();
         filtered[selectedIndex]?.action();

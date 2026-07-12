@@ -2,12 +2,12 @@
  * RAVO OS — Supabase Client
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-let sb: SupabaseClient | null = null;
+let sb: any = null;
 
 if (SUPABASE_URL && SUPABASE_KEY) {
   try {
@@ -20,11 +20,23 @@ if (SUPABASE_URL && SUPABASE_KEY) {
   console.warn('Supabase credentials nao configuradas em .env.local');
 }
 
-const createMockSupabaseClient = (): SupabaseClient => {
-  return createClient('https://fallback.supabase.co', 'fallback-key') as SupabaseClient;
-};
+const createMockSupabaseClient = () => ({
+  auth: {
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    getSession: async () => ({ data: { session: null }, error: null }),
+    signInWithPassword: async () => ({ data: null, error: { message: 'Not configured' } }),
+    signUp: async () => ({ data: null, error: { message: 'Not configured' } }),
+    signOut: async () => ({ error: null }),
+  },
+  from: () => ({
+    select: async () => ({ data: [], error: null }),
+    insert: async () => ({ data: null, error: null }),
+    update: async () => ({ data: null, error: null }),
+    delete: async () => ({ data: null, error: null }),
+  }),
+});
 
-export const supabase: SupabaseClient = sb || createMockSupabaseClient();
+export const supabase = sb || createMockSupabaseClient();
 export { supabase as sb };
 
-export const isSupabaseConfigured = (): boolean => !!sb;
+export const isSupabaseConfigured = () => !!sb;

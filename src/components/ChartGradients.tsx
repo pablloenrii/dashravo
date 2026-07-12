@@ -1,3 +1,4 @@
+import React from 'react';
 
 /**
  * SVG Gradient definitions for premium charts

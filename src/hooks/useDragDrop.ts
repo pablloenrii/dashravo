@@ -36,7 +36,7 @@ export function useDragDrop({ onDrop, onDragStart, onDragEnd }: UseDragDropProps
     setDragOverId(targetId);
   }, []);
 
-  const handleDragLeave = useCallback((_targetId: string) => {
+  const handleDragLeave = useCallback((targetId: string) => {
     dragCounter.current--;
     if (dragCounter.current === 0) {
       setDragOverId(null);

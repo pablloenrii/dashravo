@@ -1,11 +1,11 @@
 import { useState, useEffect, ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bell, MessageSquare, LogOut, Menu } from 'lucide-react';
-import { sb as supabase } from '@/services/supabase';
+import { Bell, MessageSquare, ChevronDown, Menu } from 'lucide-react';
 import { CommandPalette } from '@/components/CommandPalette';
 import { SearchBar } from '@/components/SearchBar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { MobileMenu } from '@/components/MobileMenu';
 
 interface NavItem {
@@ -18,6 +18,7 @@ const navItems: NavItem[] = [
   { path: '/crm', label: 'CRM' },
   { path: '/finance', label: 'Financeiro' },
   { path: '/goals', label: 'Metas' },
+  { path: '/cs', label: 'Atendimento' },
 ];
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -78,18 +79,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
           transition: 'width 0.3s'
         }}>
           {/* Logo */}
-          <div style={{ padding: '16px 12px', borderBottom: '0.5px solid rgba(58, 130, 246, 0.15)' }}>
+          <div style={{ padding: '16px 12px', borderBottom: '0.5px solid rgba(234, 106, 27, 0.15)' }}>
             <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
               <div style={{
                 width: '44px', height: '44px', borderRadius: '10px',
-                background: 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
+                background: 'linear-gradient(135deg, #EA6A1B 0%, #F77E2D 100%)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'white', fontWeight: 'bold', fontSize: '22px',
-                boxShadow: '0 4px 16px rgba(59, 130, 246, 0.25)'
+                boxShadow: '0 4px 16px rgba(234, 106, 27, 0.25)'
               }}>R</div>
               {sidebarOpen && (
                 <div>
-                  <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#3B82F6' }}>RAVO</h1>
+                  <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#EA6A1B' }}>RAVO</h1>
                   <p style={{ margin: 0, fontSize: '11px', color: '#6B7280', fontWeight: '500' }}>INTELLIGENCE</p>
                 </div>
               )}
@@ -109,9 +110,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   padding: '10px 12px',
                   borderRadius: '8px',
                   textDecoration: 'none',
-                  color: isActive(item.path) ? '#3B82F6' : '#9CA3AF',
-                  background: isActive(item.path) ? 'rgba(59, 130, 246, 0.12)' : 'rgba(255,255,255,0.02)',
-                  borderLeft: isActive(item.path) ? '2.5px solid #3B82F6' : '2.5px solid transparent',
+                  color: isActive(item.path) ? '#EA6A1B' : '#9CA3AF',
+                  background: isActive(item.path) ? 'rgba(234, 106, 27, 0.12)' : 'rgba(255,255,255,0.02)',
+                  borderLeft: isActive(item.path) ? '2.5px solid #EA6A1B' : '2.5px solid transparent',
                   transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
                   fontSize: '13px',
                   fontWeight: isActive(item.path) ? '600' : '500',
@@ -188,35 +189,28 @@ export function AppLayout({ children }: { children: ReactNode }) {
             {!isMobile && <Breadcrumb items={[{ label: 'Dashboard' }]} />}
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
               <SearchBar onSearchClick={() => setCommandOpen(true)} />
-              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(59, 130, 246, 0.08)', border: '0.5px solid rgba(59, 130, 246, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#3B82F6'; e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(59, 130, 246, 0.08)'; }}>
+              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(234, 106, 27, 0.08)', border: '0.5px solid rgba(234, 106, 27, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#EA6A1B'; e.currentTarget.style.background = 'rgba(234, 106, 27, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(234, 106, 27, 0.08)'; }}>
                 <Bell className="w-5 h-5" strokeWidth={1.5} />
               </button>
-              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(59, 130, 246, 0.08)', border: '0.5px solid rgba(59, 130, 246, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#3B82F6'; e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(59, 130, 246, 0.08)'; }}>
+              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(234, 106, 27, 0.08)', border: '0.5px solid rgba(234, 106, 27, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#EA6A1B'; e.currentTarget.style.background = 'rgba(234, 106, 27, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(234, 106, 27, 0.08)'; }}>
                 <MessageSquare className="w-5 h-5" strokeWidth={1.5} />
               </button>
               <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.04)' }}></div>
+              <ThemeSwitcher />
               <ThemeToggle />
-              <button
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  window.location.href = '/login';
-                }}
-                title="Sair"
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
-                  color: '#3B82F6', background: 'rgba(59, 130, 246, 0.12)',
-                  border: '0.5px solid rgba(59, 130, 246, 0.2)', borderRadius: '6px',
-                  cursor: 'pointer', transition: 'all 300ms ease-out'
-                }}
-              >
+              <button style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
+                color: '#EA6A1B', background: 'rgba(234, 106, 27, 0.12)',
+                border: '0.5px solid rgba(234, 106, 27, 0.2)', borderRadius: '6px',
+                cursor: 'pointer', transition: 'all 300ms ease-out'
+              }}>
                 <div style={{
                   width: '24px', height: '24px', borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
+                  background: 'linear-gradient(135deg, #EA6A1B 0%, #F77E2D 100%)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: 'white', fontSize: '11px', fontWeight: 'bold'
                 }}>P</div>
-                <LogOut className="w-4 h-4" strokeWidth={2} />
-                <span style={{ fontSize: '12px', fontWeight: 600 }}>Sair</span>
+                <ChevronDown className="w-4 h-4" strokeWidth={2} />
               </button>
             </div>
           </header>

@@ -16,6 +16,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { path: '/dashboard', label: 'Dashboard' },
   { path: '/crm', label: 'CRM' },
+  { path: '/cs', label: 'Customer Success' },
   { path: '/finance', label: 'Financeiro' },
   { path: '/goals', label: 'Metas' },
 ];

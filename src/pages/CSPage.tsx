@@ -1,5 +1,5 @@
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { MessageSquare, BarChart3, TrendingUp, Clock, AlertCircle } from 'lucide-react';
+import { MessageSquare, BarChart3, TrendingUp, Clock } from 'lucide-react';
 import { useState } from 'react';
 import { KPICardMinimal } from '@/components/KPICardMinimal';
 import { Badge } from '@/components/Badge';
@@ -64,7 +64,6 @@ export function CSPage() {
             type="warning"
             title="Atenção"
             message="Existem 3 tickets em espera há mais de 2 horas"
-            icon={<AlertCircle size={16} />}
             onClose={() => setShowAlert(false)}
           />
         )}
@@ -96,7 +95,7 @@ export function CSPage() {
         <KPICardMinimal title="Tickets Recebidos" value={dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0)} unit="tickets" icon={<MessageSquare />} color={colorSystem.customers.primary} />
         <KPICardMinimal title="Taxa de Resolução" value={dadosAtendimentos.length > 0 ? ((dadosAtendimentos.reduce((sum, a) => sum + (a.resolvidos || 0), 0) / dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0)) * 100).toFixed(1) : 0} unit="%" icon={<TrendingUp />} color={colorSystem.success} />
         <KPICardMinimal title="NPS Score" value={dadosSatisfacao.length > 0 ? dadosSatisfacao[dadosSatisfacao.length - 1].nps : 0} unit="pontos" icon={<BarChart3 />} color={colorSystem.conversion.primary} />
-        <KPICardMinimal title="Tempo Médio" value={tickets.length > 0 ? (tickets.length / dadosAtendimentos.length).toFixed(1) : 0} unit="horas" icon={<Clock />} color={colorSystem.automation.primary} />
+        <KPICardMinimal title="Tempo Médio" value={tickets.length > 0 ? (tickets.length / dadosAtendimentos.length).toFixed(1) : 0} unit="horas" icon={<Clock />} color={'#F59E0B'} />
       </div>
 
       {/* Gráficos */}
@@ -180,7 +179,7 @@ export function CSPage() {
               align: 'center',
               render: (value) => (
                 <Badge variant={
-                  value === 'alta' ? 'danger' :
+                  value === 'alta' ? 'error' :
                   value === 'média' ? 'warning' :
                   'success'
                 }>

@@ -1,69 +1,59 @@
 /**
- * RAVO OS — Color System with Purpose
- * Cada métrica tem uma cor consistente baseada no tipo
+ * RAVO OS Color System - Minimalist Premium
+ * 3 Primary Colors Only
  */
 
 export const colorSystem = {
-  // Receita / Monetário
-  revenue: {
-    primary: '#FF6200',    // Orange - Action, Growth
-    light: 'rgba(255,98,0,0.1)',
-    text: '#FF8A33',
-  },
+  // Primary Colors (3 only)
+  primary: '#3B82F6',      // Blue
+  success: '#10B981',      // Green
+  warning: '#F59E0B',      // Amber (for attention)
 
-  // Clientes / Pessoas
+  // Backgrounds
+  background: '#0F172A',   // Dark Navy
+  backgroundSecondary: '#1E293B',  // Slate Dark
+  backgroundTertiary: '#0A0E1A',   // Almost Black
+
+  // Text
+  text: '#F5F5F7',         // Off White
+  textSecondary: '#A1A1A6', // Gray
+  textTertiary: '#6B7280', // Light Gray
+
+  // Borders
+  border: '#1E293B',       // Slate
+  borderLight: 'rgba(255,255,255,0.1)',
+
+  // Legacy nested objects (keeping for backward compatibility but using primary colors)
   customers: {
-    primary: '#30B0C0',    // Cyan - Trust, Reliability
-    light: 'rgba(48,176,192,0.1)',
-    text: '#30B0C0',
+    primary: '#3B82F6',
+    light: 'rgba(59, 130, 246, 0.1)',
+    dark: '#1E40AF'
   },
-
-  // Taxa / Porcentagem
-  conversion: {
-    primary: '#A855F7',    // Purple - Data, Analysis
-    light: 'rgba(168,85,247,0.1)',
-    text: '#A855F7',
-  },
-
-  // Usuários Ativos / Online
-  active: {
-    primary: '#34C759',    // Green - Positive, Active
-    light: 'rgba(52,199,89,0.1)',
-    text: '#34C759',
-  },
-
-  // Pipeline / Oportunidades
   pipeline: {
-    primary: '#3B82F6',    // Blue - Information, Pipeline
-    light: 'rgba(59,130,246,0.1)',
-    text: '#3B82F6',
+    primary: '#3B82F6',
+    light: 'rgba(59, 130, 246, 0.1)',
+    dark: '#1E40AF'
   },
-
-  // IA / Automação
-  automation: {
-    primary: '#FF9500',    // Amber - Alert, Automation
-    light: 'rgba(255,149,0,0.1)',
-    text: '#FF9500',
+  conversion: {
+    primary: '#10B981',
+    light: 'rgba(16, 185, 129, 0.1)',
+    dark: '#047857'
   },
-
-  // Status Colors
-  success: '#34C759',
-  warning: '#FF9500',
-  danger: '#FF3B30',
-  neutral: '#A1A1A6',
+  revenue: {
+    primary: '#3B82F6',
+    light: 'rgba(59, 130, 246, 0.1)',
+    dark: '#1E40AF'
+  },
+  churn: {
+    primary: '#F59E0B',
+    light: 'rgba(245, 158, 11, 0.1)',
+    dark: '#D97706'
+  },
+  engagement: {
+    primary: '#10B981',
+    light: 'rgba(16, 185, 129, 0.1)',
+    dark: '#047857'
+  },
 };
 
-// Metric Type Definitions
-export const metricTypes = {
-  REVENUE: 'revenue',
-  CUSTOMERS: 'customers',
-  CONVERSION: 'conversion',
-  ACTIVE: 'active',
-  PIPELINE: 'pipeline',
-  AUTOMATION: 'automation',
-} as const;
-
-// Get color for metric type
-export function getColorForMetric(type: string) {
-  return colorSystem[type as keyof typeof colorSystem] || colorSystem.revenue;
-}
+export type ColorSystem = typeof colorSystem;

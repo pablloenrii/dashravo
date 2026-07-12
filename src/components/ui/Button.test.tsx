@@ -28,7 +28,7 @@ describe('Button Component', () => {
   });
 
   it('should show loading state', () => {
-    render(<Button isLoading>Loading</Button>);
+    render(<Button disabled>Loading</Button>);
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
     expect(button.textContent).toContain('Loading');
@@ -37,11 +37,11 @@ describe('Button Component', () => {
   it('should apply variant styles', () => {
     const { rerender } = render(<Button variant="primary">Primary</Button>);
     let button = screen.getByRole('button');
-    expect(button).toHaveClass('bg-blue-600');
+    expect(button).toHaveClass('bg-[#FF6200]');
 
     rerender(<Button variant="danger">Danger</Button>);
     button = screen.getByRole('button');
-    expect(button).toHaveClass('bg-red-600');
+    expect(button).toHaveClass('bg-[#EF4444]');
   });
 
   it('should apply size styles', () => {

@@ -3,7 +3,7 @@
  * Hooks otimizados para React performance
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * Hook para debounce de valores

@@ -5,8 +5,8 @@
 
 import { useEffect, useState } from 'react';
 import { Layout, Header } from '@/components/layout';
-import { Button, Card, Badge } from '@/components/ui';
-import { LoadingSpinner, EmptyState, ErrorState } from '@/components/state';
+import { Button } from '@/components/ui';
+import { LoadingSpinner, ErrorState } from '@/components/state';
 import { useCSStore } from '../store';
 
 export default function CSPage() {

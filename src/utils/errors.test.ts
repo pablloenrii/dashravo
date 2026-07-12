@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { createError, handleError, getErrorMessage, assert } from './errors';
+import { createError, getErrorMessage, assert } from './errors';
 
 describe('Error Utils', () => {
   describe('createError', () => {

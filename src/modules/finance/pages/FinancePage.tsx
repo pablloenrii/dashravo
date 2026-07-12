@@ -5,8 +5,8 @@
 
 import { useEffect, useState } from 'react';
 import { Layout, Header } from '@/components/layout';
-import { Button, Card } from '@/components/ui';
-import { LoadingSpinner, EmptyState, ErrorState } from '@/components/state';
+import { Button } from '@/components/ui';
+import { LoadingSpinner, ErrorState } from '@/components/state';
 import { useFinanceStore } from '../store';
 
 export default function FinancePage() {

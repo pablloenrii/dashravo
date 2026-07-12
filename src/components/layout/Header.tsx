@@ -5,14 +5,14 @@
 
 import React, { ReactNode } from 'react';
 
-export interface HeaderProps extends React.HTMLAttributes<HTMLHeaderElement> {
+export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   title?: string;
   subtitle?: string;
   actions?: ReactNode;
   children?: ReactNode;
 }
 
-export const Header = React.forwardRef<HTMLHeaderElement, HeaderProps>(
+export const Header = React.forwardRef<HTMLElement, HeaderProps>(
   ({ title, subtitle, actions, children, className, ...props }, ref) => {
     return (
       <header

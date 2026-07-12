@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
 
 export interface DropdownItem {
   id: string;
@@ -67,7 +66,7 @@ export function Dropdown({ trigger, items, align = 'left' }: DropdownProps) {
             animation: 'slideDown 200ms ease-out',
           }}
         >
-          {items.map((item, idx) => (
+          {items.map((item) => (
             <React.Fragment key={item.id}>
               {item.divider ? (
                 <div

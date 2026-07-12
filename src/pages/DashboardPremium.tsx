@@ -1,69 +1,16 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, Users, DollarSign, Zap, CheckCircle2, AlertCircle, Code2, Rocket } from 'lucide-react';
+import { TrendingUp, DollarSign, Zap, Code2 } from 'lucide-react';
 import { HeroSection } from '@/components/HeroSection';
 import { KPICardPremium } from '@/components/KPICardPremium';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { TimelinePremium } from '@/components/TimelinePremium';
-import { Alert } from '@/components/ui/Alert';
-import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Alert } from '@/components/Alert';
+import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const revenueData = [
-  { month: 'Jan', revenue: 4000 },
-  { month: 'Feb', revenue: 3000 },
-  { month: 'Mar', revenue: 2000 },
-  { month: 'Apr', revenue: 2780 },
-  { month: 'May', revenue: 1890 },
-  { month: 'Jun', revenue: 2390 },
-];
-
-const conversionData = [
-  { name: 'Leads', value: 400 },
-  { name: 'Qualified', value: 300 },
-  { name: 'Converted', value: 200 },
-  { name: 'Closed', value: 100 },
-];
-
-const pipelineData = [
-  { name: 'Discovery', value: 30, fill: '#FF6200' },
-  { name: 'Proposal', value: 25, fill: '#FF7A33' },
-  { name: 'Negotiation', value: 20, fill: '#FFB366' },
-  { name: 'Closed', value: 25, fill: '#FFC99A' },
-];
-
-const timelineItems = [
-  {
-    id: '1',
-    title: 'Novo Lead',
-    description: 'Acme Corp entrou em contato',
-    timestamp: '2 minutos atrás',
-    icon: '👤',
-    color: '#FF6200',
-  },
-  {
-    id: '2',
-    title: 'Proposta Enviada',
-    description: 'Proposta para Tech Startup enviada',
-    timestamp: '1 hora atrás',
-    icon: '📄',
-    color: '#3B82F6',
-  },
-  {
-    id: '3',
-    title: 'Deal Closed',
-    description: 'Enterprise Deal fechado com $50k',
-    timestamp: '3 horas atrás',
-    icon: '✅',
-    color: '#10B981',
-  },
-  {
-    id: '4',
-    title: 'Pipeline Update',
-    description: 'Q3 quota atualizado para $500k',
-    timestamp: '1 dia atrás',
-    icon: '📈',
-    color: '#A855F7',
-  },
-];
+const revenueData = [];
+const conversionData = [];
+const pipelineData = [];
+const timelineItems = [];
 
 export function DashboardPremium() {
   const containerVariants = {

@@ -4,7 +4,7 @@
  */
 
 import React, { ReactNode } from 'react';
-import { Input } from '@/components/ui';
+import { Input } from '@/components/Input';
 
 export interface FormFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -25,7 +25,7 @@ export const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
       className,
       ...props
     },
-    ref
+    _ref
   ) => {
     return (
       <div className={`w-full ${className || ''}`}>
@@ -38,9 +38,7 @@ export const FormField = React.forwardRef<HTMLInputElement, FormFieldProps>(
 
         {children || (
           <Input
-            ref={ref}
-            error={error}
-            helperText={helperText}
+            error={error || helperText}
             required={required}
             {...props}
           />

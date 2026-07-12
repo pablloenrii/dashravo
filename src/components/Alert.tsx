@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, AlertCircle, CheckCircle, Info } from 'lucide-react';
 
 export interface AlertProps {
@@ -8,6 +8,7 @@ export interface AlertProps {
   onClose?: () => void;
   autoClose?: number;
   closable?: boolean;
+  className?: string;
 }
 
 const typeStyles = {
@@ -44,6 +45,7 @@ export function Alert({
   onClose,
   autoClose = 0,
   closable = true,
+  className,
 }: AlertProps) {
   const [isVisible, setIsVisible] = useState(true);
   const styles = typeStyles[type];
@@ -63,6 +65,7 @@ export function Alert({
 
   return (
     <div
+      className={className}
       style={{
         padding: '12px 16px',
         borderRadius: '8px',

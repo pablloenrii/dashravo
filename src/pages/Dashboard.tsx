@@ -1,21 +1,18 @@
 /**
- * RAVO OS — Dashboard (dados reais do Supabase)
- * Minimalista: preto/branco, laranja só em detalhes.
- * Receita/positivo em verde; despesa/negativo em vermelho.
+ * RAVO OS — Dashboard
+ * Minimalismo enterprise: preto/branco, tipografia contida, gráficos discretos.
+ * Verde APENAS em receita confirmada. Sem vermelho/laranja em dados.
  */
 
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Users, DollarSign, Target, Percent, Wallet } from 'lucide-react';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChartTooltip } from '@/components/ChartTooltip';
 import { QueryError, QueryLoading } from '@/components/QueryState';
 import { useMRRData, useChurnData, useFunnelData, useCustomerMetrics } from '@/hooks/useMetricsQueries';
 import { useFinanceChartData } from '@/hooks/usePagesQueries';
 
-const ACCENT = '#FF6200';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
-const GRID = 'rgba(255,255,255,0.05)';
-const AXIS = '#5B616E';
+const REVENUE = '#3FB950';   // verde: só receita confirmada
+const LINE = '#8B8B8B';      // linhas/dados neutros
+const AXIS = '#454545';
 const fmtK = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v.toFixed(0));
 
 export default function Dashboard() {
@@ -34,12 +31,19 @@ export default function Dashboard() {
   const cac = metrics.data['CAC'] ?? 0;
   const ltvCac = cac > 0 ? (ltv / cac).toFixed(1) : '—';
 
+  const kpis = [
+    { label: 'MRR', value: fmtK(currentMRR), unit: '/mês', loading: mrr.loading },
+    { label: 'ARR', value: fmtK(currentARR), unit: '/ano', loading: mrr.loading },
+    { label: 'Clientes ativos', value: String(activeCustomers.toFixed(0)), unit: '', loading: metrics.loading },
+    { label: 'Churn', value: `${currentChurn.toFixed(1)}%`, unit: '', loading: churn.loading },
+    { label: 'NRR', value: `${currentNRR.toFixed(0)}%`, unit: '', loading: churn.loading },
+    { label: 'LTV / CAC', value: String(ltvCac), unit: '', loading: metrics.loading },
+  ];
+
   return (
-    <div style={{ maxWidth: '1360px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Dashboard</h1>
-        <p style={{ fontSize: '13px', color: '#8A8F98', margin: 0 }}>Visão geral do negócio em tempo real</p>
-      </div>
+    <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
+      <h1 style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.01em', color: '#EDEDED', margin: '0 0 2px 0' }}>Dashboard</h1>
+      <p style={{ fontSize: '12.5px', color: '#6E6E6E', margin: '0 0 22px 0' }}>Visão geral do negócio</p>
 
       {mrr.error && <QueryError message={mrr.error} onRetry={mrr.refetch} />}
       {churn.error && <QueryError message={churn.error} onRetry={churn.refetch} />}
@@ -47,71 +51,74 @@ export default function Dashboard() {
       {funnel.error && <QueryError message={funnel.error} onRetry={funnel.refetch} />}
       {finance.error && <QueryError message={finance.error} onRetry={finance.refetch} />}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px', marginBottom: '12px' }}>
-        <KPI title="MRR" value={fmtK(currentMRR)} unit="/mês" icon={<DollarSign size={15} />} valueColor={GREEN} loading={mrr.loading} />
-        <KPI title="ARR" value={fmtK(currentARR)} unit="/ano" icon={<Wallet size={15} />} valueColor={GREEN} loading={mrr.loading} />
-        <KPI title="Clientes Ativos" value={String(activeCustomers.toFixed(0))} unit="clientes" icon={<Users size={15} />} loading={metrics.loading} />
+      {/* KPIs — faixa única, densa */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', overflow: 'hidden', marginBottom: '16px',
+      }}>
+        {kpis.map((k, i) => (
+          <div key={k.label} style={{
+            padding: '14px 16px',
+            borderLeft: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.05)',
+            background: '#0F0F0F',
+          }}>
+            <div style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.02em', color: '#6E6E6E', marginBottom: '8px' }}>{k.label}</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+              <span style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.02em', color: '#EDEDED' }}>{k.loading ? '—' : k.value}</span>
+              {k.unit && <span style={{ fontSize: '12px', color: '#6E6E6E' }}>{k.unit}</span>}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-        <KPI title="Churn Rate" value={currentChurn.toFixed(1)} unit="%" icon={<Target size={15} />} valueColor={RED} loading={churn.loading} />
-        <KPI title="NRR" value={currentNRR.toFixed(0)} unit="%" icon={<Percent size={15} />} valueColor={GREEN} loading={churn.loading} />
-        <KPI title="LTV / CAC" value={String(ltvCac)} unit="razão" icon={<TrendingUp size={15} />} valueColor={GREEN} loading={metrics.loading} />
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: '12px' }}>
-        <ChartCard title="MRR Trend">
-          {mrr.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={mrr.data}>
-                <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
-                <XAxis dataKey="mes" stroke={AXIS} style={{ fontSize: '11px' }} />
-                <YAxis stroke={AXIS} style={{ fontSize: '11px' }} tickFormatter={fmtK} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                <Line type="monotone" dataKey="mrr" stroke={GREEN} dot={false} strokeWidth={2} name="MRR" />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
-
-        <ChartCard title="Receita vs Despesa">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '16px' }}>
+        <ChartCard title="Receita mensal">
           {finance.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={finance.data}>
-                <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
-                <XAxis dataKey="mes" stroke={AXIS} style={{ fontSize: '11px' }} />
-                <YAxis stroke={AXIS} style={{ fontSize: '11px' }} tickFormatter={fmtK} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                <Area type="monotone" dataKey="receita" stroke={GREEN} fill="rgba(34,197,94,0.12)" strokeWidth={2} name="Receita" />
-                <Area type="monotone" dataKey="despesa" stroke={RED} fill="rgba(239,68,68,0.10)" strokeWidth={2} name="Despesa" />
+            <ResponsiveContainer width="100%" height={190}>
+              <AreaChart data={finance.data} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                <XAxis dataKey="mes" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
+                <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} tickFormatter={fmtK} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
+                <Area type="monotone" dataKey="receita" stroke={REVENUE} fill="rgba(63,185,80,0.08)" strokeWidth={1.75} name="Receita" />
               </AreaChart>
             </ResponsiveContainer>
           )}
         </ChartCard>
 
-        <ChartCard title="Churn Rate">
-          {churn.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={churn.data}>
-                <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
-                <XAxis dataKey="mes" stroke={AXIS} style={{ fontSize: '11px' }} />
-                <YAxis stroke={AXIS} style={{ fontSize: '11px' }} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                <Line type="monotone" dataKey="churn_rate" stroke={RED} dot={false} strokeWidth={2} name="Churn %" />
+        <ChartCard title="MRR">
+          {mrr.loading ? <QueryLoading /> : (
+            <ResponsiveContainer width="100%" height={190}>
+              <LineChart data={mrr.data} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                <XAxis dataKey="mes" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
+                <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} tickFormatter={fmtK} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
+                <Line type="monotone" dataKey="mrr" stroke={LINE} dot={false} strokeWidth={1.75} name="MRR" />
               </LineChart>
             </ResponsiveContainer>
           )}
         </ChartCard>
 
-        <ChartCard title="Funil de Vendas">
+        <ChartCard title="Churn">
+          {churn.loading ? <QueryLoading /> : (
+            <ResponsiveContainer width="100%" height={190}>
+              <LineChart data={churn.data} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                <XAxis dataKey="mes" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
+                <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
+                <Line type="monotone" dataKey="churn_rate" stroke={LINE} dot={false} strokeWidth={1.75} name="Churn %" />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        <ChartCard title="Funil de vendas">
           {funnel.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={funnel.data} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
-                <XAxis type="number" stroke={AXIS} style={{ fontSize: '11px' }} />
-                <YAxis type="category" dataKey="estagio" stroke={AXIS} style={{ fontSize: '11px' }} width={90} />
+            <ResponsiveContainer width="100%" height={190}>
+              <BarChart data={funnel.data} layout="vertical" margin={{ top: 4, right: 8, left: 8, bottom: 0 }}>
+                <XAxis type="number" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
+                <YAxis type="category" dataKey="estagio" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} width={84} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                <Bar dataKey="quantidade" fill={ACCENT} radius={[0, 3, 3, 0]} name="Contatos" barSize={16} />
+                <Bar dataKey="quantidade" fill="#5A5A5A" radius={[0, 2, 2, 0]} name="Contatos" barSize={12} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -121,30 +128,10 @@ export default function Dashboard() {
   );
 }
 
-function KPI({ title, value, unit, icon, valueColor = '#F2F2F3', loading }: {
-  title: string; value: string; unit: string; icon: React.ReactNode; valueColor?: string; loading?: boolean;
-}) {
-  return (
-    <div style={{
-      background: '#121212', border: '1px solid rgba(255,255,255,0.07)',
-      borderRadius: '10px', padding: '16px 18px',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#8A8F98' }}>{title}</span>
-        <span style={{ color: '#5B616E', display: 'flex' }}>{icon}</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-        <span style={{ fontSize: '24px', fontWeight: 650, letterSpacing: '-0.02em', color: valueColor }}>{loading ? '…' : value}</span>
-        <span style={{ fontSize: '13px', color: '#8A8F98' }}>{unit}</span>
-      </div>
-    </div>
-  );
-}
-
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '16px 18px' }}>
-      <h3 style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '-0.005em', color: '#F2F2F3', margin: '0 0 14px 0' }}>{title}</h3>
+    <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '14px 16px' }}>
+      <h3 style={{ fontSize: '12px', fontWeight: 500, letterSpacing: '0.01em', color: '#8B8B8B', margin: '0 0 12px 0' }}>{title}</h3>
       {children}
     </div>
   );

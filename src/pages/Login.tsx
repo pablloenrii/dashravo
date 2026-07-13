@@ -43,7 +43,7 @@ export default function LoginPage() {
       padding: '24px',
     }}>
       <div style={{
-        width: '100%', maxWidth: '400px', background: '#121212',
+        width: '100%', maxWidth: '400px', background: '#0F0F0F',
         border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px',
         padding: '40px 32px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
       }}>

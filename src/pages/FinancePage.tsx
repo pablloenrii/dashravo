@@ -37,14 +37,14 @@ export default function FinancePage() {
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '32px' }}>
-        <KPICard title="Receita (6m)" value={finance.loading ? '…' : fmtK(totalRevenue)} unit="" color="#22C55E" icon={<DollarSign size={20} />} />
-        <KPICard title="Lucro (6m)" value={finance.loading ? '…' : fmtK(profit)} unit="" color="#22C55E" icon={<TrendingUp size={20} />} />
+        <KPICard title="Receita (6m)" value={finance.loading ? '…' : fmtK(totalRevenue)} unit="" color="#3FB950" icon={<DollarSign size={20} />} />
+        <KPICard title="Lucro (6m)" value={finance.loading ? '…' : fmtK(profit)} unit="" color="#EDEDED" icon={<TrendingUp size={20} />} />
         <KPICard title="Margem" value={finance.loading ? '…' : margin} unit="%" color="#F2F2F3" icon={<Percent size={20} />} />
-        <KPICard title="Caixa (4 sem)" value={cashFlow.loading ? '…' : fmtK(cash)} unit="" color="#22C55E" icon={<Wallet size={20} />} />
+        <KPICard title="Caixa (4 sem)" value={cashFlow.loading ? '…' : fmtK(cash)} unit="" color="#3FB950" icon={<Wallet size={20} />} />
       </div>
 
       {/* Gráfico principal — Receita vs Despesa */}
-      <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+      <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
         <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 12px 0' }}>Receita vs Despesa</h3>
         {finance.loading ? (
           <QueryLoading />
@@ -55,8 +55,8 @@ export default function FinancePage() {
               <XAxis dataKey="mes" stroke="#86868B" style={{ fontSize: '11px' }} />
               <YAxis stroke="#86868B" style={{ fontSize: '11px' }} tickFormatter={fmtK} />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <Area type="monotone" dataKey="receita" stroke="#22C55E" fill="rgba(34,197,94,0.12)" strokeWidth={2} name="Receita" />
-              <Area type="monotone" dataKey="despesa" stroke="#EF4444" fill="rgba(239,68,68,0.10)" strokeWidth={2} name="Despesa" />
+              <Area type="monotone" dataKey="receita" stroke="#3FB950" fill="rgba(63,185,80,0.08)" strokeWidth={1.75} name="Receita" />
+              <Area type="monotone" dataKey="despesa" stroke="#8B8B8B" fill="rgba(139,139,139,0.08)" strokeWidth={1.75} name="Despesa" />
             </AreaChart>
           </ResponsiveContainer>
         )}
@@ -64,7 +64,7 @@ export default function FinancePage() {
 
       {/* Gráficos secundários */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px' }}>
+        <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 12px 0' }}>Fluxo de Caixa Semanal</h3>
           {cashFlow.loading ? (
             <QueryLoading />
@@ -75,14 +75,14 @@ export default function FinancePage() {
                 <XAxis dataKey="semana" stroke="#86868B" style={{ fontSize: '11px' }} />
                 <YAxis stroke="#86868B" style={{ fontSize: '11px' }} tickFormatter={fmtK} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Bar dataKey="entradas" fill="#22C55E" radius={[3, 3, 0, 0]} name="Entradas" barSize={16} />
-                <Bar dataKey="saidas" fill="#EF4444" radius={[3, 3, 0, 0]} name="Saídas" barSize={16} />
+                <Bar dataKey="entradas" fill="#3FB950" radius={[2, 2, 0, 0]} name="Entradas" barSize={14} />
+                <Bar dataKey="saidas" fill="#8B8B8B" radius={[2, 2, 0, 0]} name="Saídas" barSize={14} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
 
-        <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px' }}>
+        <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 12px 0' }}>Despesas por Categoria</h3>
           {expenses.loading ? (
             <QueryLoading />
@@ -106,7 +106,7 @@ export default function FinancePage() {
 
 function KPICard({ title, value, unit, color, icon }: { title: string; value: string; unit: string; color: string; icon: React.ReactNode }) {
   return (
-    <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px', padding: '16px 18px' }}>
+    <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '16px 18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
         <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#8A8F98' }}>{title}</span>
         <span style={{ color: '#5B616E', display: 'flex' }}>{icon}</span>

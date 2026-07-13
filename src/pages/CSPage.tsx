@@ -100,7 +100,7 @@ export function CSPage() {
 
       {/* Gráficos */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-        <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
+        <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 8px 0' }}>Atendimentos Diários</h3>
           {dadosAtendimentos.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -109,8 +109,8 @@ export function CSPage() {
                 <XAxis dataKey="dia" stroke="#86868B" style={{ fontSize: '11px' }} />
                 <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Bar dataKey="recebidos" fill={colorSystem.customers.primary} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="resolvidos" fill={colorSystem.success} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="recebidos" fill="#8B8B8B" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="resolvidos" fill="#5A5A5A" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -120,7 +120,7 @@ export function CSPage() {
           )}
         </div>
 
-        <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
+        <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 8px 0' }}>Satisfação</h3>
           {dadosSatisfacao.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -129,8 +129,8 @@ export function CSPage() {
                 <XAxis dataKey="semana" stroke="#86868B" style={{ fontSize: '11px' }} />
                 <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Line type="monotone" dataKey="nps" stroke={colorSystem.conversion.primary} dot={false} />
-                <Line type="monotone" dataKey="satisfacao" stroke={colorSystem.success} dot={false} />
+                <Line type="monotone" dataKey="nps" stroke="#8B8B8B" dot={false} />
+                <Line type="monotone" dataKey="satisfacao" stroke="#5A5A5A" dot={false} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -207,7 +207,7 @@ export function CSPage() {
           striped={true}
         />
         ) : (
-          <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '32px', textAlign: 'center', color: '#6B7280', fontSize: '13px' }}>
+          <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '32px', textAlign: 'center', color: '#6B7280', fontSize: '13px' }}>
             Nenhum ticket disponível
           </div>
         )}

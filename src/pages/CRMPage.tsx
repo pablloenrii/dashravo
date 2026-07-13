@@ -24,7 +24,7 @@ const STAGES: Stage[] = [
   { key: 'Qualificado',   prob: 0.50, color: '#FF6200' },
   { key: 'Proposta',      prob: 0.65, color: '#FF7A33' },
   { key: 'Negociação',    prob: 0.80, color: '#E55A2B' },
-  { key: 'Ganho',         prob: 1.00, color: '#22C55E' },
+  { key: 'Ganho',         prob: 1.00, color: '#3FB950' },
   { key: 'Perdido',       prob: 0.00, color: '#EF4444' },
 ];
 const STAGE_MAP: Record<string, Stage> = Object.fromEntries(STAGES.map((s) => [s.key, s] as const));
@@ -121,23 +121,23 @@ export default function CRMPage() {
   const parados = open.filter((c) => daysSince(c.updated_at) >= ROT_DAYS).length;
 
   const insights = [
-    { label: 'Pipeline aberto', value: fmtMoney(pipelineAberto), icon: <DollarSign size={15} />, color: '#22C55E' },
-    { label: 'Forecast ponderado', value: fmtMoney(forecast), icon: <Target size={15} />, color: '#22C55E' },
-    { label: 'Win rate', value: `${winRate}%`, icon: <Trophy size={15} />, color: '#22C55E' },
-    { label: 'Ticket médio', value: fmtMoney(ticketMedio), icon: <Percent size={15} />, color: '#22C55E' },
-    { label: 'Ciclo médio', value: `${ciclo}d`, icon: <Timer size={15} />, color: '#626873' },
-    { label: 'Deals parados', value: String(parados), icon: <AlertTriangle size={15} />, color: parados > 0 ? '#EF4444' : '#626873' },
+    { label: 'Pipeline aberto', value: fmtMoney(pipelineAberto), icon: <DollarSign size={14} /> },
+    { label: 'Forecast ponderado', value: fmtMoney(forecast), icon: <Target size={14} /> },
+    { label: 'Win rate', value: `${winRate}%`, icon: <Trophy size={14} /> },
+    { label: 'Ticket médio', value: fmtMoney(ticketMedio), icon: <Percent size={14} /> },
+    { label: 'Ciclo médio', value: `${ciclo}d`, icon: <Timer size={14} /> },
+    { label: 'Deals parados', value: String(parados), icon: <AlertTriangle size={14} /> },
   ];
 
   return (
     <div style={{ maxWidth: '1500px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#ECEDEF', margin: '0 0 4px 0' }}>Pipeline de Vendas</h1>
-          <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>Gestão de leads, fases e previsão de fechamento</p>
+          <h1 style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.01em', color: '#EDEDED', margin: '0 0 2px 0' }}>Pipeline de Vendas</h1>
+          <p style={{ fontSize: '12.5px', color: '#6E6E6E', margin: 0 }}>Gestão de leads, fases e previsão de fechamento</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '3px' }}>
+          <div style={{ display: 'flex', background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '3px' }}>
             <ViewBtn active={view === 'board'} onClick={() => setView('board')} icon={<LayoutGrid size={15} />} label="Board" />
             <ViewBtn active={view === 'list'} onClick={() => setView('list')} icon={<ListIcon size={15} />} label="Lista" />
           </div>
@@ -152,11 +152,11 @@ export default function CRMPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '24px' }}>
         {insights.map((k) => (
-          <div key={k.label} style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px', padding: '14px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: k.color }}>
-              {k.icon}<span style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF' }}>{k.label}</span>
+          <div key={k.label} style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#6E6E6E' }}>
+              {k.icon}<span style={{ fontSize: '11px', fontWeight: 500, color: '#6E6E6E' }}>{k.label}</span>
             </div>
-            <div style={{ fontSize: '20px', fontWeight: 650, letterSpacing: '-0.02em', color: k.color }}>{contacts.loading ? '…' : k.value}</div>
+            <div style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.02em', color: '#EDEDED' }}>{contacts.loading ? '—' : k.value}</div>
           </div>
         ))}
       </div>
@@ -176,7 +176,7 @@ export default function CRMPage() {
                 onDrop={() => { if (dragId) moveTo(dragId, stage.key); setDragId(null); setOverCol(null); }}
                 style={{
                   flex: '0 0 250px', minWidth: '250px',
-                  background: overCol === stage.key ? 'rgba(255,98,0,0.06)' : '#121212',
+                  background: overCol === stage.key ? 'rgba(255,98,0,0.06)' : '#0F0F0F',
                   border: `1px solid ${overCol === stage.key ? 'rgba(255,98,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
                   borderRadius: '12px', padding: '10px', transition: 'background 150ms, border-color 150ms',
                 }}
@@ -215,7 +215,7 @@ export default function CRMPage() {
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontSize: '13px', fontWeight: 700, color: '#22C55E' }}>{fmtMoney(c.valor)}</span>
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: c.etapa === 'Ganho' ? '#3FB950' : '#EDEDED' }}>{fmtMoney(c.valor)}</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             {rot && <span title={`Parado há ${daysSince(c.updated_at)} dias`} style={{ display: 'flex', color: '#EF4444' }}><AlertTriangle size={13} /></span>}
                             <span style={{ fontSize: '10px', color: '#6B7280' }}>{daysSince(c.updated_at)}d</span>
@@ -235,7 +235,7 @@ export default function CRMPage() {
           })}
         </div>
       ) : (
-        <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden' }}>
+        <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden' }}>
           {items.length === 0 ? (
             <div style={{ padding: '32px', textAlign: 'center', fontSize: '13px', color: '#9CA3AF' }}>
               Nenhum lead cadastrado. Clique em Novo Lead para começar.
@@ -265,7 +265,7 @@ export default function CRMPage() {
                         </div>
                       </td>
                       <td style={{ padding: '12px 16px', fontSize: '13px', color: '#A1A1A6' }}>{c.empresa || '—'}</td>
-                      <td style={{ padding: '12px 16px', fontSize: '13px', color: '#22C55E', fontWeight: 600, textAlign: 'center' }}>{fmtMoney(c.valor)}</td>
+                      <td style={{ padding: '12px 16px', fontSize: '13px', color: c.etapa === 'Ganho' ? '#3FB950' : '#EDEDED', fontWeight: 600, textAlign: 'center' }}>{fmtMoney(c.valor)}</td>
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                         <span style={{ fontSize: '11px', fontWeight: 600, color: STAGE_MAP[c.etapa]?.color ?? '#9CA3AF', background: `${STAGE_MAP[c.etapa]?.color ?? '#9CA3AF'}1f`, padding: '3px 10px', borderRadius: '999px' }}>{c.etapa}</span>
                       </td>

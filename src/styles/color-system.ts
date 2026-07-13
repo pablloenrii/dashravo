@@ -12,7 +12,7 @@ export const colorSystem = {
   // Backgrounds
   background: '#0D0D0D',   // Dark Navy
   backgroundSecondary: '#1A1A1A',  // Slate Dark
-  backgroundTertiary: '#121212',   // Almost Black
+  backgroundTertiary: '#0F0F0F',   // Almost Black
 
   // Text
   text: '#F5F5F7',         // Off White

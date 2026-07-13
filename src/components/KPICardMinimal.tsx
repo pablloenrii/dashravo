@@ -22,8 +22,8 @@ export function KPICardMinimal({
   if (loading) {
     return (
       <div style={{
-        background: '#121212',
-        border: '1px solid rgba(255,255,255,0.07)',
+        background: '#0F0F0F',
+        border: '1px solid rgba(255,255,255,0.06)',
         borderRadius: '8px',
         padding: '12px',
         minHeight: '100px',
@@ -41,8 +41,8 @@ export function KPICardMinimal({
 
   return (
     <div style={{
-      background: '#121212',
-      border: '1px solid rgba(255,255,255,0.07)',
+      background: '#0F0F0F',
+      border: '1px solid rgba(255,255,255,0.06)',
       borderLeft: `3px solid ${color}`,
       borderRadius: '8px',
       padding: '12px',
@@ -59,7 +59,7 @@ export function KPICardMinimal({
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-      e.currentTarget.style.background = '#121212';
+      e.currentTarget.style.background = '#0F0F0F';
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', color }}>
         {icon && <span style={{ fontSize: '14px' }}>{icon}</span>}

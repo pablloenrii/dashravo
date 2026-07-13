@@ -69,7 +69,7 @@ export function QueryLoading({ height = 300 }: { height?: number }) {
         height: `${height}px`,
         borderRadius: '8px',
         background:
-          'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%)',
+          'linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%)',
         backgroundSize: '200% 100%',
         animation: 'ravo-shimmer 1.4s ease infinite',
       }}

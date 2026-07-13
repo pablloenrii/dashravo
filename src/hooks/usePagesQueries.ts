@@ -25,6 +25,7 @@ export interface ContactData {
   etapa: string;
   valor: number;
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface ContactChartData {
@@ -48,6 +49,7 @@ interface RawContact {
   etapa: string;
   valor: string | number | null;
   created_at?: string;
+  updated_at?: string;
 }
 
 export function useContactsData(): QueryResult<ContactData[]> {
@@ -64,6 +66,7 @@ export function useContactsData(): QueryResult<ContactData[]> {
         etapa: r.etapa,
         valor: toNumber(r.valor),
         created_at: r.created_at,
+        updated_at: r.updated_at,
       })),
     empty: [],
     mockKey: 'MOCK_CONTATOS',

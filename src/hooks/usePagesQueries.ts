@@ -24,6 +24,9 @@ export interface ContactData {
   telefone?: string;
   etapa: string;
   valor: number;
+  origem?: string;
+  motivo?: string;
+  data_prevista?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -48,6 +51,9 @@ interface RawContact {
   telefone: string | null;
   etapa: string;
   valor: string | number | null;
+  origem: string | null;
+  motivo: string | null;
+  data_prevista: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -65,6 +71,9 @@ export function useContactsData(): QueryResult<ContactData[]> {
         telefone: r.telefone ?? '',
         etapa: r.etapa,
         valor: toNumber(r.valor),
+        origem: r.origem ?? '',
+        motivo: r.motivo ?? '',
+        data_prevista: r.data_prevista ?? undefined,
         created_at: r.created_at,
         updated_at: r.updated_at,
       })),

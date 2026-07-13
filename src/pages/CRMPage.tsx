@@ -31,6 +31,7 @@ const STAGE_MAP: Record<string, Stage> = Object.fromEntries(STAGES.map((s) => [s
 const OPEN_KEYS = ['Novo Lead', 'Contato Feito', 'Qualificado', 'Proposta', 'Negociação'];
 const isOpen = (etapa: string) => OPEN_KEYS.includes(etapa);
 const ROT_DAYS = 14; // dias parado numa fase = "esfriando"
+const ORIGENS = ['Indicação', 'Inbound', 'Outbound', 'Evento', 'Site', 'Outro'];
 
 const fmtMoney = (v: number) =>
   v >= 1000 ? `R$ ${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k` : `R$ ${Math.round(v)}`;
@@ -38,11 +39,13 @@ const daysSince = (iso?: string) =>
   iso ? Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)) : 0;
 const initials = (nome: string) =>
   nome.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+const fmtDate = (iso: string) => { const d = new Date(iso); return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`; };
 
 interface ContactForm {
   nome: string; empresa: string; email: string; telefone: string; valor: number; etapa: string;
+  origem: string; dataPrevista: string; motivo: string;
 }
-const EMPTY_FORM: ContactForm = { nome: '', empresa: '', email: '', telefone: '', valor: 0, etapa: 'Novo Lead' };
+const EMPTY_FORM: ContactForm = { nome: '', empresa: '', email: '', telefone: '', valor: 0, etapa: 'Novo Lead', origem: '', dataPrevista: '', motivo: '' };
 
 export default function CRMPage() {
   const contacts = useContactsData();
@@ -63,7 +66,7 @@ export default function CRMPage() {
   const handleOpenModal = (c?: ContactData) => {
     setMutationError(null);
     if (c) {
-      setFormData({ nome: c.nome, empresa: c.empresa, email: c.email, telefone: c.telefone ?? '', valor: c.valor, etapa: c.etapa });
+      setFormData({ nome: c.nome, empresa: c.empresa, email: c.email, telefone: c.telefone ?? '', valor: c.valor, etapa: c.etapa, origem: c.origem ?? '', dataPrevista: c.data_prevista ?? '', motivo: c.motivo ?? '' });
       setEditingId(c.id);
     } else {
       setFormData(EMPTY_FORM); setEditingId(null);
@@ -77,6 +80,7 @@ export default function CRMPage() {
     const payload = {
       nome: formData.nome, empresa: formData.empresa || null, email: formData.email,
       telefone: formData.telefone || null, valor: formData.valor, etapa: formData.etapa,
+      origem: formData.origem || null, data_prevista: formData.dataPrevista || null, motivo: formData.motivo || null,
       updated_at: new Date().toISOString(),
     };
     const { error } = editingId
@@ -223,6 +227,13 @@ export default function CRMPage() {
                             <button onClick={() => handleDelete(c.id)} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={13} /></button>
                           </div>
                         </div>
+                        {(c.origem || (isOpen(c.etapa) && c.data_prevista) || (!isOpen(c.etapa) && c.motivo)) && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                            {c.origem && <span style={tag}>{c.origem}</span>}
+                            {isOpen(c.etapa) && c.data_prevista && <span style={{ fontSize: '10px', color: '#6E6E6E' }}>fecha {fmtDate(c.data_prevista)}</span>}
+                            {!isOpen(c.etapa) && c.motivo && <span style={{ fontSize: '10px', color: '#6E6E6E' }}>{c.motivo}</span>}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -301,6 +312,23 @@ export default function CRMPage() {
               {STAGES.map((s) => <option key={s.key} value={s.key}>{s.key}</option>)}
             </select>
           </div>
+          <div>
+            <label style={lbl}>Origem</label>
+            <select style={fld} value={formData.origem} onChange={(e) => setFormData({ ...formData, origem: e.target.value })}>
+              <option value="">—</option>
+              {ORIGENS.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={lbl}>Data prevista de fechamento</label>
+            <input type="date" style={fld} value={formData.dataPrevista} onChange={(e) => setFormData({ ...formData, dataPrevista: e.target.value })} />
+          </div>
+          {(formData.etapa === 'Ganho' || formData.etapa === 'Perdido') && (
+            <div>
+              <label style={lbl}>Motivo {formData.etapa === 'Ganho' ? 'do ganho' : 'da perda'}</label>
+              <input style={fld} placeholder="Ex: preço, indicação, concorrente…" value={formData.motivo} onChange={(e) => setFormData({ ...formData, motivo: e.target.value })} />
+            </div>
+          )}
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <Button variant="ghost" onClick={() => setShowModal(false)}>Cancelar</Button>
             <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando…' : 'Salvar'}</Button>
@@ -323,3 +351,6 @@ function ViewBtn({ active, onClick, icon, label }: { active: boolean; onClick: (
 
 const thStyle: React.CSSProperties = { padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#9CA3AF' };
 const cardBtn: React.CSSProperties = { background: 'transparent', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' };
+const lbl: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: '#8A8F98', marginBottom: '6px' };
+const fld: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#EDEDED', fontSize: '13px' };
+const tag: React.CSSProperties = { fontSize: '10px', fontWeight: 500, color: '#8B8B8B', background: 'rgba(255,255,255,0.05)', padding: '2px 7px', borderRadius: '5px' };

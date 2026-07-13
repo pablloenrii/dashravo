@@ -22,12 +22,12 @@ export function QueryError({ message, onRetry }: QueryErrorProps) {
         padding: '12px 16px',
         background: 'rgba(245, 158, 11, 0.08)',
         border: '1px solid rgba(245, 158, 11, 0.35)',
-        borderLeft: '3px solid #F59E0B',
+        borderLeft: '3px solid #8B8B8B',
         borderRadius: '8px',
         margin: '8px 0',
       }}
     >
-      <AlertTriangle size={16} color="#F59E0B" style={{ flexShrink: 0 }} />
+      <AlertTriangle size={16} color="#8B8B8B" style={{ flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '12px', fontWeight: 600, color: '#F5F5F7' }}>
           Erro ao carregar dados
@@ -46,7 +46,7 @@ export function QueryError({ message, onRetry }: QueryErrorProps) {
             background: 'transparent',
             border: '1px solid rgba(245, 158, 11, 0.35)',
             borderRadius: '6px',
-            color: '#F59E0B',
+            color: '#8B8B8B',
             fontSize: '11px',
             fontWeight: 600,
             padding: '6px 10px',

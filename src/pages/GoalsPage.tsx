@@ -91,7 +91,7 @@ export default function GoalsPage() {
                   <span style={{
                     fontSize: '11px', fontWeight: '600', padding: '4px 8px',
                     borderRadius: '4px', color: 'white',
-                    background: onTrack ? '#10B981' : '#F59E0B'
+                    background: onTrack ? '#10B981' : '#8B8B8B'
                   }}>
                     {onTrack ? 'No Prazo' : 'Atenção'}
                   </span>
@@ -100,7 +100,7 @@ export default function GoalsPage() {
                   <ProgressBar
                     value={Math.min(goal.percentual, 100)}
                     showValue={false}
-                    color={onTrack ? '#10B981' : '#F59E0B'}
+                    color={onTrack ? '#10B981' : '#8B8B8B'}
                   />
                 </div>
                 <div style={{ fontSize: '11px', color: '#9CA3AF' }}>

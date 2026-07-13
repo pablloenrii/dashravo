@@ -16,9 +16,9 @@ const variantStyles: Record<BadgeVariant, { bg: string; text: string; border: st
     border: 'rgba(255,255,255,0.2)',
   },
   primary: {
-    bg: 'rgba(255, 98, 0, 0.12)',
-    text: '#FF6200',
-    border: 'rgba(255, 98, 0, 0.3)',
+    bg: 'rgba(255,255,255, 0.12)',
+    text: '#EDEDED',
+    border: 'rgba(255,255,255, 0.3)',
   },
   success: {
     bg: 'rgba(16, 185, 129, 0.12)',
@@ -27,7 +27,7 @@ const variantStyles: Record<BadgeVariant, { bg: string; text: string; border: st
   },
   warning: {
     bg: 'rgba(245, 158, 11, 0.12)',
-    text: '#F59E0B',
+    text: '#8B8B8B',
     border: 'rgba(245, 158, 11, 0.3)',
   },
   error: {
@@ -36,9 +36,9 @@ const variantStyles: Record<BadgeVariant, { bg: string; text: string; border: st
     border: 'rgba(239, 68, 68, 0.3)',
   },
   info: {
-    bg: 'rgba(255, 98, 0, 0.12)',
-    text: '#FF6200',
-    border: 'rgba(255, 98, 0, 0.3)',
+    bg: 'rgba(255,255,255, 0.12)',
+    text: '#EDEDED',
+    border: 'rgba(255,255,255, 0.3)',
   },
 };
 

@@ -18,9 +18,9 @@ interface KPICardProps {
 
 const colorClasses = {
   primary: {
-    bg: 'bg-[rgba(255,98,0,0.1)]',
-    text: 'text-[#FF6200]',
-    icon: 'text-[#FF6200]',
+    bg: 'bg-[rgba(255,255,255,0.1)]',
+    text: 'text-[#EDEDED]',
+    icon: 'text-[#EDEDED]',
   },
   success: {
     bg: 'bg-[rgba(34,197,94,0.1)]',
@@ -29,8 +29,8 @@ const colorClasses = {
   },
   warning: {
     bg: 'bg-[rgba(245,158,11,0.1)]',
-    text: 'text-[#F59E0B]',
-    icon: 'text-[#F59E0B]',
+    text: 'text-[#8B8B8B]',
+    icon: 'text-[#8B8B8B]',
   },
   danger: {
     bg: 'bg-[rgba(239,68,68,0.1)]',
@@ -38,9 +38,9 @@ const colorClasses = {
     icon: 'text-[#EF4444]',
   },
   info: {
-    bg: 'bg-[rgba(255, 98, 0,0.1)]',
-    text: 'text-[#FF6200]',
-    icon: 'text-[#FF6200]',
+    bg: 'bg-[rgba(255,255,255,0.1)]',
+    text: 'text-[#EDEDED]',
+    icon: 'text-[#EDEDED]',
   },
 };
 

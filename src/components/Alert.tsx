@@ -27,13 +27,13 @@ const typeStyles = {
   warning: {
     bg: 'rgba(245, 158, 11, 0.1)',
     border: 'rgba(245, 158, 11, 0.3)',
-    color: '#F59E0B',
+    color: '#8B8B8B',
     icon: AlertCircle,
   },
   info: {
-    bg: 'rgba(255, 98, 0, 0.1)',
-    border: 'rgba(255, 98, 0, 0.3)',
-    color: '#FF6200',
+    bg: 'rgba(255,255,255, 0.1)',
+    border: 'rgba(255,255,255, 0.3)',
+    color: '#EDEDED',
     icon: Info,
   },
 };

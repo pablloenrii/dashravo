@@ -31,12 +31,12 @@ export function Alert({
       text: 'text-[#22C55E]',
     },
     warning: {
-      container: 'bg-[rgba(245,158,11,0.1)] border border-[#F59E0B]',
-      text: 'text-[#F59E0B]',
+      container: 'bg-[rgba(245,158,11,0.1)] border border-[#8B8B8B]',
+      text: 'text-[#8B8B8B]',
     },
     info: {
-      container: 'bg-[rgba(255, 98, 0,0.1)] border border-[#FF6200]',
-      text: 'text-[#FF6200]',
+      container: 'bg-[rgba(255,255,255,0.1)] border border-[#EDEDED]',
+      text: 'text-[#EDEDED]',
     },
   };
 

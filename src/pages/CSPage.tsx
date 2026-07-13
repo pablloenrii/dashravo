@@ -95,7 +95,7 @@ export function CSPage() {
         <KPICardMinimal title="Tickets Recebidos" value={dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0)} unit="tickets" icon={<MessageSquare />} color={colorSystem.customers.primary} />
         <KPICardMinimal title="Taxa de Resolução" value={dadosAtendimentos.length > 0 ? ((dadosAtendimentos.reduce((sum, a) => sum + (a.resolvidos || 0), 0) / dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0)) * 100).toFixed(1) : 0} unit="%" icon={<TrendingUp />} color={colorSystem.success} />
         <KPICardMinimal title="NPS Score" value={dadosSatisfacao.length > 0 ? dadosSatisfacao[dadosSatisfacao.length - 1].nps : 0} unit="pontos" icon={<BarChart3 />} color={colorSystem.conversion.primary} />
-        <KPICardMinimal title="Tempo Médio" value={tickets.length > 0 ? (tickets.length / dadosAtendimentos.length).toFixed(1) : 0} unit="horas" icon={<Clock />} color={'#F59E0B'} />
+        <KPICardMinimal title="Tempo Médio" value={tickets.length > 0 ? (tickets.length / dadosAtendimentos.length).toFixed(1) : 0} unit="horas" icon={<Clock />} color={'#8B8B8B'} />
       </div>
 
       {/* Gráficos */}

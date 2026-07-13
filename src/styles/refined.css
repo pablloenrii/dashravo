@@ -18,15 +18,15 @@
   --border-light: rgba(255, 255, 255, 0.05);
 
   /* Brand Color */
-  --accent: #FF6200;
-  --accent-hover: #FF7A33;
-  --accent-light: rgba(255, 98, 0, 0.1);
+  --accent: #EDEDED;
+  --accent-hover: #8B8B8B;
+  --accent-light: rgba(255,255,255, 0.1);
 
   /* Status Colors */
   --success: #10B981;
-  --warning: #F59E0B;
+  --warning: #8B8B8B;
   --danger: #EF4444;
-  --info: #FF6200;
+  --info: #EDEDED;
 
   /* Typography */
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -182,7 +182,7 @@ input, textarea, select {
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(255, 98, 0, 0.1);
+  box-shadow: 0 0 0 3px rgba(255,255,255, 0.1);
 }
 
 input::placeholder {
@@ -213,7 +213,7 @@ td {
 }
 
 tr:hover {
-  background: rgba(255, 98, 0, 0.02);
+  background: rgba(255,255,255, 0.02);
 }
 
 /* Scrollbar */

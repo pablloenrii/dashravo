@@ -9,9 +9,9 @@ export function Progress({ value, max = 100, label, variant = 'primary' }: Progr
   const percentage = (value / max) * 100;
   
   const colorMap = {
-    primary: '#FF6200',
+    primary: '#EDEDED',
     success: '#22C55E',
-    warning: '#F59E0B',
+    warning: '#8B8B8B',
     danger: '#EF4444'
   };
 
@@ -20,7 +20,7 @@ export function Progress({ value, max = 100, label, variant = 'primary' }: Progr
       {label && (
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
           <span style={{ color: '#94A3B8' }}>{label}</span>
-          <span style={{ color: '#FF6200', fontWeight: 'bold' }}>{Math.round(percentage)}%</span>
+          <span style={{ color: '#EDEDED', fontWeight: 'bold' }}>{Math.round(percentage)}%</span>
         </div>
       )}
       <div style={{

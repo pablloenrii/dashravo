@@ -42,13 +42,13 @@ export const colorSemantic = {
 
   // Aviso - Atenção, Alerta
   warning: {
-    primary: '#F59E0B',      // Âmbar
+    primary: '#8B8B8B',      // Âmbar
     light: '#FCD34D',        // Âmbar claro
     lighter: '#FEF3C7',      // Âmbar muito claro
     dark: '#B45309',         // Âmbar escuro
     bg: 'rgba(245, 158, 11, 0.08)',     // Fundo
     border: 'rgba(245, 158, 11, 0.2)',  // Border
-    text: '#F59E0B',
+    text: '#8B8B8B',
     glow: 'rgba(245, 158, 11, 0.3)',
   },
 
@@ -66,14 +66,14 @@ export const colorSemantic = {
 
   // Info - Informação, Contexto
   info: {
-    primary: '#FF6200',      // Azul
+    primary: '#EDEDED',      // Azul
     light: '#93C5FD',        // Azul claro
     lighter: '#DBEAFE',      // Azul muito claro
-    dark: '#CC4E00',         // Azul escuro
-    bg: 'rgba(255, 98, 0, 0.08)',     // Fundo
-    border: 'rgba(255, 98, 0, 0.2)',  // Border
-    text: '#FF6200',
-    glow: 'rgba(255, 98, 0, 0.3)',
+    dark: '#2A2A2A',         // Azul escuro
+    bg: 'rgba(255,255,255, 0.08)',     // Fundo
+    border: 'rgba(255,255,255, 0.2)',  // Border
+    text: '#EDEDED',
+    glow: 'rgba(255,255,255, 0.3)',
   },
 
   // Sucesso - Confirmação, Completado

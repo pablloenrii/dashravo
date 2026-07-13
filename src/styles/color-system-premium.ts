@@ -30,19 +30,19 @@ export const colorSystemPremium = {
   // Semantic Colors - Muted but clear
   semantic: {
     success: '#10B981',      // Green - calm
-    warning: '#F59E0B',      // Amber - noticeable
+    warning: '#8B8B8B',      // Amber - noticeable
     danger: '#EF4444',       // Red - critical
-    info: '#FF6200',         // Blue - informational
+    info: '#EDEDED',         // Blue - informational
     processing: '#6366F1',   // Indigo - in progress
   },
 
   // Data Colors - Premium palette (non-vibrant)
   data: {
     orange: '#EA6A1B',       // Revenue - primary orange
-    cyan: '#FF6200',         // Customers - refined cyan
+    cyan: '#EDEDED',         // Customers - refined cyan
     purple: '#A78BFA',       // Conversion - softer purple
     green: '#10B981',        // Success - calm green
-    blue: '#FF6200',         // Pipeline - professional blue
+    blue: '#EDEDED',         // Pipeline - professional blue
     amber: '#D97706',        // Automation - warm amber
     pink: '#EC4899',         // Alternative - sophisticated pink
     slate: '#64748B',        // Neutral data - slate

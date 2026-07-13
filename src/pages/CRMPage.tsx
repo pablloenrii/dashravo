@@ -20,10 +20,10 @@ import { useContactsData, ContactData } from '@/hooks/usePagesQueries';
 interface Stage { key: string; prob: number; color: string; }
 const STAGES: Stage[] = [
   { key: 'Novo Lead',     prob: 0.10, color: '#626873' },
-  { key: 'Contato Feito', prob: 0.25, color: '#F59E0B' },
-  { key: 'Qualificado',   prob: 0.50, color: '#FF6200' },
-  { key: 'Proposta',      prob: 0.65, color: '#FF7A33' },
-  { key: 'Negociação',    prob: 0.80, color: '#E55A2B' },
+  { key: 'Contato Feito', prob: 0.25, color: '#8B8B8B' },
+  { key: 'Qualificado',   prob: 0.50, color: '#EDEDED' },
+  { key: 'Proposta',      prob: 0.65, color: '#8B8B8B' },
+  { key: 'Negociação',    prob: 0.80, color: '#6E6E6E' },
   { key: 'Ganho',         prob: 1.00, color: '#3FB950' },
   { key: 'Perdido',       prob: 0.00, color: '#EF4444' },
 ];
@@ -180,8 +180,8 @@ export default function CRMPage() {
                 onDrop={() => { if (dragId) moveTo(dragId, stage.key); setDragId(null); setOverCol(null); }}
                 style={{
                   flex: '0 0 250px', minWidth: '250px',
-                  background: overCol === stage.key ? 'rgba(255,98,0,0.06)' : '#0F0F0F',
-                  border: `1px solid ${overCol === stage.key ? 'rgba(255,98,0,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                  background: overCol === stage.key ? 'rgba(255,255,255,0.06)' : '#0F0F0F',
+                  border: `1px solid ${overCol === stage.key ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.08)'}`,
                   borderRadius: '12px', padding: '10px', transition: 'background 150ms, border-color 150ms',
                 }}
               >
@@ -210,7 +210,7 @@ export default function CRMPage() {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                          <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'linear-gradient(135deg,#FF6200,#CC4E00)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
+                          <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
                             {initials(c.nome)}
                           </div>
                           <div style={{ minWidth: 0 }}>
@@ -271,7 +271,7 @@ export default function CRMPage() {
                       onMouseLeave={(e) => (e.currentTarget.style.background = '')}>
                       <td style={{ padding: '12px 16px', fontSize: '13px', color: '#F5F5F7', fontWeight: 500 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg,#FF6200,#CC4E00)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '11px', fontWeight: 700 }}>{initials(c.nome)}</div>
+                          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '11px', fontWeight: 700 }}>{initials(c.nome)}</div>
                           {c.nome}
                         </div>
                       </td>
@@ -344,7 +344,7 @@ function ViewBtn({ active, onClick, icon, label }: { active: boolean; onClick: (
     <button onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer',
       fontSize: '12px', fontWeight: 600,
-      background: active ? '#FF6200' : 'transparent', color: active ? '#0A0A0A' : '#9CA3AF',
+      background: active ? '#1E1E1E' : 'transparent', color: active ? '#EDEDED' : '#8B8B8B',
     }}>{icon}{label}</button>
   );
 }

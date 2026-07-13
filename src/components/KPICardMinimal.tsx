@@ -15,7 +15,7 @@ export function KPICardMinimal({
   value,
   unit = '',
   icon,
-  color = '#FF6200',
+  color = '#EDEDED',
   trend,
   loading = false,
 }: KPICardMinimalProps) {
@@ -55,7 +55,7 @@ export function KPICardMinimal({
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.borderColor = `${color}`;
-      e.currentTarget.style.background = 'rgba(255, 98, 0, 0.04)';
+      e.currentTarget.style.background = 'rgba(255,255,255, 0.04)';
     }}
     onMouseLeave={(e) => {
       e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';

@@ -17,7 +17,7 @@ export function Toggle({ checked, onChange, label }: ToggleProps) {
         width: '48px',
         height: '28px',
         borderRadius: '14px',
-        background: checked ? '#FF6200' : '#475569',
+        background: checked ? '#EDEDED' : '#475569',
         position: 'relative',
         transition: 'background 0.3s'
       }}>

@@ -45,7 +45,7 @@ export default function SignupPage() {
   const inputStyle = (name: string): React.CSSProperties => ({
     width: '100%', padding: '12px 14px', fontSize: '14px', color: '#F5F5F7',
     background: '#0A0A0A',
-    border: `1px solid ${focus === name ? '#FF6200' : 'rgba(255,255,255,0.08)'}`,
+    border: `1px solid ${focus === name ? '#EDEDED' : 'rgba(255,255,255,0.08)'}`,
     borderRadius: '10px', outline: 'none', boxSizing: 'border-box',
     transition: 'border-color .15s ease',
   });
@@ -53,7 +53,7 @@ export default function SignupPage() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(1200px 600px at 50% -10%, rgba(255,98,0,0.10), transparent), #0A0A0A',
+      background: 'radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,0.10), transparent), #0A0A0A',
       padding: '24px',
     }}>
       <div style={{
@@ -63,7 +63,7 @@ export default function SignupPage() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
           <div style={{
-            width: '42px', height: '42px', borderRadius: '11px', background: '#FF6200',
+            width: '42px', height: '42px', borderRadius: '11px', background: '#EDEDED',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontWeight: 800, fontSize: '22px', color: '#0A0A0A',
           }}>R</div>
@@ -116,7 +116,7 @@ export default function SignupPage() {
             onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
             style={{
               width: '100%', padding: '12px', fontSize: '15px', fontWeight: 700, color: '#0A0A0A',
-              background: loading ? '#B34600' : (hover ? '#FF7A33' : '#FF6200'),
+              background: loading ? '#B34600' : (hover ? '#8B8B8B' : '#EDEDED'),
               border: 'none', borderRadius: '10px',
               cursor: loading ? 'not-allowed' : 'pointer', transition: 'background .15s ease',
             }}
@@ -126,7 +126,7 @@ export default function SignupPage() {
         </form>
 
         <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: '#9CA3AF' }}>
-          Já tem conta? <a href="/login" style={{ color: '#FF6200', fontWeight: 600, textDecoration: 'none' }}>Fazer login</a>
+          Já tem conta? <a href="/login" style={{ color: '#EDEDED', fontWeight: 600, textDecoration: 'none' }}>Fazer login</a>
         </p>
       </div>
     </div>

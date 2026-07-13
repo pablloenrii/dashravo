@@ -20,14 +20,14 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const colorPalettes = {
   orange: {
-    primary: '#FF6200',
-    hover: '#FF7A33',
-    light: 'rgba(255,98,0,0.1)',
+    primary: '#EDEDED',
+    hover: '#8B8B8B',
+    light: 'rgba(255,255,255,0.1)',
   },
   blue: {
-    primary: '#FF6200',
-    hover: '#E55A2B',
-    light: 'rgba(255, 98, 0,0.1)',
+    primary: '#EDEDED',
+    hover: '#6E6E6E',
+    light: 'rgba(255,255,255,0.1)',
   },
   purple: {
     primary: '#A855F7',

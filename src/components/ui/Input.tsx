@@ -21,7 +21,7 @@ export function Input({ label, error, className = '', ...props }: InputProps) {
           text-white
           rounded-lg
           transition-colors duration-200
-          focus:outline-none focus:border-[#FF6200] focus:ring-2 focus:ring-[rgba(255,98,0,0.1)]
+          focus:outline-none focus:border-[#EDEDED] focus:ring-2 focus:ring-[rgba(255,255,255,0.1)]
           disabled:opacity-50 disabled:cursor-not-allowed
           ${error ? 'border-[#EF4444]' : ''}
           ${className}

@@ -13,20 +13,19 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const variantStyles: Record<ButtonVariant, string> = {
   primary: `
-    background: linear-gradient(135deg, #FF6200 0%, #CC4E00 100%);
-    color: white;
-    border: 1px solid rgba(255, 98, 0, 0.5);
+    background: #EDEDED;
+    color: #0A0A0A;
+    border: 1px solid rgba(255,255,255, 0.5);
     &:hover {
-      background: linear-gradient(135deg, #E55A2B 0%, #1A1A1A 100%);
-      box-shadow: 0 4px 12px rgba(255, 98, 0, 0.3);
+      background: #FFFFFF;
     }
   `,
   secondary: `
-    background: rgba(255, 98, 0, 0.08);
-    color: #FF6200;
-    border: 1px solid rgba(255, 98, 0, 0.3);
+    background: rgba(255,255,255, 0.08);
+    color: #EDEDED;
+    border: 1px solid rgba(255,255,255, 0.3);
     &:hover {
-      background: rgba(255, 98, 0, 0.15);
+      background: rgba(255,255,255, 0.15);
     }
   `,
   ghost: `
@@ -79,15 +78,15 @@ export function Button({
   const variantStyle: React.CSSProperties =
     variant === 'primary'
       ? {
-          background: 'linear-gradient(135deg, #FF6200 0%, #CC4E00 100%)',
-          color: 'white',
-          border: '1px solid rgba(255, 98, 0, 0.5)',
+          background: '#EDEDED',
+          color: '#0A0A0A',
+          border: '1px solid rgba(255,255,255, 0.5)',
         }
       : variant === 'secondary'
       ? {
-          background: 'rgba(255, 98, 0, 0.08)',
-          color: '#FF6200',
-          border: '1px solid rgba(255, 98, 0, 0.3)',
+          background: 'rgba(255,255,255, 0.08)',
+          color: '#EDEDED',
+          border: '1px solid rgba(255,255,255, 0.3)',
         }
       : variant === 'danger'
       ? {
@@ -120,12 +119,9 @@ export function Button({
       onMouseEnter={(e) => {
         if (!disabled && !loading) {
           if (variant === 'primary') {
-            e.currentTarget.style.background =
-              'linear-gradient(135deg, #E55A2B 0%, #1A1A1A 100%)';
-            e.currentTarget.style.boxShadow =
-              '0 4px 12px rgba(255, 98, 0, 0.3)';
+            e.currentTarget.style.background = '#FFFFFF';
           } else if (variant === 'secondary') {
-            e.currentTarget.style.background = 'rgba(255, 98, 0, 0.15)';
+            e.currentTarget.style.background = 'rgba(255,255,255, 0.15)';
           } else if (variant === 'danger') {
             e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
           } else {
@@ -136,11 +132,9 @@ export function Button({
       }}
       onMouseLeave={(e) => {
         if (variant === 'primary') {
-          e.currentTarget.style.background =
-            'linear-gradient(135deg, #FF6200 0%, #CC4E00 100%)';
-          e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.background = '#EDEDED';
         } else if (variant === 'secondary') {
-          e.currentTarget.style.background = 'rgba(255, 98, 0, 0.08)';
+          e.currentTarget.style.background = 'rgba(255,255,255, 0.08)';
         } else if (variant === 'danger') {
           e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
         } else {

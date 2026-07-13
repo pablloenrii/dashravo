@@ -23,9 +23,9 @@ export const MOCK_CONTACTS_CHART = [
 ];
 
 export const MOCK_OPPORTUNITIES = [
-  { name: 'Qualificado', quantidade: 320, fill: '#FF6200' },
+  { name: 'Qualificado', quantidade: 320, fill: '#EDEDED' },
   { name: 'Proposta', quantidade: 280, fill: '#10B981' },
-  { name: 'Negociação', quantidade: 190, fill: '#F59E0B' },
+  { name: 'Negociação', quantidade: 190, fill: '#8B8B8B' },
   { name: 'Fechado', quantidade: 105, fill: '#6B7280' },
 ];
 
@@ -46,9 +46,9 @@ export const MOCK_CASH_FLOW = [
 ];
 
 export const MOCK_EXPENSES = [
-  { name: 'Pessoal', value: 45000, percentual: 42, fill: '#FF6200' },
+  { name: 'Pessoal', value: 45000, percentual: 42, fill: '#EDEDED' },
   { name: 'Infraestrutura', value: 25000, percentual: 24, fill: '#10B981' },
-  { name: 'Marketing', value: 18000, percentual: 17, fill: '#F59E0B' },
+  { name: 'Marketing', value: 18000, percentual: 17, fill: '#8B8B8B' },
   { name: 'Outros', value: 12000, percentual: 12, fill: '#6B7280' },
 ];
 

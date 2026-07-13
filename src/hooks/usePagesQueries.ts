@@ -10,7 +10,7 @@ import { sb as supabase } from '@/services/supabase';
 import { useSupabaseQuery, toNumber, QueryResult } from './useSupabaseQuery';
 
 // Paleta oficial (máx. 3 cores + neutro)
-const PALETTE = ['#FF6200', '#10B981', '#F59E0B', '#6B7280'];
+const PALETTE = ['#EDEDED', '#10B981', '#8B8B8B', '#6B7280'];
 
 // ============================================================================
 // CRM

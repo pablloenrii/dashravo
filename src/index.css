@@ -19,22 +19,22 @@
   --border-secondary: rgba(255, 255, 255, 0.03);
 
   /* Accent (Orange) */
-  --primary: #FF6200;
-  --primary-hover: #FF7A33;
-  --primary-active: #E55A2B;
-  --accent: #FF6200;
-  --accent-hover: #FF7A33;
-  --accent-light: rgba(255, 98, 0, 0.1);
+  --primary: #EDEDED;
+  --primary-hover: #8B8B8B;
+  --primary-active: #6E6E6E;
+  --accent: #EDEDED;
+  --accent-hover: #8B8B8B;
+  --accent-light: rgba(255,255,255, 0.1);
 
   /* Semantic */
   --success: #22C55E;
   --success-light: rgba(34, 197, 94, 0.1);
-  --warning: #F59E0B;
+  --warning: #8B8B8B;
   --warning-light: rgba(245, 158, 11, 0.1);
   --danger: #EF4444;
   --danger-light: rgba(239, 68, 68, 0.1);
-  --info: #FF6200;
-  --info-light: rgba(255, 98, 0, 0.1);
+  --info: #EDEDED;
+  --info-light: rgba(255,255,255, 0.1);
 
   /* Spacing (8pt Grid) */
   --spacing-xs: 0.25rem;
@@ -104,6 +104,7 @@ body {
   line-height: 1.5;
   letter-spacing: -0.006em;
   font-size: 14px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ========== TYPOGRAPHY ========== */
@@ -332,7 +333,7 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+  box-shadow: 0 0 0 3px rgba(255,255,255, 0.1);
   background: var(--bg-primary);
 }
 
@@ -348,7 +349,7 @@ select:focus {
 }
 
 .badge-primary {
-  background: rgba(255, 107, 53, 0.1);
+  background: rgba(255,255,255, 0.1);
   color: var(--primary);
 }
 
@@ -368,7 +369,7 @@ select:focus {
 }
 
 .badge-info {
-  background: rgba(255, 98, 0, 0.1);
+  background: rgba(255,255,255, 0.1);
   color: var(--info);
 }
 

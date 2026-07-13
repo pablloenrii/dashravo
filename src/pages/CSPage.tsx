@@ -78,7 +78,7 @@ export function CSPage() {
       <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'start', justifyContent: 'space-between' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#F5F5F7', margin: 0 }}>
+            <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: 0 }}>
               Atendimento ao Cliente
             </h1>
             <Badge variant="info">SUPORTE</Badge>
@@ -100,7 +100,7 @@ export function CSPage() {
 
       {/* Gráficos */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-        <div style={{ background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
+        <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 8px 0' }}>Atendimentos Diários</h3>
           {dadosAtendimentos.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -120,7 +120,7 @@ export function CSPage() {
           )}
         </div>
 
-        <div style={{ background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
+        <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 8px 0' }}>Satisfação</h3>
           {dadosSatisfacao.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -207,7 +207,7 @@ export function CSPage() {
           striped={true}
         />
         ) : (
-          <div style={{ background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '32px', textAlign: 'center', color: '#6B7280', fontSize: '13px' }}>
+          <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '32px', textAlign: 'center', color: '#6B7280', fontSize: '13px' }}>
             Nenhum ticket disponível
           </div>
         )}

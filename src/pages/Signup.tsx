@@ -44,7 +44,7 @@ export default function SignupPage() {
   };
   const inputStyle = (name: string): React.CSSProperties => ({
     width: '100%', padding: '12px 14px', fontSize: '14px', color: '#F5F5F7',
-    background: '#0B0B0D',
+    background: '#0A0A0A',
     border: `1px solid ${focus === name ? '#FF6200' : 'rgba(255,255,255,0.08)'}`,
     borderRadius: '10px', outline: 'none', boxSizing: 'border-box',
     transition: 'border-color .15s ease',
@@ -53,11 +53,11 @@ export default function SignupPage() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(1200px 600px at 50% -10%, rgba(255,98,0,0.10), transparent), #09090B',
+      background: 'radial-gradient(1200px 600px at 50% -10%, rgba(255,98,0,0.10), transparent), #0A0A0A',
       padding: '24px',
     }}>
       <div style={{
-        width: '100%', maxWidth: '400px', background: '#0F1117',
+        width: '100%', maxWidth: '400px', background: '#121212',
         border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px',
         padding: '40px 32px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
       }}>

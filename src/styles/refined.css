@@ -5,9 +5,9 @@
 
 :root {
   /* Color Palette */
-  --bg-primary: #09090B;
-  --bg-secondary: #0F172A;
-  --bg-tertiary: #1E293B;
+  --bg-primary: #0A0A0A;
+  --bg-secondary: #0D0D0D;
+  --bg-tertiary: #1A1A1A;
   --bg-glass: rgba(15, 23, 42, 0.5);
 
   --text-primary: #E2E8F0;

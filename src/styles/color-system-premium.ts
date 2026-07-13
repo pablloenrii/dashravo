@@ -6,8 +6,8 @@
 export const colorSystemPremium = {
   // Neutrals - Sophisticated grayscale
   neutral: {
-    bg: '#06070D',           // Background - softer black
-    surface: '#0B0E19',      // Card surface - elegant
+    bg: '#0A0A0A',           // Background - softer black
+    surface: '#0D0D0D',      // Card surface - elegant
     surfaceHover: '#11152B', // Hover state - subtle lift
     border: 'rgba(255,255,255,0.04)', // Ultra-fine borders
     borderHover: 'rgba(255,255,255,0.08)',
@@ -39,7 +39,7 @@ export const colorSystemPremium = {
   // Data Colors - Premium palette (non-vibrant)
   data: {
     orange: '#EA6A1B',       // Revenue - primary orange
-    cyan: '#06B6D4',         // Customers - refined cyan
+    cyan: '#FF6200',         // Customers - refined cyan
     purple: '#A78BFA',       // Conversion - softer purple
     green: '#10B981',        // Success - calm green
     blue: '#FF6200',         // Pipeline - professional blue

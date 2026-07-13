@@ -5,8 +5,8 @@
 
 :root {
   /* Neutrals - Premium Grayscale */
-  --bg-primary: #06070D;           /* Softer black */
-  --bg-secondary: #0B0E19;         /* Elegant surface */
+  --bg-primary: #0A0A0A;           /* Softer black */
+  --bg-secondary: #0D0D0D;         /* Elegant surface */
   --bg-tertiary: #11152B;          /* Hover state */
   --bg-hover: #15192F;             /* Lift effect */
 
@@ -36,7 +36,7 @@
 
   /* Data Colors */
   --data-orange: #EA6A1B;
-  --data-cyan: #06B6D4;
+  --data-cyan: #FF6200;
   --data-purple: #A78BFA;
   --data-green: #10B981;
   --data-blue: #FF6200;

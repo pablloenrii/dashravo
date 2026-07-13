@@ -58,7 +58,7 @@ export function Dropdown({ trigger, items, align = 'left' }: DropdownProps) {
             [align]: 0,
             marginTop: '8px',
             minWidth: '200px',
-            background: '#0B0E19',
+            background: '#0D0D0D',
             border: '0.5px solid rgba(255,255,255,0.04)',
             borderRadius: '8px',
             boxShadow: '0 10px 15px rgba(0, 0, 0, 0.5)',

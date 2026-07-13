@@ -10,9 +10,9 @@ export const colorSystem = {
   warning: '#F59E0B',      // Amber (for attention)
 
   // Backgrounds
-  background: '#0F172A',   // Dark Navy
-  backgroundSecondary: '#1E293B',  // Slate Dark
-  backgroundTertiary: '#0A0E1A',   // Almost Black
+  background: '#0D0D0D',   // Dark Navy
+  backgroundSecondary: '#1A1A1A',  // Slate Dark
+  backgroundTertiary: '#121212',   // Almost Black
 
   // Text
   text: '#F5F5F7',         // Off White
@@ -20,7 +20,7 @@ export const colorSystem = {
   textTertiary: '#6B7280', // Light Gray
 
   // Borders
-  border: '#1E293B',       // Slate
+  border: '#1A1A1A',       // Slate
   borderLight: 'rgba(255,255,255,0.1)',
 
   // Legacy nested objects (keeping for backward compatibility but using primary colors)

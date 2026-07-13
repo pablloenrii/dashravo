@@ -5,10 +5,10 @@
 
 :root {
   /* Dark Mode (Default) */
-  --bg-primary: #09090B;
-  --bg-secondary: #0F172A;
-  --bg-tertiary: #111827;
-  --bg-hover: #1F2937;
+  --bg-primary: #0A0A0A;
+  --bg-secondary: #0D0D0D;
+  --bg-tertiary: #1A1A1A;
+  --bg-hover: #1A1A1A;
 
   --text-primary: #ECEDEF;
   --text-secondary: #9096A1;
@@ -75,7 +75,7 @@ html[data-theme="light"] {
   --bg-tertiary: #F3F4F6;
   --bg-hover: #E5E7EB;
 
-  --text-primary: #111827;
+  --text-primary: #1A1A1A;
   --text-secondary: #6B7280;
   --text-tertiary: #9CA3AF;
   --text-disabled: #D1D5DB;

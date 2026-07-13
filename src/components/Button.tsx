@@ -17,7 +17,7 @@ export const variantStyles: Record<ButtonVariant, string> = {
     color: white;
     border: 1px solid rgba(255, 98, 0, 0.5);
     &:hover {
-      background: linear-gradient(135deg, #E55A2B 0%, #1E3A8A 100%);
+      background: linear-gradient(135deg, #E55A2B 0%, #1A1A1A 100%);
       box-shadow: 0 4px 12px rgba(255, 98, 0, 0.3);
     }
   `,
@@ -121,7 +121,7 @@ export function Button({
         if (!disabled && !loading) {
           if (variant === 'primary') {
             e.currentTarget.style.background =
-              'linear-gradient(135deg, #E55A2B 0%, #1E3A8A 100%)';
+              'linear-gradient(135deg, #E55A2B 0%, #1A1A1A 100%)';
             e.currentTarget.style.boxShadow =
               '0 4px 12px rgba(255, 98, 0, 0.3)';
           } else if (variant === 'secondary') {

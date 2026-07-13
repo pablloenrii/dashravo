@@ -104,7 +104,7 @@ export function Table<T extends { id?: string | number }>({
           borderRadius: '8px',
           border: '0.5px solid rgba(255,255,255,0.04)',
           overflow: 'hidden',
-          background: '#0B0E19',
+          background: '#0D0D0D',
         }}
       >
         <table

@@ -8,7 +8,7 @@ export function Card({ className = '', children, ...props }: CardProps) {
   return (
     <div
       className={`
-        bg-[#111827]
+        bg-[#1A1A1A]
         border border-[rgba(255,255,255,0.06)]
         rounded-lg
         shadow-sm

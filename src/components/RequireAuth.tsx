@@ -35,7 +35,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#05070D', color: '#9CA3AF', fontSize: '14px'
+        background: '#0A0A0A', color: '#9CA3AF', fontSize: '14px'
       }}>
         Verificando sessão…
       </div>

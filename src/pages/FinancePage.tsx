@@ -26,7 +26,7 @@ export default function FinancePage() {
     <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#F5F5F7', margin: '0 0 8px 0' }}>Financeiro</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Financeiro</h1>
         <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>Controle de receitas, despesas e fluxo de caixa</p>
       </div>
 
@@ -37,14 +37,14 @@ export default function FinancePage() {
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '32px' }}>
-        <KPICard title="Receita (6m)" value={finance.loading ? '…' : fmtK(totalRevenue)} unit="" color="#FF6200" icon={<DollarSign size={20} />} />
-        <KPICard title="Lucro (6m)" value={finance.loading ? '…' : fmtK(profit)} unit="" color="#10B981" icon={<TrendingUp size={20} />} />
-        <KPICard title="Margem" value={finance.loading ? '…' : margin} unit="%" color="#FF6200" icon={<Percent size={20} />} />
-        <KPICard title="Caixa (4 sem)" value={cashFlow.loading ? '…' : fmtK(cash)} unit="" color="#10B981" icon={<Wallet size={20} />} />
+        <KPICard title="Receita (6m)" value={finance.loading ? '…' : fmtK(totalRevenue)} unit="" color="#22C55E" icon={<DollarSign size={20} />} />
+        <KPICard title="Lucro (6m)" value={finance.loading ? '…' : fmtK(profit)} unit="" color="#22C55E" icon={<TrendingUp size={20} />} />
+        <KPICard title="Margem" value={finance.loading ? '…' : margin} unit="%" color="#F2F2F3" icon={<Percent size={20} />} />
+        <KPICard title="Caixa (4 sem)" value={cashFlow.loading ? '…' : fmtK(cash)} unit="" color="#22C55E" icon={<Wallet size={20} />} />
       </div>
 
       {/* Gráfico principal — Receita vs Despesa */}
-      <div style={{ background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+      <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
         <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 12px 0' }}>Receita vs Despesa</h3>
         {finance.loading ? (
           <QueryLoading />
@@ -55,8 +55,8 @@ export default function FinancePage() {
               <XAxis dataKey="mes" stroke="#86868B" style={{ fontSize: '11px' }} />
               <YAxis stroke="#86868B" style={{ fontSize: '11px' }} tickFormatter={fmtK} />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <Area type="monotone" dataKey="receita" stroke="#10B981" fill="rgba(16, 185, 129, 0.25)" name="Receita" />
-              <Area type="monotone" dataKey="despesa" stroke="#F59E0B" fill="rgba(245, 158, 11, 0.25)" name="Despesa" />
+              <Area type="monotone" dataKey="receita" stroke="#22C55E" fill="rgba(34,197,94,0.12)" strokeWidth={2} name="Receita" />
+              <Area type="monotone" dataKey="despesa" stroke="#EF4444" fill="rgba(239,68,68,0.10)" strokeWidth={2} name="Despesa" />
             </AreaChart>
           </ResponsiveContainer>
         )}
@@ -64,7 +64,7 @@ export default function FinancePage() {
 
       {/* Gráficos secundários */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px' }}>
+        <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 12px 0' }}>Fluxo de Caixa Semanal</h3>
           {cashFlow.loading ? (
             <QueryLoading />
@@ -75,14 +75,14 @@ export default function FinancePage() {
                 <XAxis dataKey="semana" stroke="#86868B" style={{ fontSize: '11px' }} />
                 <YAxis stroke="#86868B" style={{ fontSize: '11px' }} tickFormatter={fmtK} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Bar dataKey="entradas" fill="#10B981" radius={[4, 4, 0, 0]} name="Entradas" />
-                <Bar dataKey="saidas" fill="#F59E0B" radius={[4, 4, 0, 0]} name="Saídas" />
+                <Bar dataKey="entradas" fill="#22C55E" radius={[3, 3, 0, 0]} name="Entradas" barSize={16} />
+                <Bar dataKey="saidas" fill="#EF4444" radius={[3, 3, 0, 0]} name="Saídas" barSize={16} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
 
-        <div style={{ background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px' }}>
+        <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px' }}>
           <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 12px 0' }}>Despesas por Categoria</h3>
           {expenses.loading ? (
             <QueryLoading />
@@ -106,17 +106,14 @@ export default function FinancePage() {
 
 function KPICard({ title, value, unit, color, icon }: { title: string; value: string; unit: string; color: string; icon: React.ReactNode }) {
   return (
-    <div style={{
-      background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderLeft: `3px solid ${color}`,
-      borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color }}>
-        {icon}
-        <span style={{ fontSize: '11px', fontWeight: '600', color: '#9CA3AF' }}>{title}</span>
+    <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px', padding: '16px 18px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+        <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#8A8F98' }}>{title}</span>
+        <span style={{ color: '#5B616E', display: 'flex' }}>{icon}</span>
       </div>
-      <div style={{ fontSize: '28px', fontWeight: '700', color: '#F5F5F7' }}>
-        {value}
-        {unit && <span style={{ fontSize: '14px', color: '#9CA3AF', marginLeft: '4px' }}>{unit}</span>}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+        <span style={{ fontSize: '24px', fontWeight: 650, letterSpacing: '-0.02em', color }}>{value}</span>
+        {unit && <span style={{ fontSize: '13px', color: '#8A8F98' }}>{unit}</span>}
       </div>
     </div>
   );

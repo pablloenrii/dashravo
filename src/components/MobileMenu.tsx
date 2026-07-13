@@ -49,7 +49,7 @@ export function MobileMenu({ isOpen, onClose, items, isActive }: MobileMenuProps
           top: 0,
           bottom: 0,
           width: '280px',
-          background: '#0B0E19',
+          background: '#0D0D0D',
           borderRight: '0.5px solid rgba(255,255,255,0.04)',
           zIndex: 51,
           animation: 'slideInLeft 300ms ease-out',

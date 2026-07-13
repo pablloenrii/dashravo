@@ -26,7 +26,7 @@ export default function GoalsPage() {
     <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#F5F5F7', margin: '0 0 8px 0' }}>Metas</h1>
+        <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Metas</h1>
         <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>Acompanhamento de objetivos e progresso</p>
       </div>
 
@@ -36,14 +36,14 @@ export default function GoalsPage() {
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '32px' }}>
-        <KPICard title="Progresso Médio" value={goals.loading ? '…' : avgProgress} unit="%" color="#FF6200" icon={<TrendingUp size={20} />} />
-        <KPICard title="Metas Atingidas" value={goals.loading ? '…' : completedGoals.toString()} unit={`/${list.length}`} color="#10B981" icon={<Target size={20} />} />
-        <KPICard title="Atenção" value={goals.loading ? '…' : warningGoals.toString()} unit="metas" color="#F59E0B" icon={<AlertCircle size={20} />} />
-        <KPICard title="No Prazo" value={goals.loading ? '…' : onTrackGoals.toString()} unit="metas" color="#FF6200" icon={<Zap size={20} />} />
+        <KPICard title="Progresso Médio" value={goals.loading ? '…' : avgProgress} unit="%" color="#F2F2F3" icon={<TrendingUp size={20} />} />
+        <KPICard title="Metas Atingidas" value={goals.loading ? '…' : completedGoals.toString()} unit={`/${list.length}`} color="#22C55E" icon={<Target size={20} />} />
+        <KPICard title="Atenção" value={goals.loading ? '…' : warningGoals.toString()} unit="metas" color="#EF4444" icon={<AlertCircle size={20} />} />
+        <KPICard title="No Prazo" value={goals.loading ? '…' : onTrackGoals.toString()} unit="metas" color="#22C55E" icon={<Zap size={20} />} />
       </div>
 
       {/* Gráfico de progresso semanal */}
-      <div style={{ background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+      <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
         <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 12px 0' }}>Progresso Semanal vs Meta</h3>
         {progress.loading ? (
           <QueryLoading />
@@ -55,7 +55,7 @@ export default function GoalsPage() {
               <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
               <Bar dataKey="meta" fill="rgba(255,255,255,0.1)" name="Meta" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="atingido" fill="#FF6200" name="Atingido" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="atingido" fill="#22C55E" name="Atingido" radius={[3, 3, 0, 0]} barSize={16} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -66,7 +66,7 @@ export default function GoalsPage() {
         <QueryLoading height={200} />
       ) : list.length === 0 && !goals.error ? (
         <div style={{
-          background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px',
+          background: '#121212', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px',
           padding: '32px', textAlign: 'center', fontSize: '13px', color: '#9CA3AF'
         }}>
           Nenhuma meta cadastrada.
@@ -77,7 +77,7 @@ export default function GoalsPage() {
             const onTrack = goal.status === 'no-prazo' || goal.status === 'concluido';
             return (
               <div key={goal.id} style={{
-                background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)',
+                background: '#121212', border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
@@ -117,17 +117,14 @@ export default function GoalsPage() {
 
 function KPICard({ title, value, unit, color, icon }: { title: string; value: string; unit: string; color: string; icon: React.ReactNode }) {
   return (
-    <div style={{
-      background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderLeft: `3px solid ${color}`,
-      borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color }}>
-        {icon}
-        <span style={{ fontSize: '11px', fontWeight: '600', color: '#9CA3AF' }}>{title}</span>
+    <div style={{ background: '#121212', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px', padding: '16px 18px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+        <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#8A8F98' }}>{title}</span>
+        <span style={{ color: '#5B616E', display: 'flex' }}>{icon}</span>
       </div>
-      <div style={{ fontSize: '28px', fontWeight: '700', color: '#F5F5F7' }}>
-        {value}
-        <span style={{ fontSize: '14px', color: '#9CA3AF', marginLeft: '4px' }}>{unit}</span>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+        <span style={{ fontSize: '24px', fontWeight: 650, letterSpacing: '-0.02em', color }}>{value}</span>
+        <span style={{ fontSize: '13px', color: '#8A8F98' }}>{unit}</span>
       </div>
     </div>
   );

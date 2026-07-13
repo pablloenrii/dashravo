@@ -63,11 +63,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
         items={navItems}
         isActive={isActive}
       />
-      <div style={{ display: 'flex', height: '100vh', background: '#06070D', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', height: '100vh', background: '#0A0A0A', overflow: 'hidden' }}>
         {/* Sidebar - Hidden on mobile */}
         <aside style={{
           width: sidebarOpen ? '16rem' : '5rem',
-          background: '#0B0E19',
+          background: '#0D0D0D',
           borderRight: '0.5px solid rgba(255,255,255,0.04)',
           display: isMobile ? 'none' : 'flex',
           flexDirection: 'column',
@@ -79,7 +79,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           transition: 'width 0.3s'
         }}>
           {/* Logo */}
-          <div style={{ padding: '16px 12px', borderBottom: '0.5px solid rgba(58, 130, 246, 0.15)' }}>
+          <div style={{ padding: '16px 12px', borderBottom: '0.5px solid rgba(255, 98, 0, 0.15)' }}>
             <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
               <div style={{
                 width: '34px', height: '34px', borderRadius: '9px',
@@ -154,7 +154,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         }}>
           {/* Header */}
           <header style={{
-            background: '#0B0E19',
+            background: '#0D0D0D',
             borderBottom: '0.5px solid rgba(255,255,255,0.04)',
             height: '64px',
             display: 'flex',

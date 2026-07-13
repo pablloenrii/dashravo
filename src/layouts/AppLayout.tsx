@@ -82,10 +82,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <div style={{ padding: '16px 12px', borderBottom: '0.5px solid rgba(58, 130, 246, 0.15)' }}>
             <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
               <div style={{
-                width: '44px', height: '44px', borderRadius: '10px',
+                width: '34px', height: '34px', borderRadius: '9px',
                 background: 'linear-gradient(135deg, #FF6200 0%, #CC4E00 100%)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'white', fontWeight: 'bold', fontSize: '22px',
+                color: 'white', fontWeight: 700, fontSize: '17px',
                 boxShadow: '0 4px 16px rgba(255, 98, 0, 0.25)'
               }}>R</div>
               {sidebarOpen && (

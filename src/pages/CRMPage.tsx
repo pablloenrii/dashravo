@@ -121,19 +121,19 @@ export default function CRMPage() {
   const parados = open.filter((c) => daysSince(c.updated_at) >= ROT_DAYS).length;
 
   const insights = [
-    { label: 'Pipeline aberto', value: fmtMoney(pipelineAberto), icon: <DollarSign size={18} />, color: '#FF6200' },
-    { label: 'Forecast ponderado', value: fmtMoney(forecast), icon: <Target size={18} />, color: '#FF7A33' },
-    { label: 'Win rate', value: `${winRate}%`, icon: <Trophy size={18} />, color: '#10B981' },
-    { label: 'Ticket médio', value: fmtMoney(ticketMedio), icon: <Percent size={18} />, color: '#F59E0B' },
-    { label: 'Ciclo médio', value: `${ciclo}d`, icon: <Timer size={18} />, color: '#6B7280' },
-    { label: 'Deals parados', value: String(parados), icon: <AlertTriangle size={18} />, color: parados > 0 ? '#EF4444' : '#10B981' },
+    { label: 'Pipeline aberto', value: fmtMoney(pipelineAberto), icon: <DollarSign size={15} />, color: '#626873' },
+    { label: 'Forecast ponderado', value: fmtMoney(forecast), icon: <Target size={15} />, color: '#626873' },
+    { label: 'Win rate', value: `${winRate}%`, icon: <Trophy size={15} />, color: '#22C55E' },
+    { label: 'Ticket médio', value: fmtMoney(ticketMedio), icon: <Percent size={15} />, color: '#626873' },
+    { label: 'Ciclo médio', value: `${ciclo}d`, icon: <Timer size={15} />, color: '#626873' },
+    { label: 'Deals parados', value: String(parados), icon: <AlertTriangle size={15} />, color: parados > 0 ? '#EF4444' : '#626873' },
   ];
 
   return (
     <div style={{ maxWidth: '1500px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#F5F5F7', margin: '0 0 6px 0' }}>Pipeline de Vendas</h1>
+          <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#ECEDEF', margin: '0 0 4px 0' }}>Pipeline de Vendas</h1>
           <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>Gestão de leads, fases e previsão de fechamento</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -152,11 +152,11 @@ export default function CRMPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '24px' }}>
         {insights.map((k) => (
-          <div key={k.label} style={{ background: '#0A0E1A', border: '1px solid rgba(255,255,255,0.1)', borderLeft: `3px solid ${k.color}`, borderRadius: '8px', padding: '14px' }}>
+          <div key={k.label} style={{ background: '#0E1116', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px', padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: k.color }}>
               {k.icon}<span style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF' }}>{k.label}</span>
             </div>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: '#F5F5F7' }}>{contacts.loading ? '…' : k.value}</div>
+            <div style={{ fontSize: '20px', fontWeight: 650, letterSpacing: '-0.02em', color: '#ECEDEF' }}>{contacts.loading ? '…' : k.value}</div>
           </div>
         ))}
       </div>

@@ -104,7 +104,7 @@ export default function GoalsPage() {
                   />
                 </div>
                 <div style={{ fontSize: '11px', color: '#9CA3AF' }}>
-                  {goal.percentual}% concluído
+                  {Math.min(goal.percentual, 100)}% concluído
                 </div>
               </div>
             );

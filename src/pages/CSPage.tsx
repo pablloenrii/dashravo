@@ -10,8 +10,17 @@ import { colorSystem } from '@/styles/color-system';
 import { colorSystemPremium } from '@/styles/color-system-premium';
 import { useTicketsData, useAttendanceChartData, useSatisfactionData } from '@/hooks/usePagesQueries';
 
+/** Converte "2h 15m" / "45m" / "3h" em minutos. Retorna 0 se não reconhecer o formato. */
+function parseTempoResposta(tempo?: string): number {
+  if (!tempo) return 0;
+  const h = /(\d+)\s*h/i.exec(tempo);
+  const m = /(\d+)\s*m/i.exec(tempo);
+  return (h ? Number(h[1]) : 0) * 60 + (m ? Number(m[1]) : 0);
+}
+
 export function CSPage() {
-  const [showAlert, setShowAlert] = useState(true);
+  const [showWaitAlert, setShowWaitAlert] = useState(true);
+  const [showNpsAlert, setShowNpsAlert] = useState(true);
 
   // Fetch data from Supabase
   const { data: tickets, loading: loadingTickets, error: errorTickets } = useTicketsData();
@@ -55,24 +64,32 @@ export function CSPage() {
     );
   }
 
+  const ticketsEmEspera = tickets.filter((t) => parseTempoResposta(t.tempo_resposta) > 120).length;
+  const npsAtual = dadosSatisfacao.length > 0 ? dadosSatisfacao[dadosSatisfacao.length - 1].nps : 0;
+  const npsRecorde = dadosSatisfacao.length > 0 && npsAtual >= Math.max(...dadosSatisfacao.map((d) => d.nps));
+
   return (
     <div style={{ padding: '16px', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Alerts */}
       <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {showAlert && (
+        {showWaitAlert && ticketsEmEspera > 0 && (
           <Alert
             type="warning"
             title="Atenção"
-            message="Existem 3 tickets em espera há mais de 2 horas"
-            onClose={() => setShowAlert(false)}
+            message={`Existem ${ticketsEmEspera} ticket${ticketsEmEspera > 1 ? 's' : ''} em espera há mais de 2 horas`}
+            onClose={() => setShowWaitAlert(false)}
           />
         )}
-        <Alert
-          type="success"
-          title="Atualização"
-          message="NPS Score atingiu 78 esta semana - recorde histórico!"
-          onClose={() => {}}
-        />
+        {showNpsAlert && dadosSatisfacao.length > 0 && (
+          <Alert
+            type={npsRecorde ? 'success' : 'info'}
+            title="Atualização"
+            message={npsRecorde
+              ? `NPS Score atingiu ${npsAtual} esta semana — recorde no período`
+              : `NPS Score atual: ${npsAtual} pontos`}
+            onClose={() => setShowNpsAlert(false)}
+          />
+        )}
       </div>
 
       <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'start', justifyContent: 'space-between' }}>
@@ -93,9 +110,13 @@ export function CSPage() {
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginBottom: '16px' }}>
         <KPICardMinimal title="Tickets Recebidos" value={dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0)} unit="tickets" icon={<MessageSquare />} color={colorSystem.customers.primary} />
-        <KPICardMinimal title="Taxa de Resolução" value={dadosAtendimentos.length > 0 ? ((dadosAtendimentos.reduce((sum, a) => sum + (a.resolvidos || 0), 0) / dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0)) * 100).toFixed(1) : 0} unit="%" icon={<TrendingUp />} color={colorSystem.success} />
+        <KPICardMinimal title="Taxa de Resolução" value={(() => {
+          const recebidos = dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0);
+          const resolvidos = dadosAtendimentos.reduce((sum, a) => sum + (a.resolvidos || 0), 0);
+          return recebidos > 0 ? ((resolvidos / recebidos) * 100).toFixed(1) : 0;
+        })()} unit="%" icon={<TrendingUp />} color={colorSystem.success} />
         <KPICardMinimal title="NPS Score" value={dadosSatisfacao.length > 0 ? dadosSatisfacao[dadosSatisfacao.length - 1].nps : 0} unit="pontos" icon={<BarChart3 />} color={colorSystem.conversion.primary} />
-        <KPICardMinimal title="Tempo Médio" value={tickets.length > 0 ? (tickets.length / dadosAtendimentos.length).toFixed(1) : 0} unit="horas" icon={<Clock />} color={'#8B8B8B'} />
+        <KPICardMinimal title="Tempo Médio" value={tickets.length > 0 ? (tickets.reduce((sum, t) => sum + parseTempoResposta(t.tempo_resposta), 0) / tickets.length / 60).toFixed(1) : 0} unit="horas" icon={<Clock />} color={'#8B8B8B'} />
       </div>
 
       {/* Gráficos */}
@@ -179,7 +200,7 @@ export function CSPage() {
               align: 'center',
               render: (value) => (
                 <Badge variant={
-                  value === 'alta' ? 'error' :
+                  value === 'crítica' || value === 'alta' ? 'error' :
                   value === 'média' ? 'warning' :
                   'success'
                 }>

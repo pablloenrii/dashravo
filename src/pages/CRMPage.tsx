@@ -74,6 +74,49 @@ export default function CRMPage() {
     setShowModal(true);
   };
 
+  /**
+   * Integra um deal "Ganho" ao Dashboard/Financeiro: garante um cliente (customers)
+   * e uma assinatura (subscriptions) com mrr = valor do deal, para que apareça em
+   * MRR/ARR, Clientes ativos, LTV/CAC e Forecast do Dashboard. Idempotente: se o
+   * cliente/assinatura já existirem (mesmo e-mail), apenas atualiza o valor.
+   */
+  const integrateWonDeal = async (deal: { nome: string; email: string; empresa: string; telefone?: string; valor: number }) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId || !deal.email) return;
+
+      let customerId: string | undefined;
+      const { data: existingCustomer } = await supabase
+        .from('customers').select('id').eq('user_id', userId).eq('email', deal.email).maybeSingle();
+
+      if (existingCustomer) {
+        customerId = existingCustomer.id;
+      } else {
+        const { data: createdCustomer, error: custError } = await supabase
+          .from('customers')
+          .insert([{
+            name: deal.nome, email: deal.email, phone: deal.telefone || null,
+            company: deal.empresa || null, status: 'active', user_id: userId, source: 'crm',
+          }])
+          .select('id').single();
+        if (custError) { setMutationError(`Lead salvo, mas não integrou ao Dashboard: ${custError.message}`); return; }
+        customerId = createdCustomer?.id;
+      }
+      if (!customerId) return;
+
+      const { data: existingSub } = await supabase
+        .from('subscriptions').select('id').eq('customer_id', customerId).eq('status', 'active').maybeSingle();
+
+      const { error: subError } = existingSub
+        ? await supabase.from('subscriptions').update({ mrr: deal.valor }).eq('id', existingSub.id)
+        : await supabase.from('subscriptions').insert([{ customer_id: customerId, mrr: deal.valor, status: 'active' }]);
+      if (subError) { setMutationError(`Lead salvo, mas não integrou ao Dashboard: ${subError.message}`); }
+    } catch (err) {
+      setMutationError(`Lead salvo, mas não integrou ao Dashboard: ${err instanceof Error ? err.message : 'erro desconhecido'}`);
+    }
+  };
+
   const handleSave = async () => {
     if (!formData.nome || !formData.email) { setMutationError('Nome e email são obrigatórios.'); return; }
     setSaving(true); setMutationError(null);
@@ -90,6 +133,9 @@ export default function CRMPage() {
     if (error) { setMutationError(error.message); return; }
     setShowModal(false);
     contacts.refetch();
+    if (formData.etapa === 'Ganho') {
+      await integrateWonDeal(formData);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -108,7 +154,10 @@ export default function CRMPage() {
     const nowIso = new Date().toISOString();
     setItems(items.map((c) => (c.id === id ? { ...c, etapa, updated_at: nowIso } : c)));
     const { error } = await supabase.from('contatos').update({ etapa, updated_at: nowIso }).eq('id', id);
-    if (error) { setItems(prev); setMutationError(error.message); }
+    if (error) { setItems(prev); setMutationError(error.message); return; }
+    if (etapa === 'Ganho') {
+      await integrateWonDeal(current);
+    }
   };
 
   const open = items.filter((c) => isOpen(c.etapa));

@@ -62,14 +62,14 @@ export function MobileMenu({ isOpen, onClose, items, isActive }: MobileMenuProps
         <div
           style={{
             padding: '16px',
-            borderBottom: '0.5px solid rgba(234, 106, 27, 0.15)',
+            borderBottom: '0.5px solid rgba(255,255,255,0.1)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
           }}
         >
           <div>
-            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#EA6A1B', margin: 0 }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#EDEDED', margin: 0 }}>
               RAVO
             </h2>
             <p style={{ fontSize: '11px', color: '#6B7280', margin: 0 }}>INTELLIGENCE</p>
@@ -104,9 +104,9 @@ export function MobileMenu({ isOpen, onClose, items, isActive }: MobileMenuProps
                 padding: '12px',
                 borderRadius: '8px',
                 textDecoration: 'none',
-                color: isActive(item.path) ? '#EA6A1B' : '#9CA3AF',
-                background: isActive(item.path) ? 'rgba(234, 106, 27, 0.12)' : 'rgba(255,255,255,0.02)',
-                borderLeft: isActive(item.path) ? '2.5px solid #EA6A1B' : '2.5px solid transparent',
+                color: isActive(item.path) ? '#EDEDED' : '#9CA3AF',
+                background: isActive(item.path) ? 'rgba(255,255,255, 0.12)' : 'rgba(255,255,255,0.02)',
+                borderLeft: isActive(item.path) ? '2.5px solid #EDEDED' : '2.5px solid transparent',
                 transition: 'all 300ms ease-out',
                 fontSize: '14px',
                 fontWeight: isActive(item.path) ? '600' : '500',

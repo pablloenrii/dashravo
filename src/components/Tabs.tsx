@@ -41,7 +41,7 @@ export function Tabs({ tabs, defaultTab, onChange }: TabsProps) {
               padding: '12px 16px',
               fontSize: '13px',
               fontWeight: activeTab === tab.id ? '600' : '500',
-              color: activeTab === tab.id ? '#EA6A1B' : '#9CA3AF',
+              color: activeTab === tab.id ? '#EDEDED' : '#9CA3AF',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
@@ -73,7 +73,7 @@ export function Tabs({ tabs, defaultTab, onChange }: TabsProps) {
                   left: 0,
                   right: 0,
                   height: '2px',
-                  background: 'linear-gradient(90deg, #EA6A1B 0%, #F77E2D 100%)',
+                  background: 'linear-gradient(90deg, #EDEDED 0%, #F5F5F7 100%)',
                   animation: 'slideInTab 300ms ease-out',
                 }}
               />

@@ -12,7 +12,7 @@ export function ProgressBar({
   value,
   max = 100,
   label,
-  color = '#EA6A1B',
+  color = '#EDEDED',
   animated = true,
   showValue = true,
 }: ProgressBarProps) {

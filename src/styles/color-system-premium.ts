@@ -18,13 +18,13 @@ export const colorSystemPremium = {
     },
   },
 
-  // Primary Accent - Orange refined
+  // Primary Accent - Grayscale (verde reservado para receita/sucesso)
   accent: {
-    primary: '#EA6A1B',      // Main orange - less vibrant
-    hover: '#F77E2D',        // Hover - elegant transition
-    light: '#FFA040',        // For secondaries
-    lighter: 'rgba(234, 106, 27, 0.1)', // Background tint
-    veryLight: 'rgba(234, 106, 27, 0.05)',
+    primary: '#EDEDED',
+    hover: '#F5F5F7',
+    light: '#F5F5F7',
+    lighter: 'rgba(255, 255, 255, 0.1)', // Background tint
+    veryLight: 'rgba(255, 255, 255, 0.05)',
   },
 
   // Semantic Colors - Muted but clear
@@ -38,7 +38,7 @@ export const colorSystemPremium = {
 
   // Data Colors - Premium palette (non-vibrant)
   data: {
-    orange: '#EA6A1B',       // Revenue - primary orange
+    orange: '#EDEDED',       // Revenue - grayscale (verde é usado à parte p/ receita positiva)
     cyan: '#EDEDED',         // Customers - refined cyan
     purple: '#A78BFA',       // Conversion - softer purple
     green: '#10B981',        // Success - calm green
@@ -50,7 +50,7 @@ export const colorSystemPremium = {
 
   // Gradients for premium feel
   gradients: {
-    cardHover: 'linear-gradient(135deg, rgba(234, 106, 27, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
+    cardHover: 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(16, 185, 129, 0.05) 100%)',
     glassLight: 'rgba(255, 255, 255, 0.03)',
     glassDark: 'rgba(0, 0, 0, 0.2)',
   },

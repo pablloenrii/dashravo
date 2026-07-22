@@ -100,8 +100,8 @@ export function Dropdown({ trigger, items, align = 'left' }: DropdownProps) {
                   }}
                   onMouseEnter={(e) => {
                     if (!item.disabled) {
-                      e.currentTarget.style.background = 'rgba(234, 106, 27, 0.1)';
-                      e.currentTarget.style.color = '#EA6A1B';
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                      e.currentTarget.style.color = '#EDEDED';
                     }
                   }}
                   onMouseLeave={(e) => {

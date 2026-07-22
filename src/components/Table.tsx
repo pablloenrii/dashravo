@@ -133,8 +133,8 @@ export function Table<T extends { id?: string | number }>({
                   <button
                     onClick={handleSelectAll}
                     style={{
-                      background: selectedRows.size > 0 ? '#EA6A1B' : 'transparent',
-                      border: `1px solid ${selectedRows.size > 0 ? '#EA6A1B' : 'rgba(255,255,255,0.2)'}`,
+                      background: selectedRows.size > 0 ? '#EDEDED' : 'transparent',
+                      border: `1px solid ${selectedRows.size > 0 ? '#EDEDED' : 'rgba(255,255,255,0.2)'}`,
                       borderRadius: '4px',
                       width: '18px',
                       height: '18px',
@@ -220,7 +220,7 @@ export function Table<T extends { id?: string | number }>({
                   style={{
                     borderBottom: '0.5px solid rgba(255,255,255,0.03)',
                     background: isSelected
-                      ? 'rgba(234, 106, 27, 0.08)'
+                      ? 'rgba(255,255,255,0.08)'
                       : striped && idx % 2 === 0
                         ? 'rgba(255,255,255,0.01)'
                         : 'transparent',
@@ -229,12 +229,12 @@ export function Table<T extends { id?: string | number }>({
                   }}
                   onMouseEnter={(e) => {
                     if (hoverable) {
-                      (e.currentTarget as HTMLElement).style.background = 'rgba(234, 106, 27, 0.05)';
+                      (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLElement).style.background = isSelected
-                      ? 'rgba(234, 106, 27, 0.08)'
+                      ? 'rgba(255,255,255,0.08)'
                       : striped && idx % 2 === 0
                         ? 'rgba(255,255,255,0.01)'
                         : 'transparent';
@@ -248,8 +248,8 @@ export function Table<T extends { id?: string | number }>({
                           handleSelectRow(actualIndex);
                         }}
                         style={{
-                          background: isSelected ? '#EA6A1B' : 'transparent',
-                          border: `1px solid ${isSelected ? '#EA6A1B' : 'rgba(255,255,255,0.2)'}`,
+                          background: isSelected ? '#EDEDED' : 'transparent',
+                          border: `1px solid ${isSelected ? '#EDEDED' : 'rgba(255,255,255,0.2)'}`,
                           borderRadius: '4px',
                           width: '18px',
                           height: '18px',
@@ -332,12 +332,12 @@ export function Table<T extends { id?: string | number }>({
                     height: '32px',
                     borderRadius: '4px',
                     border: currentPage === i
-                      ? '0.5px solid #EA6A1B'
+                      ? '0.5px solid #EDEDED'
                       : '0.5px solid rgba(255,255,255,0.1)',
                     background: currentPage === i
-                      ? 'rgba(234, 106, 27, 0.15)'
+                      ? 'rgba(255,255,255, 0.15)'
                       : 'rgba(255,255,255,0.02)',
-                    color: currentPage === i ? '#EA6A1B' : '#9CA3AF',
+                    color: currentPage === i ? '#EDEDED' : '#9CA3AF',
                     cursor: 'pointer',
                     fontWeight: currentPage === i ? '600' : '400',
                     transition: 'all 200ms ease-out',

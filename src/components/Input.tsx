@@ -52,8 +52,8 @@ export function Input({
             ...props.style,
           }}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = 'rgba(234, 106, 27, 0.5)';
-            e.currentTarget.style.background = 'rgba(234, 106, 27, 0.05)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
           }}
           onBlur={(e) => {
             e.currentTarget.style.borderColor = error

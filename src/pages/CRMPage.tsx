@@ -75,17 +75,21 @@ export default function CRMPage() {
   };
 
   /**
-   * Integra um deal "Ganho" ao Dashboard/Financeiro: garante um cliente (customers)
-   * e uma assinatura (subscriptions) com mrr = valor do deal, para que apareça em
-   * MRR/ARR, Clientes ativos, LTV/CAC e Forecast do Dashboard. Idempotente: se o
-   * cliente/assinatura já existirem (mesmo e-mail), apenas atualiza o valor.
+   * Integra um deal "Ganho" ao resto do sistema:
+   * 1) customers + subscriptions (mrr = valor do deal) → alimenta MRR/ARR,
+   *    Clientes ativos e LTV/CAC no Dashboard. Idempotente por e-mail.
+   * 2) receitas do mês corrente → alimenta o Financeiro e o gráfico de receita
+   *    do Dashboard. Usa `contatos.receita_integrada` para lançar só a diferença
+   *    (delta) caso o valor do deal seja editado depois de já ganho, evitando
+   *    somar o mesmo dinheiro duas vezes.
    */
-  const integrateWonDeal = async (deal: { nome: string; email: string; empresa: string; telefone?: string; valor: number }) => {
+  const integrateWonDeal = async (deal: { id: string; nome: string; email: string; empresa: string; telefone?: string; valor: number }) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData?.user?.id;
       if (!userId || !deal.email) return;
 
+      // --- 1) customers + subscriptions (Dashboard) ---
       let customerId: string | undefined;
       const { data: existingCustomer } = await supabase
         .from('customers').select('id').eq('user_id', userId).eq('email', deal.email).maybeSingle();
@@ -103,15 +107,40 @@ export default function CRMPage() {
         if (custError) { setMutationError(`Lead salvo, mas não integrou ao Dashboard: ${custError.message}`); return; }
         customerId = createdCustomer?.id;
       }
-      if (!customerId) return;
+      if (customerId) {
+        const { data: existingSub } = await supabase
+          .from('subscriptions').select('id').eq('customer_id', customerId).eq('status', 'active').maybeSingle();
 
-      const { data: existingSub } = await supabase
-        .from('subscriptions').select('id').eq('customer_id', customerId).eq('status', 'active').maybeSingle();
+        const { error: subError } = existingSub
+          ? await supabase.from('subscriptions').update({ mrr: deal.valor }).eq('id', existingSub.id)
+          : await supabase.from('subscriptions').insert([{ customer_id: customerId, mrr: deal.valor, status: 'active' }]);
+        if (subError) setMutationError(`Lead salvo, mas não integrou ao Dashboard: ${subError.message}`);
+      }
 
-      const { error: subError } = existingSub
-        ? await supabase.from('subscriptions').update({ mrr: deal.valor }).eq('id', existingSub.id)
-        : await supabase.from('subscriptions').insert([{ customer_id: customerId, mrr: deal.valor, status: 'active' }]);
-      if (subError) { setMutationError(`Lead salvo, mas não integrou ao Dashboard: ${subError.message}`); }
+      // --- 2) receitas (Financeiro + gráfico de receita do Dashboard) ---
+      const { data: contatoRow } = await supabase
+        .from('contatos').select('receita_integrada').eq('id', deal.id).maybeSingle();
+      const jaIntegrado = Number(contatoRow?.receita_integrada ?? 0);
+      const delta = deal.valor - jaIntegrado;
+      if (delta !== 0) {
+        const now = new Date();
+        const mesISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        const { data: existingReceita } = await supabase
+          .from('receitas').select('id, receita, despesa').eq('user_id', userId).eq('mes', mesISO).maybeSingle();
+
+        const { error: receitaError } = existingReceita
+          ? await supabase.from('receitas').update({
+              receita: Number(existingReceita.receita) + delta,
+              lucro: Number(existingReceita.receita) + delta - Number(existingReceita.despesa),
+            }).eq('id', existingReceita.id)
+          : await supabase.from('receitas').insert([{ user_id: userId, mes: mesISO, receita: delta, despesa: 0, lucro: delta }]);
+
+        if (receitaError) {
+          setMutationError(`Lead salvo, mas não integrou ao Financeiro: ${receitaError.message}`);
+        } else {
+          await supabase.from('contatos').update({ receita_integrada: deal.valor }).eq('id', deal.id);
+        }
+      }
     } catch (err) {
       setMutationError(`Lead salvo, mas não integrou ao Dashboard: ${err instanceof Error ? err.message : 'erro desconhecido'}`);
     }
@@ -126,15 +155,15 @@ export default function CRMPage() {
       origem: formData.origem || null, data_prevista: formData.dataPrevista || null, motivo: formData.motivo || null,
       updated_at: new Date().toISOString(),
     };
-    const { error } = editingId
-      ? await supabase.from('contatos').update(payload).eq('id', editingId)
-      : await supabase.from('contatos').insert([payload]);
+    const { data: saved, error } = editingId
+      ? await supabase.from('contatos').update(payload).eq('id', editingId).select('id').single()
+      : await supabase.from('contatos').insert([payload]).select('id').single();
     setSaving(false);
     if (error) { setMutationError(error.message); return; }
     setShowModal(false);
     contacts.refetch();
-    if (formData.etapa === 'Ganho') {
-      await integrateWonDeal(formData);
+    if (formData.etapa === 'Ganho' && saved?.id) {
+      await integrateWonDeal({ id: saved.id, ...formData });
     }
   };
 

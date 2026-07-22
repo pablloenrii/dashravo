@@ -1,12 +1,14 @@
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bell, MessageSquare, LogOut, Menu } from 'lucide-react';
+import { Bell, LogOut, Menu } from 'lucide-react';
 import { sb as supabase } from '@/services/supabase';
 import { CommandPalette } from '@/components/CommandPalette';
 import { SearchBar } from '@/components/SearchBar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { MobileMenu } from '@/components/MobileMenu';
+import { NotificationsPanel } from '@/components/NotificationsPanel';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface NavItem {
   path: string;
@@ -26,7 +28,21 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const { items: notifications, loading: notifLoading } = useNotifications();
+
+  // Fecha o painel de notificações ao clicar fora dele
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifOpen && notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [notifOpen]);
 
   // Handle window resize
   useEffect(() => {
@@ -189,12 +205,26 @@ export function AppLayout({ children }: { children: ReactNode }) {
             {!isMobile && <Breadcrumb items={[{ label: 'Dashboard' }]} />}
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
               <SearchBar onSearchClick={() => setCommandOpen(true)} />
-              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(255,255,255, 0.08)', border: '0.5px solid rgba(255,255,255, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#EDEDED'; e.currentTarget.style.background = 'rgba(255,255,255, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(255,255,255, 0.08)'; }}>
-                <Bell className="w-5 h-5" strokeWidth={1.5} />
-              </button>
-              <button style={{ padding: '8px 12px', color: '#9CA3AF', background: 'rgba(255,255,255, 0.08)', border: '0.5px solid rgba(255,255,255, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#EDEDED'; e.currentTarget.style.background = 'rgba(255,255,255, 0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(255,255,255, 0.08)'; }}>
-                <MessageSquare className="w-5 h-5" strokeWidth={1.5} />
-              </button>
+              <div ref={notifRef} style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setNotifOpen((v) => !v)}
+                  aria-label="Notificações"
+                  style={{ position: 'relative', padding: '8px 12px', color: '#9CA3AF', background: 'rgba(255,255,255, 0.08)', border: '0.5px solid rgba(255,255,255, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#EDEDED'; e.currentTarget.style.background = 'rgba(255,255,255, 0.15)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(255,255,255, 0.08)'; }}
+                >
+                  <Bell className="w-5 h-5" strokeWidth={1.5} />
+                  {notifications.length > 0 && (
+                    <span style={{
+                      position: 'absolute', top: '4px', right: '4px', width: '7px', height: '7px',
+                      borderRadius: '50%', background: '#EF4444', border: '1.5px solid #0D0D0D',
+                    }} />
+                  )}
+                </button>
+                {notifOpen && (
+                  <NotificationsPanel items={notifications} loading={notifLoading} onClose={() => setNotifOpen(false)} />
+                )}
+              </div>
               <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.04)' }}></div>
               <ThemeToggle />
               <button

@@ -244,6 +244,7 @@ export interface TicketData {
   prioridade: string;
   status: string;
   tempo_resposta?: string;
+  contato_id?: string;
 }
 
 export interface AttendanceChartData {
@@ -275,6 +276,7 @@ export function useTicketsData(): QueryResult<TicketData[]> {
         prioridade: String(r.prioridade ?? ''),
         status: String(r.status ?? ''),
         tempo_resposta: r.tempo_resposta ? String(r.tempo_resposta) : undefined,
+        contato_id: r.contato_id ? String(r.contato_id) : undefined,
       })),
     empty: [],
     mockKey: 'MOCK_TICKETS',

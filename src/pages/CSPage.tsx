@@ -1,14 +1,21 @@
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { MessageSquare, BarChart3, TrendingUp, Clock } from 'lucide-react';
+import { MessageSquare, BarChart3, TrendingUp, Clock, Plus, CheckCircle2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { KPICardMinimal } from '@/components/KPICardMinimal';
 import { Badge } from '@/components/Badge';
 import { Alert } from '@/components/Alert';
 import { Table } from '@/components/Table';
 import { ChartTooltip } from '@/components/ChartTooltip';
+import { Button } from '@/components/Button';
+import { Modal } from '@/components/Modal';
+import { QueryError, QueryLoading } from '@/components/QueryState';
 import { colorSystem } from '@/styles/color-system';
 import { colorSystemPremium } from '@/styles/color-system-premium';
-import { useTicketsData, useAttendanceChartData, useSatisfactionData } from '@/hooks/usePagesQueries';
+import { sb as supabase } from '@/services/supabase';
+import { useTicketsData, useAttendanceChartData, useSatisfactionData, useContactsData } from '@/hooks/usePagesQueries';
+
+const PRIORIDADES = ['baixa', 'média', 'alta', 'crítica'];
+const genTicketId = () => `TK-${Date.now().toString(36).toUpperCase().slice(-6)}`;
 
 /** Converte "2h 15m" / "45m" / "3h" em minutos. Retorna 0 se não reconhecer o formato. */
 function parseTempoResposta(tempo?: string): number {
@@ -18,30 +25,67 @@ function parseTempoResposta(tempo?: string): number {
   return (h ? Number(h[1]) : 0) * 60 + (m ? Number(m[1]) : 0);
 }
 
+interface TicketForm {
+  contatoId: string;
+  assunto: string;
+  prioridade: string;
+}
+const EMPTY_TICKET_FORM: TicketForm = { contatoId: '', assunto: '', prioridade: 'média' };
+
 export function CSPage() {
   const [showWaitAlert, setShowWaitAlert] = useState(true);
   const [showNpsAlert, setShowNpsAlert] = useState(true);
 
   // Fetch data from Supabase
-  const { data: tickets, loading: loadingTickets, error: errorTickets } = useTicketsData();
+  const { data: tickets, loading: loadingTickets, error: errorTickets, refetch: refetchTickets } = useTicketsData();
   const { data: dadosAtendimentos, loading: loadingAttendance, error: errorAttendance } = useAttendanceChartData();
   const { data: dadosSatisfacao, loading: loadingSatisfaction, error: errorSatisfaction } = useSatisfactionData();
+  const { data: contatos } = useContactsData();
+
+  const [showTicketModal, setShowTicketModal] = useState(false);
+  const [ticketForm, setTicketForm] = useState<TicketForm>(EMPTY_TICKET_FORM);
+  const [savingTicket, setSavingTicket] = useState(false);
+  const [ticketError, setTicketError] = useState<string | null>(null);
+
+  const handleSaveTicket = async () => {
+    const contato = contatos.find((c) => c.id === ticketForm.contatoId);
+    if (!contato || !ticketForm.assunto) { setTicketError('Selecione um cliente e informe o assunto.'); return; }
+    setSavingTicket(true); setTicketError(null);
+    const { error } = await supabase.from('tickets').insert([{
+      ticketid: genTicketId(),
+      contato_id: contato.id,
+      cliente: contato.nome,
+      assunto: ticketForm.assunto,
+      prioridade: ticketForm.prioridade,
+      status: 'aberto',
+    }]);
+    setSavingTicket(false);
+    if (error) { setTicketError(error.message); return; }
+    setShowTicketModal(false);
+    setTicketForm(EMPTY_TICKET_FORM);
+    refetchTickets();
+  };
+
+  const handleResolveTicket = async (id: string) => {
+    setTicketError(null);
+    const { error } = await supabase.from('tickets').update({ status: 'resolvido', resolved_at: new Date().toISOString() }).eq('id', id);
+    if (error) { setTicketError(error.message); return; }
+    refetchTickets();
+  };
+
+  const handleDeleteTicket = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja deletar este ticket?')) return;
+    setTicketError(null);
+    const { error } = await supabase.from('tickets').delete().eq('id', id);
+    if (error) { setTicketError(error.message); return; }
+    refetchTickets();
+  };
 
   // Show error state
   if (errorTickets || errorAttendance || errorSatisfaction) {
     return (
       <div style={{ padding: '16px', maxWidth: '1400px', margin: '0 auto' }}>
-        <div style={{
-          color: '#FF6B6B',
-          fontSize: '14px',
-          background: 'rgba(255, 107, 107, 0.1)',
-          padding: '16px',
-          borderRadius: '8px',
-          border: '1px solid rgba(255, 107, 107, 0.2)',
-          marginBottom: '16px'
-        }}>
-          Erro ao carregar dados de atendimento: {errorTickets || errorAttendance || errorSatisfaction}
-        </div>
+        <QueryError message={errorTickets || errorAttendance || errorSatisfaction || ''} onRetry={refetchTickets} />
       </div>
     );
   }
@@ -49,17 +93,8 @@ export function CSPage() {
   // Show loading state
   if (loadingTickets || loadingAttendance || loadingSatisfaction) {
     return (
-      <div style={{
-        padding: '16px',
-        textAlign: 'center',
-        minHeight: '400px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ color: '#A1A1A6', fontSize: '14px' }}>
-          ⏳ Carregando dados de atendimento...
-        </div>
+      <div style={{ padding: '16px', maxWidth: '1400px', margin: '0 auto' }}>
+        <QueryLoading height={400} />
       </div>
     );
   }
@@ -104,8 +139,15 @@ export function CSPage() {
             Gestão de tickets, satisfação e relacionamento
           </p>
         </div>
-        <div style={{ fontSize: '32px', opacity: 0.1 }}>💬</div>
+        <Button
+          onClick={() => { setTicketForm(EMPTY_TICKET_FORM); setTicketError(null); setShowTicketModal(true); }}
+          style={{ display: 'flex', gap: '8px', alignItems: 'center' }}
+        >
+          <Plus size={16} /> Novo Ticket
+        </Button>
       </div>
+
+      {ticketError && !showTicketModal && <div style={{ marginBottom: '16px' }}><QueryError message={ticketError} /></div>}
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginBottom: '16px' }}>
@@ -219,6 +261,31 @@ export function CSPage() {
                 </span>
               ),
             },
+            {
+              key: 'status',
+              label: 'Ações',
+              align: 'center',
+              render: (_value, row) => (
+                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => handleResolveTicket(String(row.id))}
+                    aria-label="Marcar como resolvido"
+                    title="Marcar como resolvido"
+                    style={{ background: 'transparent', border: 'none', color: '#3FB950', cursor: 'pointer', padding: '2px', display: 'flex' }}
+                  >
+                    <CheckCircle2 size={15} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTicket(String(row.id))}
+                    aria-label="Deletar ticket"
+                    title="Deletar ticket"
+                    style={{ background: 'transparent', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '2px', display: 'flex' }}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ),
+            },
           ]}
           data={tickets}
           selectable={true}
@@ -233,6 +300,52 @@ export function CSPage() {
           </div>
         )}
       </div>
+
+      <Modal isOpen={showTicketModal} onClose={() => setShowTicketModal(false)} title="Novo Ticket" size="sm">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {ticketError && <QueryError message={ticketError} />}
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#9CA3AF', marginBottom: '6px' }}>Cliente *</label>
+            {contatos.length === 0 ? (
+              <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>
+                Nenhum lead cadastrado ainda — cadastre um no CRM primeiro para poder abrir um ticket para ele.
+              </p>
+            ) : (
+              <select
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F5F7', fontSize: '13px' }}
+                value={ticketForm.contatoId}
+                onChange={(e) => setTicketForm({ ...ticketForm, contatoId: e.target.value })}
+              >
+                <option value="">Selecione um cliente</option>
+                {contatos.map((c) => <option key={c.id} value={c.id}>{c.nome}{c.empresa ? ` — ${c.empresa}` : ''}</option>)}
+              </select>
+            )}
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#9CA3AF', marginBottom: '6px' }}>Assunto *</label>
+            <input
+              placeholder="Ex: Erro na integração"
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#EDEDED', fontSize: '13px' }}
+              value={ticketForm.assunto}
+              onChange={(e) => setTicketForm({ ...ticketForm, assunto: e.target.value })}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#9CA3AF', marginBottom: '6px' }}>Prioridade</label>
+            <select
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F5F7', fontSize: '13px' }}
+              value={ticketForm.prioridade}
+              onChange={(e) => setTicketForm({ ...ticketForm, prioridade: e.target.value })}
+            >
+              {PRIORIDADES.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <Button variant="ghost" onClick={() => setShowTicketModal(false)}>Cancelar</Button>
+            <Button onClick={handleSaveTicket} disabled={savingTicket || contatos.length === 0}>{savingTicket ? 'Salvando…' : 'Salvar'}</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -5,6 +5,7 @@
 
 import React, { ReactNode } from 'react';
 import { toastError } from '@/utils/toast';
+import { ErrorBoundaryVisual } from '@/components/ErrorBoundaryVisual';
 
 interface Props {
   children: ReactNode;
@@ -68,32 +69,20 @@ export class ErrorBoundary extends React.Component<Props, State> {
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               minHeight: '400px',
               padding: '2rem',
-              textAlign: 'center',
             }}
           >
-            <h2>❌ Algo deu errado</h2>
-            <p style={{ color: '#666', margin: '1rem 0' }}>
-              {this.state.error?.message}
-            </p>
-            <button
-              onClick={this.handleReset}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#EDEDED',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.25rem',
-                cursor: 'pointer',
-                fontSize: '1rem',
-              }}
-            >
-              Tentar novamente
-            </button>
+            <div style={{ width: '100%', maxWidth: '420px' }}>
+              <ErrorBoundaryVisual
+                error={this.state.error ?? undefined}
+                onRetry={this.handleReset}
+                title="Algo deu errado"
+                description="A aplicação encontrou um erro inesperado. Tente novamente."
+              />
+            </div>
           </div>
         )
       );

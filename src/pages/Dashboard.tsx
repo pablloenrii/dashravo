@@ -3,14 +3,17 @@
  * Minimalismo enterprise + período, comparação vs mês anterior, sparklines e drill-down.
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Trophy, Target, Percent, Timer } from 'lucide-react';
 import { Modal } from '@/components/Modal';
 import { ChartTooltip } from '@/components/ChartTooltip';
 import { QueryError, QueryLoading } from '@/components/QueryState';
+import { MetricCard, pctChange } from '@/components/MetricCard';
 import { useMRRData, useChurnData, useFunnelData, useCustomerMetrics } from '@/hooks/useMetricsQueries';
-import { useFinanceChartData } from '@/hooks/usePagesQueries';
+import { useFinanceChartData, useContactsData } from '@/hooks/usePagesQueries';
+import { usePeriod, prevMonthKey, monthLabel } from '@/contexts/PeriodContext';
+import { computeCrmMetrics } from '@/utils/crmMetrics';
 
 const REVENUE = '#3FB950';
 const LINE = '#8B8B8B';
@@ -25,6 +28,19 @@ export default function Dashboard() {
   const funnel = useFunnelData();
   const metrics = useCustomerMetrics();
   const finance = useFinanceChartData();
+  const contacts = useContactsData();
+  const { month, isAllTime, label: periodLabel } = usePeriod();
+
+  // Desempenho comercial do período selecionado (mesma fonte do CRM)
+  const cm = useMemo(() => computeCrmMetrics(contacts.data, month), [contacts.data, month]);
+  const cmPrev = useMemo(
+    () => computeCrmMetrics(contacts.data, month === null ? null : prevMonthKey(month)),
+    [contacts.data, month]
+  );
+  const dc = (cur: number, prev: number) => (isAllTime ? undefined : pctChange(cur, prev));
+  const vsLabel = isAllTime ? 'acumulado' : `vs ${monthLabel(prevMonthKey(month as string))}`;
+  const fmtMoney = (v: number) =>
+    v >= 1000 ? `R$ ${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k` : `R$ ${Math.round(v)}`;
 
   const [period, setPeriod] = useState<'3m' | '6m'>('6m');
   const [drill, setDrill] = useState<Drill>(null);
@@ -59,7 +75,7 @@ export default function Dashboard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
         <div>
           <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Dashboard</h1>
-          <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>Visão geral do negócio</p>
+          <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>{periodLabel} · visão geral do negócio</p>
         </div>
         <div style={{ display: 'flex', background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '3px' }}>
           {(['3m', '6m'] as const).map((pp) => (
@@ -75,6 +91,30 @@ export default function Dashboard() {
       {churn.error && <QueryError message={churn.error} onRetry={churn.refetch} />}
       {metrics.error && <QueryError message={metrics.error} onRetry={metrics.refetch} />}
       {finance.error && <QueryError message={finance.error} onRetry={finance.refetch} />}
+
+      {/* Desempenho comercial do período */}
+      <div style={{ marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '12px', fontWeight: 650, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#5B616E', margin: '0 0 10px 0' }}>
+          Comercial
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px' }}>
+          <MetricCard label="Receita fechada" value={fmtMoney(cm.receitaGanha)} icon={<Trophy size={14} />}
+            deltaPct={dc(cm.receitaGanha, cmPrev.receitaGanha)} sublabel={vsLabel} loading={contacts.loading} />
+          <MetricCard label="Pipeline aberto" value={fmtMoney(cm.pipelineAberto)} icon={<Target size={14} />}
+            deltaPct={dc(cm.pipelineAberto, cmPrev.pipelineAberto)}
+            sublabel={`${cm.abertos.length} ${cm.abertos.length === 1 ? 'deal' : 'deals'}`} loading={contacts.loading} />
+          <MetricCard label="Win rate" value={`${cm.winRate}%`} icon={<Percent size={14} />}
+            deltaPct={dc(cm.winRate, cmPrev.winRate)}
+            sublabel={`${cm.ganhos.length}G / ${cm.perdidos.length}P`} loading={contacts.loading} />
+          <MetricCard label="Ciclo de venda" value={`${cm.cicloMedio}d`} icon={<Timer size={14} />}
+            deltaPct={dc(cm.cicloMedio, cmPrev.cicloMedio)} invertDelta
+            sublabel="lead → fechamento" loading={contacts.loading} />
+        </div>
+      </div>
+
+      <h2 style={{ fontSize: '12px', fontWeight: 650, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#5B616E', margin: '0 0 10px 0' }}>
+        Recorrência
+      </h2>
 
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',

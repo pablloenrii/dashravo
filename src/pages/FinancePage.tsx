@@ -5,41 +5,89 @@
 
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DollarSign, TrendingUp, Percent, Wallet } from 'lucide-react';
+import { useMemo } from 'react';
 import { ChartTooltip } from '@/components/ChartTooltip';
 import { QueryError, QueryLoading } from '@/components/QueryState';
-import { useFinanceChartData, useCashFlowData, useExpensesData } from '@/hooks/usePagesQueries';
+import { MetricCard, pctChange } from '@/components/MetricCard';
+import { useFinanceChartData, useCashFlowData, useExpensesData, useReceitasRawData } from '@/hooks/usePagesQueries';
+import { usePeriod, prevMonthKey, monthLabel, toMonthKey } from '@/contexts/PeriodContext';
 
 const fmtK = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v.toFixed(0));
+const fmtMoney = (v: number) =>
+  v >= 1000 ? `R$ ${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k` : `R$ ${Math.round(v)}`;
 
 export default function FinancePage() {
   const finance = useFinanceChartData();
   const cashFlow = useCashFlowData();
   const expenses = useExpensesData();
+  const receitas = useReceitasRawData();
+  const { effectiveMonth, isAllTime, label: periodLabel } = usePeriod();
+
+  // KPIs do mês selecionado (dados brutos preservam o mês/ano exato)
+  const somaMes = useMemo(() => {
+    const soma = (mk: string) => receitas.data
+      .filter((r) => r.mes && toMonthKey(new Date(r.mes)) === mk)
+      .reduce((acc, r) => ({
+        receita: acc.receita + r.receita,
+        despesa: acc.despesa + r.despesa,
+      }), { receita: 0, despesa: 0 });
+
+    if (isAllTime) {
+      const tudo = receitas.data.reduce((acc, r) => ({
+        receita: acc.receita + r.receita, despesa: acc.despesa + r.despesa,
+      }), { receita: 0, despesa: 0 });
+      return { atual: tudo, anterior: null as null | { receita: number; despesa: number } };
+    }
+    return { atual: soma(effectiveMonth), anterior: soma(prevMonthKey(effectiveMonth)) };
+  }, [receitas.data, effectiveMonth, isAllTime]);
+
+  const receitaMes = somaMes.atual.receita;
+  const despesaMes = somaMes.atual.despesa;
+  const lucroMes = receitaMes - despesaMes;
+  const margemMes = receitaMes > 0 ? (lucroMes / receitaMes) * 100 : 0;
+
+  const ant = somaMes.anterior;
+  const lucroAnt = ant ? ant.receita - ant.despesa : 0;
+  const d = (cur: number, prev: number) => (isAllTime || !ant ? undefined : pctChange(cur, prev));
+  const vsLabel = isAllTime ? 'acumulado' : `vs ${monthLabel(prevMonthKey(effectiveMonth))}`;
 
   const totalRevenue = finance.data.reduce((sum, m) => sum + m.receita, 0);
   const totalExpensesVal = finance.data.reduce((sum, m) => sum + m.despesa, 0);
   const profit = totalRevenue - totalExpensesVal;
-  const margin = totalRevenue > 0 ? ((profit / totalRevenue) * 100).toFixed(1) : '0';
   const cash = cashFlow.data.reduce((sum, w) => sum + w.entradas - w.saidas, 0);
 
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: '20px' }}>
         <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Financeiro</h1>
-        <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>Controle de receitas, despesas e fluxo de caixa</p>
+        <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>
+          {periodLabel} · receitas, despesas e fluxo de caixa
+        </p>
       </div>
 
       {/* Erros */}
       {finance.error && <QueryError message={finance.error} onRetry={finance.refetch} />}
+      {receitas.error && <QueryError message={receitas.error} onRetry={receitas.refetch} />}
       {cashFlow.error && <QueryError message={cashFlow.error} onRetry={cashFlow.refetch} />}
       {expenses.error && <QueryError message={expenses.error} onRetry={expenses.refetch} />}
 
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '32px' }}>
+      {/* KPIs do período */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+        <MetricCard label="Receita" value={fmtMoney(receitaMes)} icon={<DollarSign size={14} />}
+          deltaPct={d(receitaMes, ant?.receita ?? 0)} sublabel={vsLabel} loading={receitas.loading} />
+        <MetricCard label="Despesa" value={fmtMoney(despesaMes)} icon={<Wallet size={14} />}
+          deltaPct={d(despesaMes, ant?.despesa ?? 0)} invertDelta sublabel={vsLabel} loading={receitas.loading} />
+        <MetricCard label="Lucro" value={fmtMoney(lucroMes)} icon={<TrendingUp size={14} />}
+          deltaPct={d(lucroMes, lucroAnt)} sublabel={vsLabel} loading={receitas.loading} />
+        <MetricCard label="Margem" value={`${margemMes.toFixed(1)}%`} icon={<Percent size={14} />}
+          progress={Math.max(0, margemMes)} sublabel="lucro / receita" loading={receitas.loading} />
+      </div>
+
+      {/* Contexto histórico (6 meses) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
         <KPICard title="Receita (6m)" value={finance.loading ? '…' : fmtK(totalRevenue)} unit="" color="#3FB950" icon={<DollarSign size={20} />} />
         <KPICard title="Lucro (6m)" value={finance.loading ? '…' : fmtK(profit)} unit="" color="#EDEDED" icon={<TrendingUp size={20} />} />
-        <KPICard title="Margem" value={finance.loading ? '…' : margin} unit="%" color="#F2F2F3" icon={<Percent size={20} />} />
         <KPICard title="Caixa (4 sem)" value={cashFlow.loading ? '…' : fmtK(cash)} unit="" color="#3FB950" icon={<Wallet size={20} />} />
       </div>
 

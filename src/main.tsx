@@ -7,6 +7,7 @@ import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { PeriodProvider } from './contexts/PeriodContext';
 import { AppLayout } from './layouts/AppLayout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { RequireAuth } from './components/RequireAuth';
@@ -46,6 +47,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <ThemeProvider>
+        <PeriodProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Suspense fallback={<PageFallback />}><LoginPage /></Suspense>} />
@@ -59,6 +61,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </BrowserRouter>
+        </PeriodProvider>
       </ThemeProvider>
     </ErrorBoundary>
   </React.StrictMode>,

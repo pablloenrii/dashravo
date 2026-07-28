@@ -4,7 +4,7 @@
  * Toggle Board / Lista. CRUD real contra Supabase (tabela `contatos`).
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Trash2, Edit2, LayoutGrid, List as ListIcon,
   DollarSign, Target, Percent, Timer, AlertTriangle, Trophy,
@@ -13,30 +13,20 @@ import { Button } from '@/components/Button';
 import { Modal } from '@/components/Modal';
 import { Input } from '@/components/Input';
 import { QueryError, QueryLoading } from '@/components/QueryState';
+import { MetricCard, pctChange } from '@/components/MetricCard';
 import { sb as supabase } from '@/services/supabase';
 import { useContactsData, ContactData } from '@/hooks/usePagesQueries';
+import { usePeriod, prevMonthKey, monthLabel } from '@/contexts/PeriodContext';
+import {
+  STAGES, STAGE_MAP, isOpen, daysSince, ROT_DAYS,
+  computeCrmMetrics, computeFunnel, computeBySource,
+} from '@/utils/crmMetrics';
 
 /* ---------- Configuração das fases (com probabilidade p/ forecast) ---------- */
-interface Stage { key: string; prob: number; color: string; }
-const STAGES: Stage[] = [
-  { key: 'Novo Lead',     prob: 0.10, color: '#626873' },
-  { key: 'Contato Feito', prob: 0.25, color: '#8B8B8B' },
-  { key: 'Qualificado',   prob: 0.50, color: '#EDEDED' },
-  { key: 'Proposta',      prob: 0.65, color: '#8B8B8B' },
-  { key: 'Negociação',    prob: 0.80, color: '#6E6E6E' },
-  { key: 'Ganho',         prob: 1.00, color: '#3FB950' },
-  { key: 'Perdido',       prob: 0.00, color: '#EF4444' },
-];
-const STAGE_MAP: Record<string, Stage> = Object.fromEntries(STAGES.map((s) => [s.key, s] as const));
-const OPEN_KEYS = ['Novo Lead', 'Contato Feito', 'Qualificado', 'Proposta', 'Negociação'];
-const isOpen = (etapa: string) => OPEN_KEYS.includes(etapa);
-const ROT_DAYS = 14; // dias parado numa fase = "esfriando"
 const ORIGENS = ['Indicação', 'Inbound', 'Outbound', 'Evento', 'Site', 'Outro'];
 
 const fmtMoney = (v: number) =>
   v >= 1000 ? `R$ ${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k` : `R$ ${Math.round(v)}`;
-const daysSince = (iso?: string) =>
-  iso ? Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)) : 0;
 const initials = (nome: string) =>
   nome.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 const fmtDate = (iso: string) => { const d = new Date(iso); return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`; };
@@ -49,6 +39,7 @@ const EMPTY_FORM: ContactForm = { nome: '', empresa: '', email: '', telefone: ''
 
 export default function CRMPage() {
   const contacts = useContactsData();
+  const { month, isAllTime, label: periodLabel } = usePeriod();
 
   const [items, setItems] = useState<ContactData[]>([]);
   useEffect(() => { setItems(contacts.data); }, [contacts.data]);
@@ -189,34 +180,40 @@ export default function CRMPage() {
     }
   };
 
-  const open = items.filter((c) => isOpen(c.etapa));
-  const won = items.filter((c) => c.etapa === 'Ganho');
-  const lost = items.filter((c) => c.etapa === 'Perdido');
-  const pipelineAberto = open.reduce((s, c) => s + c.valor, 0);
-  const forecast = open.reduce((s, c) => s + c.valor * (STAGE_MAP[c.etapa]?.prob ?? 0), 0);
-  const winRate = won.length + lost.length > 0 ? Math.round((won.length / (won.length + lost.length)) * 100) : 0;
-  const ticketMedio = won.length > 0 ? won.reduce((s, c) => s + c.valor, 0) / won.length
-    : (open.length > 0 ? pipelineAberto / open.length : 0);
-  const ciclo = won.length > 0
-    ? Math.round(won.reduce((s, c) => s + Math.max(0, daysSince(c.created_at) - daysSince(c.updated_at)), 0) / won.length)
-    : 0;
-  const parados = open.filter((c) => daysSince(c.updated_at) >= ROT_DAYS).length;
+  // Métricas do período selecionado + mês anterior (para variação)
+  const m = useMemo(() => computeCrmMetrics(items, month), [items, month]);
+  const mPrev = useMemo(
+    () => computeCrmMetrics(items, month === null ? null : prevMonthKey(month)),
+    [items, month]
+  );
+  const funil = useMemo(
+    () => computeFunnel(month === null ? items : m.novosLeads),
+    [items, m.novosLeads, month]
+  );
+  const porOrigem = useMemo(
+    () => computeBySource(month === null ? items : m.novosLeads),
+    [items, m.novosLeads, month]
+  );
 
-  const insights = [
-    { label: 'Pipeline aberto', value: fmtMoney(pipelineAberto), icon: <DollarSign size={14} /> },
-    { label: 'Forecast ponderado', value: fmtMoney(forecast), icon: <Target size={14} /> },
-    { label: 'Win rate', value: `${winRate}%`, icon: <Trophy size={14} /> },
-    { label: 'Ticket médio', value: fmtMoney(ticketMedio), icon: <Percent size={14} /> },
-    { label: 'Ciclo médio', value: `${ciclo}d`, icon: <Timer size={14} /> },
-    { label: 'Deals parados', value: String(parados), icon: <AlertTriangle size={14} /> },
-  ];
+  // Sem mês anterior para comparar (visão acumulada), não mostramos variação.
+  const d = (cur: number, prev: number) => (isAllTime ? undefined : pctChange(cur, prev));
+  const vsLabel = isAllTime ? undefined : `vs ${monthLabel(prevMonthKey(month as string))}`;
+
+  // Board/lista seguem o mesmo recorte dos KPIs: pipeline aberto até o fim do
+  // mês + fechamentos ocorridos no mês. Assim o que se vê bate com os números.
+  const visiveis = useMemo(
+    () => (isAllTime ? items : [...m.abertos, ...m.ganhos, ...m.perdidos]),
+    [isAllTime, items, m.abertos, m.ganhos, m.perdidos]
+  );
 
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Pipeline de Vendas</h1>
-          <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>Gestão de leads, fases e previsão de fechamento</p>
+          <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>
+            {periodLabel} · {m.novosLeadsCount} {m.novosLeadsCount === 1 ? 'novo lead' : 'novos leads'} · {m.ganhos.length} {m.ganhos.length === 1 ? 'fechado' : 'fechados'}
+          </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <div style={{ display: 'flex', background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '3px' }}>
@@ -232,23 +229,112 @@ export default function CRMPage() {
       {contacts.error && <QueryError message={contacts.error} onRetry={contacts.refetch} />}
       {mutationError && !showModal && <QueryError message={mutationError} />}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-        {insights.map((k) => (
-          <div key={k.label} style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '14px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#6E6E6E' }}>
-              {k.icon}<span style={{ fontSize: '11px', fontWeight: 500, color: '#6E6E6E' }}>{k.label}</span>
-            </div>
-            <div style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.02em', color: '#EDEDED' }}>{contacts.loading ? '—' : k.value}</div>
-          </div>
-        ))}
+      {/* Métricas comerciais do período */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(165px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+        <MetricCard
+          label="Receita fechada" value={fmtMoney(m.receitaGanha)} icon={<Trophy size={14} />}
+          deltaPct={d(m.receitaGanha, mPrev.receitaGanha)} sublabel={vsLabel} loading={contacts.loading}
+        />
+        <MetricCard
+          label="Pipeline aberto" value={fmtMoney(m.pipelineAberto)} icon={<DollarSign size={14} />}
+          deltaPct={d(m.pipelineAberto, mPrev.pipelineAberto)}
+          sublabel={`${m.abertos.length} ${m.abertos.length === 1 ? 'deal' : 'deals'}`} loading={contacts.loading}
+        />
+        <MetricCard
+          label="Forecast ponderado" value={fmtMoney(m.forecast)} icon={<Target size={14} />}
+          deltaPct={d(m.forecast, mPrev.forecast)} sublabel="por probabilidade" loading={contacts.loading}
+        />
+        <MetricCard
+          label="Win rate" value={`${m.winRate}%`} icon={<Percent size={14} />}
+          deltaPct={d(m.winRate, mPrev.winRate)}
+          sublabel={`${m.ganhos.length}G / ${m.perdidos.length}P`} loading={contacts.loading}
+        />
+        <MetricCard
+          label="Ticket médio" value={fmtMoney(m.ticketMedio)} icon={<DollarSign size={14} />}
+          deltaPct={d(m.ticketMedio, mPrev.ticketMedio)} sublabel={vsLabel} loading={contacts.loading}
+        />
+        <MetricCard
+          label="Ciclo de venda" value={`${m.cicloMedio}d`} icon={<Timer size={14} />}
+          deltaPct={d(m.cicloMedio, mPrev.cicloMedio)} invertDelta
+          sublabel="lead → fechamento" loading={contacts.loading}
+        />
+        <MetricCard
+          label="Novos leads" value={String(m.novosLeadsCount)} icon={<Plus size={14} />}
+          deltaPct={d(m.novosLeadsCount, mPrev.novosLeadsCount)} sublabel={vsLabel} loading={contacts.loading}
+        />
+        <MetricCard
+          label="Deals parados" value={String(m.parados)} icon={<AlertTriangle size={14} />}
+          deltaPct={d(m.parados, mPrev.parados)} invertDelta
+          sublabel={`sem contato há ${ROT_DAYS}d+`} loading={contacts.loading}
+        />
       </div>
+
+      {/* Funil de conversão + desempenho por canal */}
+      {!contacts.loading && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+          <Panel title="Conversão por etapa" hint={isAllTime ? 'todo o histórico' : 'leads do período'}>
+            {funil[0]?.quantidade === 0 ? (
+              <Vazio texto="Nenhum lead no período." />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
+                {funil.map((f, i) => {
+                  const base = funil[0].quantidade || 1;
+                  const largura = Math.max(3, (f.quantidade / base) * 100);
+                  return (
+                    <div key={f.etapa}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '11.5px', color: '#9CA3AF', fontWeight: 500 }}>{f.etapa}</span>
+                        <span style={{ fontSize: '11.5px', color: '#6E6E6E' }}>
+                          <strong style={{ color: '#EDEDED', fontWeight: 650 }}>{f.quantidade}</strong>
+                          {i > 0 && <span style={{ marginLeft: '6px' }}>{f.conversaoEtapa}%</span>}
+                        </span>
+                      </div>
+                      <div style={{ height: '6px', background: 'rgba(255,255,255,0.04)', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${largura}%`, height: '100%', background: f.color,
+                          borderRadius: '3px', transition: 'width .5s cubic-bezier(0.4,0,0.2,1)',
+                        }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Panel>
+
+          <Panel title="Desempenho por canal" hint="receita gerada">
+            {porOrigem.length === 0 ? (
+              <Vazio texto="Nenhum lead no período." />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 52px 52px 74px', gap: '8px', padding: '0 0 7px 0', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#5B616E', fontWeight: 600 }}>
+                  <span>Canal</span><span style={{ textAlign: 'right' }}>Leads</span>
+                  <span style={{ textAlign: 'right' }}>Win</span><span style={{ textAlign: 'right' }}>Receita</span>
+                </div>
+                {porOrigem.slice(0, 6).map((r) => (
+                  <div key={r.origem} style={{
+                    display: 'grid', gridTemplateColumns: '1fr 52px 52px 74px', gap: '8px',
+                    padding: '7px 0', borderTop: '1px solid rgba(255,255,255,0.04)',
+                    fontSize: '12px', alignItems: 'center',
+                  }}>
+                    <span style={{ color: '#EDEDED', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.origem}</span>
+                    <span style={{ textAlign: 'right', color: '#9CA3AF' }}>{r.leads}</span>
+                    <span style={{ textAlign: 'right', color: r.winRate >= 50 ? '#3FB950' : '#9CA3AF', fontWeight: 600 }}>{r.winRate}%</span>
+                    <span style={{ textAlign: 'right', color: r.receita > 0 ? '#3FB950' : '#5B616E', fontWeight: 600 }}>{fmtMoney(r.receita)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+        </div>
+      )}
 
       {contacts.loading ? (
         <QueryLoading height={300} />
       ) : view === 'board' ? (
         <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '12px' }}>
           {STAGES.map((stage) => {
-            const cards = items.filter((c) => c.etapa === stage.key);
+            const cards = visiveis.filter((c) => c.etapa === stage.key);
             const total = cards.reduce((s, c) => s + c.valor, 0);
             return (
               <div
@@ -325,9 +411,11 @@ export default function CRMPage() {
         </div>
       ) : (
         <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden' }}>
-          {items.length === 0 ? (
+          {visiveis.length === 0 ? (
             <div style={{ padding: '32px', textAlign: 'center', fontSize: '13px', color: '#9CA3AF' }}>
-              Nenhum lead cadastrado. Clique em Novo Lead para começar.
+              {items.length === 0
+                ? 'Nenhum lead cadastrado. Clique em Novo Lead para começar.'
+                : `Nenhum lead em ${periodLabel.toLowerCase()}. Troque o período no topo da tela.`}
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -343,7 +431,7 @@ export default function CRMPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((c) => (
+                  {visiveis.map((c) => (
                     <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
                       onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = '')}>
@@ -415,6 +503,22 @@ export default function CRMPage() {
       </Modal>
     </div>
   );
+}
+
+function Panel({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
+        <h3 style={{ fontSize: '12.5px', fontWeight: 650, color: '#F2F2F3', margin: 0, letterSpacing: '-0.01em' }}>{title}</h3>
+        {hint && <span style={{ fontSize: '10.5px', color: '#5B616E' }}>{hint}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Vazio({ texto }: { texto: string }) {
+  return <div style={{ padding: '20px 0', textAlign: 'center', fontSize: '12px', color: '#5B616E' }}>{texto}</div>;
 }
 
 function ViewBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {

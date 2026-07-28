@@ -186,6 +186,13 @@ export interface GoalProgressData {
   meta: number;
 }
 
+/** Métricas que podem alimentar o "realizado" de uma meta automaticamente */
+export type GoalMetric =
+  | 'manual' | 'receita_ganha' | 'deals_ganhos' | 'novos_leads'
+  | 'pipeline_aberto' | 'ticket_medio' | 'win_rate';
+
+export type GoalUnit = 'moeda' | 'numero' | 'percentual';
+
 export interface GoalData {
   id: string;
   nome: string;
@@ -194,6 +201,10 @@ export interface GoalData {
   percentual: number;
   status: string;
   periodo?: string;
+  /** Mês de referência (ISO 'YYYY-MM-DD', sempre dia 1) */
+  mes: string;
+  metrica: GoalMetric;
+  unidade: GoalUnit;
 }
 
 export function useGoalProgressData(): QueryResult<GoalProgressData[]> {
@@ -226,6 +237,9 @@ export function useGoalsData(): QueryResult<GoalData[]> {
           percentual: meta > 0 ? Math.round((realizado / meta) * 100) : 0,
           status: String(r.status ?? ''),
           periodo: r.periodo ? String(r.periodo) : undefined,
+          mes: String(r.mes ?? ''),
+          metrica: (r.metrica ? String(r.metrica) : 'manual') as GoalMetric,
+          unidade: (r.unidade ? String(r.unidade) : 'numero') as GoalUnit,
         };
       }),
     empty: [],

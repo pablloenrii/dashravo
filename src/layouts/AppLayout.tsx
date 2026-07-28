@@ -8,6 +8,7 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { MobileMenu } from '@/components/MobileMenu';
 import { NotificationsPanel } from '@/components/NotificationsPanel';
+import { PeriodSelector } from '@/components/PeriodSelector';
 import { useNotifications } from '@/hooks/useNotifications';
 
 interface NavItem {
@@ -204,7 +205,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
             {!isMobile && <Breadcrumb items={[{ label: 'Dashboard' }]} />}
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <SearchBar onSearchClick={() => setCommandOpen(true)} />
+              <PeriodSelector compact={isMobile} />
+              {!isMobile && <SearchBar onSearchClick={() => setCommandOpen(true)} />}
               <div ref={notifRef} style={{ position: 'relative' }}>
                 <button
                   onClick={() => setNotifOpen((v) => !v)}

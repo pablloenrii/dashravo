@@ -1,131 +1,304 @@
 /**
- * RAVO OS — Goals (dados reais do Supabase)
- * 4 KPIs + gráfico de progresso + lista de metas
+ * RAVO OS — Metas
+ *
+ * Metas mensais com cadastro manual. O "realizado" pode ser digitado (meta
+ * livre) ou puxado automaticamente de uma métrica do CRM/Financeiro — nesse
+ * caso o número acompanha o sistema sozinho, sem atualização manual.
  */
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Target, TrendingUp, AlertCircle, Zap } from 'lucide-react';
-import { ChartTooltip } from '@/components/ChartTooltip';
+import { useState, useMemo } from 'react';
+import { Target, TrendingUp, AlertCircle, CheckCircle2, Plus, Edit2, Trash2, Zap } from 'lucide-react';
+import { Button } from '@/components/Button';
+import { Modal } from '@/components/Modal';
 import { ProgressBar } from '@/components/ProgressBar';
 import { QueryError, QueryLoading } from '@/components/QueryState';
-import { useGoalsData, useGoalProgressData } from '@/hooks/usePagesQueries';
+import { MetricCard } from '@/components/MetricCard';
+import { sb as supabase } from '@/services/supabase';
+import { useGoalsData, useContactsData, GoalData, GoalMetric, GoalUnit } from '@/hooks/usePagesQueries';
+import { usePeriod, monthISO, monthLabelLong, toMonthKey } from '@/contexts/PeriodContext';
+import { computeCrmMetrics } from '@/utils/crmMetrics';
+
+/** Catálogo de métricas automáticas — o realizado vem do próprio sistema. */
+const METRICAS: { value: GoalMetric; label: string; unidade: GoalUnit; hint: string }[] = [
+  { value: 'manual', label: 'Manual (eu atualizo)', unidade: 'numero', hint: 'Você digita o realizado' },
+  { value: 'receita_ganha', label: 'Receita fechada', unidade: 'moeda', hint: 'Soma dos deals ganhos no mês' },
+  { value: 'deals_ganhos', label: 'Deals fechados', unidade: 'numero', hint: 'Quantidade de deals ganhos' },
+  { value: 'novos_leads', label: 'Novos leads', unidade: 'numero', hint: 'Leads criados no mês' },
+  { value: 'pipeline_aberto', label: 'Pipeline aberto', unidade: 'moeda', hint: 'Valor em aberto no funil' },
+  { value: 'ticket_medio', label: 'Ticket médio', unidade: 'moeda', hint: 'Receita média por deal ganho' },
+  { value: 'win_rate', label: 'Win rate', unidade: 'percentual', hint: '% de deals ganhos vs decididos' },
+];
+const METRICA_MAP = Object.fromEntries(METRICAS.map((m) => [m.value, m] as const));
+
+const fmtValor = (v: number, u: GoalUnit) => {
+  if (u === 'moeda') return v >= 1000 ? `R$ ${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k` : `R$ ${Math.round(v)}`;
+  if (u === 'percentual') return `${Math.round(v)}%`;
+  return v.toLocaleString('pt-BR');
+};
+
+interface GoalForm {
+  nome: string; meta: number; realizado: number; metrica: GoalMetric;
+}
+const EMPTY_FORM: GoalForm = { nome: '', meta: 0, realizado: 0, metrica: 'manual' };
 
 export default function GoalsPage() {
   const goals = useGoalsData();
-  const progress = useGoalProgressData();
+  const contacts = useContactsData();
+  const { effectiveMonth, isAllTime, label: periodLabel } = usePeriod();
 
-  const list = goals.data;
-  const completedGoals = list.filter((g) => g.percentual >= 100).length;
-  const warningGoals = list.filter((g) => g.status === 'atencao' || g.status === 'atrasado').length;
-  const avgProgress = list.length > 0
-    ? (list.reduce((sum, g) => sum + g.percentual, 0) / list.length).toFixed(0)
-    : '0';
-  const onTrackGoals = list.filter((g) => g.status === 'no-prazo' || g.status === 'concluido').length;
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<GoalForm>(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [mutationError, setMutationError] = useState<string | null>(null);
+
+  // Métricas do CRM no mês de referência — alimentam as metas automáticas.
+  const crm = useMemo(
+    () => computeCrmMetrics(contacts.data, isAllTime ? null : effectiveMonth),
+    [contacts.data, isAllTime, effectiveMonth]
+  );
+
+  /** Valor realizado de uma meta: automático (do CRM) ou o que foi digitado. */
+  const realizadoDe = (g: GoalData): number => {
+    switch (g.metrica) {
+      case 'receita_ganha': return crm.receitaGanha;
+      case 'deals_ganhos': return crm.ganhos.length;
+      case 'novos_leads': return crm.novosLeadsCount;
+      case 'pipeline_aberto': return crm.pipelineAberto;
+      case 'ticket_medio': return crm.ticketMedio;
+      case 'win_rate': return crm.winRate;
+      default: return g.realizado;
+    }
+  };
+
+  // Metas do mês selecionado (ou todas, na visão acumulada)
+  const lista = useMemo(() => {
+    const base = isAllTime
+      ? goals.data
+      : goals.data.filter((g) => g.mes && toMonthKey(new Date(g.mes)) === effectiveMonth);
+    return base.map((g) => {
+      const realizado = realizadoDe(g);
+      const percentual = g.meta > 0 ? Math.round((realizado / g.meta) * 100) : 0;
+      return { ...g, realizado, percentual };
+    });
+    // realizadoDe depende de crm, já memoizado acima
+  }, [goals.data, isAllTime, effectiveMonth, crm]);
+
+  const atingidas = lista.filter((g) => g.percentual >= 100).length;
+  const emRisco = lista.filter((g) => g.percentual < 50).length;
+  const progressoMedio = lista.length > 0
+    ? Math.round(lista.reduce((s, g) => s + Math.min(g.percentual, 100), 0) / lista.length)
+    : 0;
+
+  const openModal = (g?: GoalData) => {
+    setMutationError(null);
+    if (g) {
+      setForm({ nome: g.nome, meta: g.meta, realizado: g.realizado, metrica: g.metrica });
+      setEditingId(g.id);
+    } else {
+      setForm(EMPTY_FORM); setEditingId(null);
+    }
+    setShowModal(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.nome.trim()) { setMutationError('Dê um nome para a meta.'); return; }
+    if (!form.meta || form.meta <= 0) { setMutationError('O alvo precisa ser maior que zero.'); return; }
+    setSaving(true); setMutationError(null);
+
+    const unidade = METRICA_MAP[form.metrica]?.unidade ?? 'numero';
+    const payload = {
+      nome: form.nome.trim(),
+      meta: form.meta,
+      realizado: form.metrica === 'manual' ? form.realizado : 0,
+      metrica: form.metrica,
+      unidade,
+      mes: monthISO(effectiveMonth),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = editingId
+      ? await supabase.from('metas').update(payload).eq('id', editingId)
+      : await supabase.from('metas').insert([payload]);
+
+    setSaving(false);
+    if (error) { setMutationError(error.message); return; }
+    setShowModal(false);
+    goals.refetch();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Excluir esta meta?')) return;
+    setMutationError(null);
+    const { error } = await supabase.from('metas').delete().eq('id', id);
+    if (error) { setMutationError(error.message); return; }
+    goals.refetch();
+  };
+
+  const unidadeForm = METRICA_MAP[form.metrica]?.unidade ?? 'numero';
 
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Metas</h1>
-        <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>Acompanhamento de objetivos e progresso</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Metas</h1>
+          <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>
+            {periodLabel} · {lista.length} {lista.length === 1 ? 'meta' : 'metas'} · {atingidas} {atingidas === 1 ? 'atingida' : 'atingidas'}
+          </p>
+        </div>
+        <Button onClick={() => openModal()} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <Plus size={16} /> Nova Meta
+        </Button>
       </div>
 
-      {/* Erros */}
       {goals.error && <QueryError message={goals.error} onRetry={goals.refetch} />}
-      {progress.error && <QueryError message={progress.error} onRetry={progress.refetch} />}
+      {mutationError && !showModal && <QueryError message={mutationError} />}
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '32px' }}>
-        <KPICard title="Progresso Médio" value={goals.loading ? '…' : avgProgress} unit="%" color="#EDEDED" icon={<TrendingUp size={20} />} />
-        <KPICard title="Metas Atingidas" value={goals.loading ? '…' : completedGoals.toString()} unit={`/${list.length}`} color="#EDEDED" icon={<Target size={20} />} />
-        <KPICard title="Atenção" value={goals.loading ? '…' : warningGoals.toString()} unit="metas" color="#EDEDED" icon={<AlertCircle size={20} />} />
-        <KPICard title="No Prazo" value={goals.loading ? '…' : onTrackGoals.toString()} unit="metas" color="#EDEDED" icon={<Zap size={20} />} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+        <MetricCard label="Progresso médio" value={`${progressoMedio}%`} icon={<TrendingUp size={14} />}
+          progress={progressoMedio} loading={goals.loading} />
+        <MetricCard label="Metas atingidas" value={`${atingidas}/${lista.length}`} icon={<CheckCircle2 size={14} />}
+          sublabel="alvo alcançado" loading={goals.loading} />
+        <MetricCard label="Em risco" value={String(emRisco)} icon={<AlertCircle size={14} />}
+          sublabel="abaixo de 50%" loading={goals.loading} />
+        <MetricCard label="Automáticas" value={String(lista.filter((g) => g.metrica !== 'manual').length)}
+          icon={<Zap size={14} />} sublabel="puxam do sistema" loading={goals.loading} />
       </div>
 
-      {/* Gráfico de progresso semanal */}
-      <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 12px 0' }}>Progresso Semanal vs Meta</h3>
-        {progress.loading ? (
-          <QueryLoading />
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={progress.data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey="semana" stroke="#86868B" style={{ fontSize: '11px' }} />
-              <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
-              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <Bar dataKey="meta" fill="rgba(255,255,255,0.1)" name="Meta" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="atingido" fill="#8B8B8B" name="Atingido" radius={[3, 3, 0, 0]} barSize={16} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-
-      {/* Lista de metas */}
+      {/* Lista */}
       {goals.loading ? (
-        <QueryLoading height={200} />
-      ) : list.length === 0 && !goals.error ? (
+        <QueryLoading height={220} />
+      ) : lista.length === 0 ? (
         <div style={{
-          background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px',
-          padding: '32px', textAlign: 'center', fontSize: '13px', color: '#9CA3AF'
+          background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px',
+          padding: '44px 32px', textAlign: 'center',
         }}>
-          Nenhuma meta cadastrada.
+          <Target size={26} style={{ color: '#3A3A3A', marginBottom: '12px' }} />
+          <div style={{ fontSize: '14px', color: '#EDEDED', fontWeight: 600, marginBottom: '4px' }}>
+            Nenhuma meta em {periodLabel.toLowerCase()}
+          </div>
+          <div style={{ fontSize: '12.5px', color: '#6E6E6E', marginBottom: '18px' }}>
+            Defina um alvo e acompanhe o progresso — o sistema pode calcular o realizado sozinho.
+          </div>
+          <Button onClick={() => openModal()} style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
+            <Plus size={15} /> Criar primeira meta
+          </Button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
-          {list.map((goal) => {
-            const onTrack = goal.status === 'no-prazo' || goal.status === 'concluido';
+          {lista.map((g) => {
+            const pct = Math.min(g.percentual, 100);
+            const cor = g.percentual >= 100 ? '#3FB950' : g.percentual >= 50 ? '#EDEDED' : '#8B8B8B';
+            const auto = g.metrica !== 'manual';
             return (
-              <div key={goal.id} style={{
-                background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px'
+              <div key={g.id} style={{
+                background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: '10px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px',
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                  <div>
-                    <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 4px 0' }}>{goal.nome}</h4>
-                    <p style={{ fontSize: '11px', color: '#6B7280', margin: 0 }}>
-                      {goal.realizado.toLocaleString('pt-BR')} de {goal.meta.toLocaleString('pt-BR')}
-                      {goal.periodo ? ` · ${goal.periodo}` : ''}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '10px' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <h4 style={{ fontSize: '13.5px', fontWeight: 650, color: '#F2F2F3', margin: '0 0 4px 0', letterSpacing: '-0.01em' }}>{g.nome}</h4>
+                    <p style={{ fontSize: '11.5px', color: '#6E6E6E', margin: 0 }}>
+                      {fmtValor(g.realizado, g.unidade)} de {fmtValor(g.meta, g.unidade)}
+                      {auto && <span style={{ marginLeft: '6px', color: '#5B616E' }}>· auto</span>}
                     </p>
                   </div>
+                  <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                    <button onClick={() => openModal(g)} aria-label={`Editar ${g.nome}`}
+                      style={{ background: 'transparent', border: 'none', color: '#6E6E6E', cursor: 'pointer', padding: '3px', display: 'flex' }}>
+                      <Edit2 size={13} />
+                    </button>
+                    <button onClick={() => handleDelete(g.id)} aria-label={`Excluir ${g.nome}`}
+                      style={{ background: 'transparent', border: 'none', color: '#6E6E6E', cursor: 'pointer', padding: '3px', display: 'flex' }}>
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+
+                <ProgressBar value={pct} showValue={false} color={cor} animated={false} />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontSize: '18px', fontWeight: 650, color: cor, letterSpacing: '-0.02em' }}>{g.percentual}%</span>
                   <span style={{
-                    fontSize: '11px', fontWeight: '600', padding: '4px 8px',
-                    borderRadius: '4px', color: 'white',
-                    background: onTrack ? '#10B981' : '#8B8B8B'
+                    fontSize: '10.5px', fontWeight: 600, padding: '3px 8px', borderRadius: '5px',
+                    color: g.percentual >= 100 ? '#3FB950' : g.percentual >= 50 ? '#9CA3AF' : '#EF4444',
+                    background: g.percentual >= 100 ? 'rgba(63,185,80,0.1)' : g.percentual >= 50 ? 'rgba(255,255,255,0.05)' : 'rgba(239,68,68,0.1)',
                   }}>
-                    {onTrack ? 'No Prazo' : 'Atenção'}
+                    {g.percentual >= 100 ? 'Atingida' : g.percentual >= 50 ? 'Em andamento' : 'Em risco'}
                   </span>
-                </div>
-                <div style={{ width: '100%' }}>
-                  <ProgressBar
-                    value={Math.min(goal.percentual, 100)}
-                    showValue={false}
-                    color={onTrack ? '#10B981' : '#8B8B8B'}
-                  />
-                </div>
-                <div style={{ fontSize: '11px', color: '#9CA3AF' }}>
-                  {Math.min(goal.percentual, 100)}% concluído
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* Modal criar/editar */}
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingId ? 'Editar Meta' : 'Nova Meta'}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={lbl}>Nome da meta *</label>
+            <input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })}
+              placeholder="Ex: Receita de julho" style={fld} />
+          </div>
+
+          <div>
+            <label style={lbl}>Como medir o realizado</label>
+            <select value={form.metrica}
+              onChange={(e) => setForm({ ...form, metrica: e.target.value as GoalMetric })} style={fld}>
+              {METRICAS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
+            <p style={{ fontSize: '11px', color: '#6E6E6E', margin: '6px 0 0 0' }}>
+              {METRICA_MAP[form.metrica]?.hint}
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: form.metrica === 'manual' ? '1fr 1fr' : '1fr', gap: '12px' }}>
+            <div>
+              <label style={lbl}>
+                Alvo * {unidadeForm === 'moeda' ? '(R$)' : unidadeForm === 'percentual' ? '(%)' : ''}
+              </label>
+              <input type="number" min={0} value={form.meta || ''}
+                onChange={(e) => setForm({ ...form, meta: Number(e.target.value) })}
+                placeholder="0" style={fld} />
+            </div>
+            {form.metrica === 'manual' && (
+              <div>
+                <label style={lbl}>Realizado</label>
+                <input type="number" min={0} value={form.realizado || ''}
+                  onChange={(e) => setForm({ ...form, realizado: Number(e.target.value) })}
+                  placeholder="0" style={fld} />
+              </div>
+            )}
+          </div>
+
+          <p style={{ fontSize: '11.5px', color: '#5B616E', margin: 0 }}>
+            Meta do mês de <strong style={{ color: '#9CA3AF' }}>{monthLabelLong(effectiveMonth)}</strong>
+            {isAllTime && ' (mês atual — troque o período no topo para outro mês)'}
+          </p>
+
+          {mutationError && <QueryError message={mutationError} />}
+
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' }}>
+            <button onClick={() => setShowModal(false)} style={{
+              padding: '9px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)',
+              background: 'transparent', color: '#9CA3AF', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+            }}>Cancelar</button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? 'Salvando…' : editingId ? 'Salvar' : 'Criar meta'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
 
-function KPICard({ title, value, unit, color, icon }: { title: string; value: string; unit: string; color: string; icon: React.ReactNode }) {
-  return (
-    <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '16px 18px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#8A8F98' }}>{title}</span>
-        <span style={{ color: '#5B616E', display: 'flex' }}>{icon}</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-        <span style={{ fontSize: '24px', fontWeight: 650, letterSpacing: '-0.02em', color }}>{value}</span>
-        <span style={{ fontSize: '13px', color: '#8A8F98' }}>{unit}</span>
-      </div>
-    </div>
-  );
-}
+const lbl: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: '#8A8F98', marginBottom: '6px' };
+const fld: React.CSSProperties = {
+  width: '100%', padding: '10px 12px', borderRadius: '8px',
+  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+  color: '#EDEDED', fontSize: '13px', boxSizing: 'border-box',
+};

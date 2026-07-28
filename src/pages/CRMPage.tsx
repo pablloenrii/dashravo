@@ -212,11 +212,11 @@ export default function CRMPage() {
   ];
 
   return (
-    <div style={{ maxWidth: '1500px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.01em', color: '#EDEDED', margin: '0 0 2px 0' }}>Pipeline de Vendas</h1>
-          <p style={{ fontSize: '12.5px', color: '#6E6E6E', margin: 0 }}>Gestão de leads, fases e previsão de fechamento</p>
+          <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Pipeline de Vendas</h1>
+          <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>Gestão de leads, fases e previsão de fechamento</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <div style={{ display: 'flex', background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '3px' }}>

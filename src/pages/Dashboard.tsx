@@ -55,11 +55,11 @@ export default function Dashboard() {
   const loading = mrr.loading || churn.loading || metrics.loading;
 
   return (
-    <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
         <div>
-          <h1 style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.01em', color: '#EDEDED', margin: '0 0 2px 0' }}>Dashboard</h1>
-          <p style={{ fontSize: '12.5px', color: '#6E6E6E', margin: 0 }}>Visão geral do negócio</p>
+          <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Dashboard</h1>
+          <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>Visão geral do negócio</p>
         </div>
         <div style={{ display: 'flex', background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '3px' }}>
           {(['3m', '6m'] as const).map((pp) => (
@@ -83,7 +83,7 @@ export default function Dashboard() {
         {kpis.map((k, i) => <KPI key={k.label} kpi={k} first={i === 0} loading={loading} onOpen={() => k.drill && setDrill(k.drill)} />)}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
         <ChartCard title="Receita mensal">
           {finance.loading ? <QueryLoading /> : (
             <ResponsiveContainer width="100%" height={190}>

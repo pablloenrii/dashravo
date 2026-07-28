@@ -72,7 +72,7 @@ export default function GoalsPage() {
           Nenhuma meta cadastrada.
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
           {list.map((goal) => {
             const onTrack = goal.status === 'no-prazo' || goal.status === 'concluido';
             return (

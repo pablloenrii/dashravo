@@ -84,7 +84,7 @@ export function CSPage() {
   // Show error state
   if (errorTickets || errorAttendance || errorSatisfaction) {
     return (
-      <div style={{ padding: '16px', maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         <QueryError message={errorTickets || errorAttendance || errorSatisfaction || ''} onRetry={refetchTickets} />
       </div>
     );
@@ -93,7 +93,7 @@ export function CSPage() {
   // Show loading state
   if (loadingTickets || loadingAttendance || loadingSatisfaction) {
     return (
-      <div style={{ padding: '16px', maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         <QueryLoading height={400} />
       </div>
     );
@@ -104,7 +104,7 @@ export function CSPage() {
   const npsRecorde = dadosSatisfacao.length > 0 && npsAtual >= Math.max(...dadosSatisfacao.map((d) => d.nps));
 
   return (
-    <div style={{ padding: '16px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       {/* Alerts */}
       <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {showWaitAlert && ticketsEmEspera > 0 && (

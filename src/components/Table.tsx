@@ -98,13 +98,15 @@ export function Table<T extends { id?: string | number }>({
 
   return (
     <div style={{ width: '100%' }}>
-      {/* Table Container */}
+      {/* Table Container — overflow-x para não cortar colunas em telas estreitas */}
+      <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <div
         style={{
           borderRadius: '8px',
           border: '0.5px solid rgba(255,255,255,0.04)',
           overflow: 'hidden',
           background: '#0D0D0D',
+          minWidth: 'fit-content',
         }}
       >
         <table
@@ -285,6 +287,7 @@ export function Table<T extends { id?: string | number }>({
             })}
           </tbody>
         </table>
+      </div>
       </div>
 
       {/* Pagination */}

@@ -1,15 +1,18 @@
 # Dependencies
 node_modules/
-package-lock.json
 yarn.lock
 
-# Environment
+# Environment — NUNCA commitar credenciais reais
 .env
 .env.local
 .env.*.local
+.env.production
+.env.production.local
+.env.staging
 
 # Build outputs
 dist/
+dist.old/
 build/
 *.tsbuildinfo
 
@@ -42,5 +45,6 @@ coverage/
 .cache/
 temp/
 tmp/
+.sync_test
 
 .vercel

@@ -57,7 +57,7 @@ export function useFunnelData(): QueryResult<FunnelData[]> {
     queryFn: () => supabase.rpc('get_sales_funnel'),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
-        estagio: String(r.estago),
+        estagio: String(r.estagio),
         quantidade: toNumber(r.quantidade),
         conversao: toNumber(r.conversao),
       })),

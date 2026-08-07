@@ -98,8 +98,8 @@ export function useOpportunitiesData(): QueryResult<OpportunityData[]> {
   return useSupabaseQuery<OpportunityData[]>({
     queryFn: () => supabase.rpc('get_opportunities_by_stage'),
     transform: (rows) =>
-      ((rows as { estago: string; quantidade: number | string }[]) ?? []).map((r, i) => ({
-        name: r.estago,
+      ((rows as { estagio: string; quantidade: number | string }[]) ?? []).map((r, i) => ({
+        name: r.estagio,
         quantidade: toNumber(r.quantidade),
         fill: PALETTE[i % PALETTE.length],
       })),

@@ -158,13 +158,13 @@ $$ LANGUAGE plpgsql;
 -- Função: get_opportunities_by_stage
 CREATE OR REPLACE FUNCTION get_opportunities_by_stage()
 RETURNS TABLE(
-  estago TEXT,
+  estagio TEXT,
   quantidade BIGINT
 ) AS $$
 BEGIN
   RETURN QUERY
   SELECT
-    etapa as estago,
+    etapa as estagio,
     COUNT(*) as quantidade
   FROM contatos
   WHERE user_id = auth.uid()

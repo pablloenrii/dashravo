@@ -43,7 +43,18 @@ interface QueryOptions<T> {
 
 type MockModule = typeof import('./useMockData');
 
-export function useSupabaseQuery<T>(options: QueryOptions<T>): QueryResult<T> {
+/**
+ * Hook de query Supabase com proteção contra race conditions.
+ *
+ * `reloadDeps` permite re-executar a query quando parâmetros externos mudam
+ * (ex.: o mês de referência do período global) sem recriar o objeto de opções.
+ * É espalhado no array de dependências do efeito — passe apenas valores
+ * primitivos estáveis (ex.: `[refMonth ?? null]`).
+ */
+export function useSupabaseQuery<T>(
+  options: QueryOptions<T>,
+  reloadDeps: ReadonlyArray<unknown> = []
+): QueryResult<T> {
   const [data, setData] = useState<T>(options.empty);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +113,7 @@ export function useSupabaseQuery<T>(options: QueryOptions<T>): QueryResult<T> {
     return () => {
       active = false;
     };
-  }, [reloadKey]);
+  }, [reloadKey, ...reloadDeps]);
 
   const refetch = useCallback(() => setReloadKey((k) => k + 1), []);
 

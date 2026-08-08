@@ -17,11 +17,12 @@ const fmtMoney = (v: number) =>
   v >= 1000 ? `R$ ${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k` : `R$ ${Math.round(v)}`;
 
 export default function FinancePage() {
-  const finance = useFinanceChartData();
+  const { effectiveMonth, isAllTime, label: periodLabel, month } = usePeriod();
+
+  const finance = useFinanceChartData(month);
   const cashFlow = useCashFlowData();
   const expenses = useExpensesData();
   const receitas = useReceitasRawData();
-  const { effectiveMonth, isAllTime, label: periodLabel } = usePeriod();
 
   // KPIs do mês selecionado (dados brutos preservam o mês/ano exato)
   const somaMes = useMemo(() => {

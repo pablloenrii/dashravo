@@ -5,6 +5,17 @@
 
 import { sb as supabase } from '@/services/supabase';
 import { useSupabaseQuery, toNumber, QueryResult } from './useSupabaseQuery';
+import type { MonthKey } from '@/contexts/PeriodContext';
+
+/**
+ * Argumentos comuns das RPCs mensais: janela fixa de 6 meses terminando no mês
+ * de referência (`refMonth`). Sem `refMonth`, ancoram no mês atual (padrão).
+ */
+function monthlyArgs(refMonth?: MonthKey | null): Record<string, unknown> {
+  const args: Record<string, unknown> = { months_back: 6 };
+  if (refMonth) args.ref_month = `${refMonth}-01`;
+  return args;
+}
 
 export interface MRRData {
   mes: string;
@@ -24,9 +35,9 @@ export interface FunnelData {
   conversao: number;
 }
 
-export function useMRRData(): QueryResult<MRRData[]> {
+export function useMRRData(refMonth?: MonthKey | null): QueryResult<MRRData[]> {
   return useSupabaseQuery<MRRData[]>({
-    queryFn: () => supabase.rpc('get_mrr_by_month', { months_back: 6 }),
+    queryFn: () => supabase.rpc('get_mrr_by_month', monthlyArgs(refMonth)),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
         mes: String(r.mes),
@@ -35,12 +46,12 @@ export function useMRRData(): QueryResult<MRRData[]> {
       })),
     empty: [],
     mockKey: 'MOCK_MRR',
-  });
+  }, [refMonth ?? null]);
 }
 
-export function useChurnData(): QueryResult<ChurnData[]> {
+export function useChurnData(refMonth?: MonthKey | null): QueryResult<ChurnData[]> {
   return useSupabaseQuery<ChurnData[]>({
-    queryFn: () => supabase.rpc('get_churn_rate', { months_back: 6 }),
+    queryFn: () => supabase.rpc('get_churn_rate', monthlyArgs(refMonth)),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
         mes: String(r.mes),
@@ -49,7 +60,7 @@ export function useChurnData(): QueryResult<ChurnData[]> {
       })),
     empty: [],
     mockKey: 'MOCK_CHURN',
-  });
+  }, [refMonth ?? null]);
 }
 
 export function useFunnelData(): QueryResult<FunnelData[]> {
@@ -66,9 +77,9 @@ export function useFunnelData(): QueryResult<FunnelData[]> {
   });
 }
 
-export function useCustomerMetrics(): QueryResult<Record<string, number>> {
+export function useCustomerMetrics(refMonth?: MonthKey | null): QueryResult<Record<string, number>> {
   return useSupabaseQuery<Record<string, number>>({
-    queryFn: () => supabase.rpc('get_customer_metrics'),
+    queryFn: () => supabase.rpc('get_customer_metrics', refMonth ? { ref_month: `${refMonth}-01` } : {}),
     transform: (rows) => {
       const obj: Record<string, number> = {};
       ((rows as { metric_name: string; value: unknown }[]) ?? []).forEach((r) => {
@@ -78,5 +89,5 @@ export function useCustomerMetrics(): QueryResult<Record<string, number>> {
     },
     empty: {},
     mockKey: 'MOCK_CUSTOMER_METRICS',
-  });
+  }, [refMonth ?? null]);
 }

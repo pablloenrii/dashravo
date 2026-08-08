@@ -23,13 +23,15 @@ const fmtK = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v.toFixed
 type Drill = { title: string; data: object[]; dataKey: string; color: string } | null;
 
 export default function Dashboard() {
-  const mrr = useMRRData();
-  const churn = useChurnData();
-  const funnel = useFunnelData();
-  const metrics = useCustomerMetrics();
-  const finance = useFinanceChartData();
-  const contacts = useContactsData();
   const { month, isAllTime, label: periodLabel } = usePeriod();
+
+  // Séries ancoradas no mês selecionado (ou no atual, quando "Todo o período")
+  const mrr = useMRRData(month);
+  const churn = useChurnData(month);
+  const funnel = useFunnelData();
+  const metrics = useCustomerMetrics(month);
+  const finance = useFinanceChartData(month);
+  const contacts = useContactsData();
 
   // Desempenho comercial do período selecionado (mesma fonte do CRM)
   const cm = useMemo(() => computeCrmMetrics(contacts.data, month), [contacts.data, month]);

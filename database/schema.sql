@@ -296,7 +296,7 @@ $$ LANGUAGE plpgsql;
 -- ----------------------------------------------------------------------------
 -- Financeiro: receita vs despesa por mês
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_revenue_by_month(months_back INT DEFAULT 6)
+CREATE OR REPLACE FUNCTION get_revenue_by_month(months_back INT DEFAULT 6, ref_month DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
   mes TEXT,
   receita DECIMAL,
@@ -312,8 +312,9 @@ BEGIN
     r.lucro
   FROM receitas r
   WHERE r.user_id = auth.uid()
-    AND r.mes >= NOW()::DATE - INTERVAL '1 month' * months_back
-  ORDER BY r.mes DESC
+    AND r.mes >= DATE_TRUNC('month', ref_month)::DATE - INTERVAL '1 month' * months_back
+    AND r.mes <= DATE_TRUNC('month', ref_month)::DATE
+  ORDER BY r.mes ASC
   LIMIT months_back;
 END;
 $$ LANGUAGE plpgsql;
@@ -455,7 +456,7 @@ $$ LANGUAGE plpgsql;
 -- churn: uma sub deixou de contar no mês seguinte ao churn do cliente.
 -- ARR = MRR × 12.
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_mrr_by_month(months_back INT DEFAULT 6)
+CREATE OR REPLACE FUNCTION get_mrr_by_month(months_back INT DEFAULT 6, ref_month DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
   mes TEXT,
   mrr NUMERIC,
@@ -464,7 +465,7 @@ RETURNS TABLE(
 BEGIN
   RETURN QUERY
   WITH months AS (
-    SELECT (DATE_TRUNC('month', NOW()) - INTERVAL '1 month' * gs)::DATE AS month_start
+    SELECT (DATE_TRUNC('month', ref_month) - INTERVAL '1 month' * gs)::DATE AS month_start
     FROM generate_series(0, months_back - 1) AS gs
   )
   SELECT TO_CHAR(m.month_start, 'Mon') AS mes,
@@ -490,7 +491,7 @@ $$ LANGUAGE plpgsql;
 -- Churn mensal = clientes com churned_at no mês / ativos no início do mês.
 -- NRR é aproximado como 100% − churn (não há dados de expansão/contração).
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_churn_rate(months_back INT DEFAULT 6)
+CREATE OR REPLACE FUNCTION get_churn_rate(months_back INT DEFAULT 6, ref_month DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
   mes TEXT,
   churn_rate NUMERIC,
@@ -499,7 +500,7 @@ RETURNS TABLE(
 BEGIN
   RETURN QUERY
   WITH months AS (
-    SELECT (DATE_TRUNC('month', NOW()) - INTERVAL '1 month' * gs)::DATE AS month_start
+    SELECT (DATE_TRUNC('month', ref_month) - INTERVAL '1 month' * gs)::DATE AS month_start
     FROM generate_series(0, months_back - 1) AS gs
   ),
   base AS (
@@ -536,38 +537,65 @@ $$ LANGUAGE plpgsql;
 -- Dashboard: métricas agregadas de clientes
 -- Retorna linhas {metric_name, value}: Active Customers, MRR Total, CAC, LTV.
 -- LTV = (MRR Total / ativos) × (100 / churn%) — fórmula SaaS padrão.
+-- Com `ref_month`, os valores são "ao fim do mês de referência" (mesma semântica
+-- do get_mrr_by_month): um cliente churnado depois do ref ainda conta como ativo.
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_customer_metrics()
+CREATE OR REPLACE FUNCTION get_customer_metrics(ref_month DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
   metric_name TEXT,
   value NUMERIC
 ) AS $$
 DECLARE
+  inicio DATE; -- primeiro dia do mês de referência
+  fim DATE;    -- primeiro dia do mês seguinte ao ref (corte de "ativo ao fim do mês")
   ativos INT;
   mrr_total NUMERIC;
   churn_pct NUMERIC;
   cac NUMERIC;
   ltv NUMERIC;
 BEGIN
+  inicio := DATE_TRUNC('month', ref_month)::DATE;
+  fim := (DATE_TRUNC('month', ref_month) + INTERVAL '1 month')::DATE;
+
   SELECT COUNT(*) INTO ativos
   FROM customers
-  WHERE user_id = auth.uid() AND status = 'active';
+  WHERE user_id = auth.uid()
+    AND created_at < fim
+    AND (churned_at IS NULL OR churned_at >= fim);
 
   SELECT COALESCE(SUM(s.mrr), 0) INTO mrr_total
   FROM subscriptions s
   JOIN customers c ON c.id = s.customer_id
-  WHERE c.user_id = auth.uid() AND s.status = 'active';
+  WHERE c.user_id = auth.uid()
+    AND s.status = 'active'
+    AND s.created_at < fim
+    AND (c.churned_at IS NULL OR c.churned_at >= fim);
 
-  SELECT COALESCE(
-           ROUND(100.0 * COUNT(*) FILTER (WHERE c.status <> 'active') / NULLIF(COUNT(*), 0), 2),
-           0
-         ) INTO churn_pct
-  FROM customers c
-  WHERE c.user_id = auth.uid();
+  -- Churn do mês de referência: churnados no mês / ativos no início do mês
+  WITH base AS (
+    SELECT COUNT(*)::NUMERIC AS ativos_inicio
+    FROM customers c
+    WHERE c.user_id = auth.uid()
+      AND c.created_at < fim
+      AND (c.churned_at IS NULL OR c.churned_at >= inicio)
+  ),
+  ch AS (
+    SELECT COUNT(*)::NUMERIC AS total
+    FROM customers c
+    WHERE c.user_id = auth.uid()
+      AND c.churned_at >= inicio
+      AND c.churned_at < fim
+  )
+  SELECT CASE WHEN b.ativos_inicio > 0 THEN ROUND((ch.total / b.ativos_inicio * 100)::NUMERIC, 2) ELSE 0 END
+  INTO churn_pct
+  FROM base b CROSS JOIN ch;
 
   SELECT COALESCE(AVG(custo_aquisicao), 0) INTO cac
   FROM customers
-  WHERE user_id = auth.uid() AND status = 'active' AND custo_aquisicao > 0;
+  WHERE user_id = auth.uid()
+    AND custo_aquisicao > 0
+    AND created_at < fim
+    AND (churned_at IS NULL OR churned_at >= fim);
 
   IF ativos > 0 AND mrr_total > 0 AND COALESCE(churn_pct, 0) > 0 THEN
     ltv := ROUND((mrr_total / ativos) * (100.0 / churn_pct), 2);

@@ -8,6 +8,7 @@
 
 import { sb as supabase } from '@/services/supabase';
 import { useSupabaseQuery, toNumber, QueryResult } from './useSupabaseQuery';
+import type { MonthKey } from '@/contexts/PeriodContext';
 
 // Paleta oficial (máx. 3 cores + neutro)
 const PALETTE = ['#EDEDED', '#10B981', '#8B8B8B', '#6B7280'];
@@ -132,9 +133,11 @@ export interface ExpenseData {
   fill: string;
 }
 
-export function useFinanceChartData(): QueryResult<FinanceChartData[]> {
+export function useFinanceChartData(refMonth?: MonthKey | null): QueryResult<FinanceChartData[]> {
+  const args: Record<string, unknown> = { months_back: 6 };
+  if (refMonth) args.ref_month = `${refMonth}-01`;
   return useSupabaseQuery<FinanceChartData[]>({
-    queryFn: () => supabase.rpc('get_revenue_by_month', { months_back: 6 }),
+    queryFn: () => supabase.rpc('get_revenue_by_month', args),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
         mes: String(r.mes),
@@ -144,7 +147,7 @@ export function useFinanceChartData(): QueryResult<FinanceChartData[]> {
       })),
     empty: [],
     mockKey: 'MOCK_FINANCE_CHART',
-  });
+  }, [refMonth ?? null]);
 }
 
 export function useCashFlowData(): QueryResult<CashFlowData[]> {
@@ -248,7 +251,7 @@ export function useGoalsData(): QueryResult<GoalData[]> {
 }
 
 // ============================================================================
-// CUSTOMER SERVICE (módulo removido da navegação; hooks mantidos p/ CSPage)
+// CUSTOMER SERVICE — hooks da CSPage
 // ============================================================================
 
 export interface TicketData {

@@ -21,6 +21,7 @@ import {
   STAGES, STAGE_MAP, isOpen, daysSince, ROT_DAYS,
   computeCrmMetrics, computeFunnel, computeBySource,
 } from '@/utils/crmMetrics';
+import { useRevalidateStore } from '@/store/revalidate.store';
 
 /* ---------- Configuração das fases (com probabilidade p/ forecast) ---------- */
 const ORIGENS = ['Indicação', 'Inbound', 'Outbound', 'Evento', 'Site', 'Outro'];
@@ -156,6 +157,7 @@ export default function CRMPage() {
     if (formData.etapa === 'Ganho' && saved?.id) {
       await integrateWonDeal({ id: saved.id, ...formData });
     }
+    useRevalidateStore.getState().invalidate();
   };
 
   const handleDelete = async (id: string) => {
@@ -164,7 +166,8 @@ export default function CRMPage() {
     const prev = items;
     setItems(items.filter((c) => c.id !== id));
     const { error } = await supabase.from('contatos').delete().eq('id', id);
-    if (error) { setItems(prev); setMutationError(error.message); }
+    if (error) { setItems(prev); setMutationError(error.message); return; }
+    useRevalidateStore.getState().invalidate();
   };
 
   const moveTo = async (id: string, etapa: string) => {
@@ -178,6 +181,7 @@ export default function CRMPage() {
     if (etapa === 'Ganho') {
       await integrateWonDeal(current);
     }
+    useRevalidateStore.getState().invalidate();
   };
 
   // Métricas do período selecionado + mês anterior (para variação)

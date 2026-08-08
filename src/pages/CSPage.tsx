@@ -13,17 +13,11 @@ import { colorSystem } from '@/styles/color-system';
 import { colorSystemPremium } from '@/styles/color-system-premium';
 import { sb as supabase } from '@/services/supabase';
 import { useTicketsData, useAttendanceChartData, useSatisfactionData, useContactsData } from '@/hooks/usePagesQueries';
+import { parseTempoResposta } from '@/utils/tickets';
+import { useRevalidateStore } from '@/store/revalidate.store';
 
 const PRIORIDADES = ['baixa', 'média', 'alta', 'crítica'];
 const genTicketId = () => `TK-${Date.now().toString(36).toUpperCase().slice(-6)}`;
-
-/** Converte "2h 15m" / "45m" / "3h" em minutos. Retorna 0 se não reconhecer o formato. */
-function parseTempoResposta(tempo?: string): number {
-  if (!tempo) return 0;
-  const h = /(\d+)\s*h/i.exec(tempo);
-  const m = /(\d+)\s*m/i.exec(tempo);
-  return (h ? Number(h[1]) : 0) * 60 + (m ? Number(m[1]) : 0);
-}
 
 interface TicketForm {
   contatoId: string;
@@ -64,6 +58,7 @@ export function CSPage() {
     setShowTicketModal(false);
     setTicketForm(EMPTY_TICKET_FORM);
     refetchTickets();
+    useRevalidateStore.getState().invalidate();
   };
 
   const handleResolveTicket = async (id: string) => {
@@ -71,6 +66,7 @@ export function CSPage() {
     const { error } = await supabase.from('tickets').update({ status: 'resolvido', resolved_at: new Date().toISOString() }).eq('id', id);
     if (error) { setTicketError(error.message); return; }
     refetchTickets();
+    useRevalidateStore.getState().invalidate();
   };
 
   const handleDeleteTicket = async (id: string) => {
@@ -79,6 +75,7 @@ export function CSPage() {
     const { error } = await supabase.from('tickets').delete().eq('id', id);
     if (error) { setTicketError(error.message); return; }
     refetchTickets();
+    useRevalidateStore.getState().invalidate();
   };
 
   // Show error state

@@ -37,7 +37,7 @@ export const OPEN_KEYS = ['Novo Lead', 'Contato Feito', 'Qualificado', 'Proposta
 export const isOpen = (etapa: string) => OPEN_KEYS.includes(etapa);
 export const ROT_DAYS = 14;
 
-export const daysSince = (iso?: string) =>
+export const daysSince = (iso?: string | null) =>
   iso ? Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)) : 0;
 
 /** Diferença em dias entre duas datas ISO (>= 0) */

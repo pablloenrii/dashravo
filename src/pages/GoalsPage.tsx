@@ -17,6 +17,7 @@ import { sb as supabase } from '@/services/supabase';
 import { useGoalsData, useContactsData, GoalData, GoalMetric, GoalUnit } from '@/hooks/usePagesQueries';
 import { usePeriod, monthISO, monthLabelLong, toMonthKey } from '@/contexts/PeriodContext';
 import { computeCrmMetrics } from '@/utils/crmMetrics';
+import { useRevalidateStore } from '@/store/revalidate.store';
 
 /** Catálogo de métricas automáticas — o realizado vem do próprio sistema. */
 const METRICAS: { value: GoalMetric; label: string; unidade: GoalUnit; hint: string }[] = [
@@ -125,6 +126,7 @@ export default function GoalsPage() {
     if (error) { setMutationError(error.message); return; }
     setShowModal(false);
     goals.refetch();
+    useRevalidateStore.getState().invalidate();
   };
 
   const handleDelete = async (id: string) => {
@@ -133,6 +135,7 @@ export default function GoalsPage() {
     const { error } = await supabase.from('metas').delete().eq('id', id);
     if (error) { setMutationError(error.message); return; }
     goals.refetch();
+    useRevalidateStore.getState().invalidate();
   };
 
   const unidadeForm = METRICA_MAP[form.metrica]?.unidade ?? 'numero';

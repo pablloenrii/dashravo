@@ -58,6 +58,14 @@ global.IntersectionObserver = class IntersectionObserver {
   unobserve() {}
 } as any;
 
+// Mock ResizeObserver (recharts ResponsiveContainer depende dele)
+global.ResizeObserver = class ResizeObserver {
+  constructor() {}
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as any;
+
 // Silence console warnings em testes
 const originalWarn = console.warn;
 beforeAll(() => {

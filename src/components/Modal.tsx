@@ -104,6 +104,7 @@ export function Modal({
             {closeButton && (
               <button
                 onClick={onClose}
+                aria-label="Fechar"
                 style={{
                   background: 'transparent',
                   border: 'none',

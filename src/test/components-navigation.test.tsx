@@ -14,6 +14,20 @@ import { CommandPalette } from '@/components/CommandPalette';
 import { PeriodSelector } from '@/components/PeriodSelector';
 import { PeriodProvider, currentMonthKey, monthLabelLong } from '@/contexts/PeriodContext';
 
+// O PeriodSelector agora renderiza o MonthDetailPanel (que usa hooks do Supabase).
+// Stub mínimo para o grafo de módulos não depender de .env nos testes.
+vi.mock('@/services/supabase', () => {
+  const ok = () => Promise.resolve({ data: [], error: null });
+  const stub = {
+    rpc: vi.fn(ok),
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({ eq: vi.fn(() => ({ order: vi.fn(ok) })), order: vi.fn(ok) })),
+    })),
+    auth: { signOut: vi.fn(() => Promise.resolve({ error: null })) },
+  };
+  return { sb: stub, supabase: stub };
+});
+
 const router = (ui: ReactNode) => <MemoryRouter>{ui}</MemoryRouter>;
 
 describe('Breadcrumb', () => {
@@ -196,8 +210,19 @@ describe('PeriodSelector', () => {
     fireEvent.click(trigger);
 
     const current = monthLabelLong(currentMonthKey());
-    fireEvent.click(screen.getByRole('button', { name: new RegExp(current) }));
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${current}`) }));
     expect(screen.getByRole('button').textContent).toContain(current);
+  });
+
+  it('abre as métricas de um mês pelo botão de detalhes', () => {
+    render(
+      <PeriodProvider><PeriodSelector /></PeriodProvider>
+    );
+    fireEvent.click(screen.getByRole('button'));
+
+    const current = monthLabelLong(currentMonthKey());
+    fireEvent.click(screen.getByRole('button', { name: `Ver métricas de ${current}` }));
+    expect(screen.getByText(`Métricas · ${current}`)).toBeTruthy();
   });
 
   it('volta para "Todo o período"', () => {

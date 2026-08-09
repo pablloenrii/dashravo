@@ -17,6 +17,7 @@ import {
   monthLabelLong,
   isInMonth,
   recentMonths,
+  monthsEndingAt,
 } from '@/contexts/PeriodContext';
 
 describe('chaves de mês (YYYY-MM)', () => {
@@ -98,5 +99,19 @@ describe('recentMonths', () => {
 
   it('retorna lista vazia para contagem zero', () => {
     expect(recentMonths(0)).toEqual([]);
+  });
+});
+
+describe('monthsEndingAt', () => {
+  it('termina no mês informado e cruza a virada do ano', () => {
+    const lista = monthsEndingAt('2026-01', 3);
+    expect(lista).toEqual(['2025-11', '2025-12', '2026-01']);
+  });
+
+  it('o último item é sempre o mês de referência', () => {
+    const lista = monthsEndingAt('2026-07', 6);
+    expect(lista.length).toBe(6);
+    expect(lista[5]).toBe('2026-07');
+    expect(lista[0]).toBe('2026-02');
   });
 });

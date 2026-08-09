@@ -1,21 +1,35 @@
 /**
  * RAVO OS — Dashboard
- * Minimalismo enterprise + período, comparação vs mês anterior, sparklines e drill-down.
+ * Minimalismo enterprise + período, comparação vs mês anterior, sparklines,
+ * drill-down, "Receitas × Investimentos" e análise mês a mês com métricas
+ * selecionáveis.
  */
 
 import { useState, useMemo } from 'react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  ComposedChart, BarChart, LineChart, AreaChart, PieChart,
+  Bar, Line, Area, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+} from 'recharts';
 import { ArrowUpRight, ArrowDownRight, Trophy, Target, Percent, Timer } from 'lucide-react';
 import { Modal } from '@/components/Modal';
 import { ChartTooltip } from '@/components/ChartTooltip';
 import { ChartCard } from '@/components/ChartCard';
 import { QueryError, QueryLoading } from '@/components/QueryState';
 import { MetricCard } from '@/components/MetricCard';
+import { MonthlyTable } from '@/components/MonthlyTable';
 import { useMRRData, useChurnData, useFunnelData, useCustomerMetrics } from '@/hooks/useMetricsQueries';
-import { useFinanceChartData, useContactsData } from '@/hooks/usePagesQueries';
-import { usePeriod, prevMonthKey, monthLabel } from '@/contexts/PeriodContext';
+import {
+  useFinanceChartData, useContactsData, useContactsChartData,
+  useCashFlowData, useExpensesData,
+} from '@/hooks/usePagesQueries';
+import {
+  usePeriod, prevMonthKey, monthLabel, monthsEndingAt, MonthKey,
+} from '@/contexts/PeriodContext';
 import { computeCrmMetrics } from '@/utils/crmMetrics';
 import { fmtK, fmtMoney, pctChange } from '@/utils/format';
+import {
+  mergeMonthly, DEFAULT_SELECTED, MonthlyMetricKey, FinanceSlice,
+} from '@/utils/monthlyAnalysis';
 import { chart, type, layout, surface, text } from '@/constants/theme';
 
 const REVENUE = chart.revenue;
@@ -25,7 +39,7 @@ const AXIS = chart.axis;
 type Drill = { title: string; data: object[]; dataKey: string; color: string } | null;
 
 export default function Dashboard() {
-  const { month, isAllTime, label: periodLabel } = usePeriod();
+  const { month, isAllTime, label: periodLabel, effectiveMonth, setMonth } = usePeriod();
 
   // Séries ancoradas no mês selecionado (ou no atual, quando "Todo o período")
   const mrr = useMRRData(month);
@@ -34,6 +48,9 @@ export default function Dashboard() {
   const metrics = useCustomerMetrics(month);
   const finance = useFinanceChartData(month);
   const contacts = useContactsData();
+  const contactsChart = useContactsChartData(month);
+  const cashFlow = useCashFlowData(month);
+  const expenses = useExpensesData(month);
 
   // Desempenho comercial do período selecionado (mesma fonte do CRM)
   const cm = useMemo(() => computeCrmMetrics(contacts.data, month), [contacts.data, month]);
@@ -46,11 +63,13 @@ export default function Dashboard() {
 
   const [period, setPeriod] = useState<'3m' | '6m'>('6m');
   const [drill, setDrill] = useState<Drill>(null);
+  const [selMetrics, setSelMetrics] = useState<MonthlyMetricKey[]>(DEFAULT_SELECTED);
   const n = period === '3m' ? 3 : 6;
 
   const mrrS = mrr.data.slice(-n);
   const churnS = churn.data.slice(-n);
   const finS = finance.data.slice(-n);
+  const contactsS = contactsChart.data.slice(-n);
 
   const currentMRR = mrr.data.length > 0 ? mrr.data[mrr.data.length - 1].mrr : 0;
   const currentARR = mrr.data.length > 0 ? mrr.data[mrr.data.length - 1].arr : 0;
@@ -70,7 +89,38 @@ export default function Dashboard() {
     { label: 'LTV / CAC', value: String(ltvCac), unit: '' },
   ];
 
+  // --------------------------------------------------------------------------
+  // Análise do mês selecionado: Receita × Investimento (despesa)
+  // --------------------------------------------------------------------------
+  const selFin = finS[finS.length - 1];
+  const prevFin = finS[finS.length - 2];
+  const monthKPIs = useMemo(() => {
+    if (isAllTime) {
+      const receita = finS.reduce((s, m) => s + m.receita, 0);
+      const despesa = finS.reduce((s, m) => s + m.despesa, 0);
+      const lucro = receita - despesa;
+      return { receita, despesa, lucro, margem: receita > 0 ? (lucro / receita) * 100 : 0, deltaReceita: undefined, deltaDespesa: undefined, deltaLucro: undefined };
+    }
+    const receita = selFin?.receita ?? 0;
+    const despesa = selFin?.despesa ?? 0;
+    const lucro = selFin?.lucro ?? receita - despesa;
+    return {
+      receita, despesa, lucro, margem: receita > 0 ? (lucro / receita) * 100 : 0,
+      deltaReceita: prevFin ? pctChange(receita, prevFin.receita) : undefined,
+      deltaDespesa: prevFin ? pctChange(despesa, prevFin.despesa) : undefined,
+      deltaLucro: prevFin ? pctChange(lucro, prevFin.lucro) : undefined,
+    };
+  }, [finS, isAllTime, selFin, prevFin]);
+
+  const highlightedMonth: MonthKey | null = isAllTime ? null : month;
+  const finKeys = monthsEndingAt(effectiveMonth, finS.length);
+  const monthRows = useMemo(
+    () => mergeMonthly(finS as FinanceSlice[], mrrS, churnS, contactsS, finKeys),
+    [finS, mrrS, churnS, contactsS, finKeys]
+  );
+
   const loading = mrr.loading || churn.loading || metrics.loading;
+  const highlightIndex = isAllTime ? -1 : finS.length - 1;
 
   return (
     <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
@@ -93,12 +143,12 @@ export default function Dashboard() {
       {churn.error && <QueryError message={churn.error} onRetry={churn.refetch} />}
       {metrics.error && <QueryError message={metrics.error} onRetry={metrics.refetch} />}
       {finance.error && <QueryError message={finance.error} onRetry={finance.refetch} />}
+      {expenses.error && <QueryError message={expenses.error} onRetry={expenses.refetch} />}
+      {cashFlow.error && <QueryError message={cashFlow.error} onRetry={cashFlow.refetch} />}
 
       {/* Desempenho comercial do período */}
       <div style={{ marginBottom: '16px' }}>
-        <h2 style={{ ...type.sectionTitle, color: text.label, margin: '0 0 10px 0' }}>
-          Comercial
-        </h2>
+        <SectionTitle>Comercial</SectionTitle>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px' }}>
           <MetricCard label="Receita fechada" value={fmtMoney(cm.receitaGanha)} icon={<Trophy size={14} />}
             deltaPct={dc(cm.receitaGanha, cmPrev.receitaGanha)} sublabel={vsLabel} loading={contacts.loading} />
@@ -114,9 +164,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <h2 style={{ ...type.sectionTitle, color: text.label, margin: '0 0 10px 0' }}>
-        Recorrência
-      </h2>
+      <SectionTitle>Recorrência</SectionTitle>
 
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
@@ -125,20 +173,60 @@ export default function Dashboard() {
         {kpis.map((k, i) => <KPI key={k.label} kpi={k} first={i === 0} loading={loading} onOpen={() => k.drill && setDrill(k.drill)} />)}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-        <ChartCard title="Receita mensal">
+      {/* Receitas × Investimentos */}
+      <div style={{ marginBottom: '16px' }}>
+        <SectionTitle>Receitas × Investimentos</SectionTitle>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+          <MetricCard label="Receita" value={fmtMoney(monthKPIs.receita)} icon={<ArrowUpRight size={14} />}
+            deltaPct={monthKPIs.deltaReceita} sublabel={isAllTime ? `${periodLabel}` : monthLabel(effectiveMonth)} loading={finance.loading} />
+          <MetricCard label="Investimento" value={fmtMoney(monthKPIs.despesa)} icon={<ArrowDownRight size={14} />}
+            deltaPct={monthKPIs.deltaDespesa} invertDelta sublabel="despesas do período" loading={finance.loading} />
+          <MetricCard label="Lucro" value={fmtMoney(monthKPIs.lucro)} icon={<ArrowUpRight size={14} />}
+            deltaPct={monthKPIs.deltaLucro} sublabel="receita − investimento" loading={finance.loading} />
+          <MetricCard label="Margem" value={`${monthKPIs.margem.toFixed(1)}%`} icon={<Percent size={14} />}
+            progress={Math.max(0, monthKPIs.margem)} sublabel="lucro / receita" loading={finance.loading} />
+        </div>
+
+        <ChartCard title="Receita, Investimento e Lucro" subtitle={periodLabel}>
           {finance.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={190}>
-              <AreaChart data={finS} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height={260}>
+              <ComposedChart data={finS} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
                 <XAxis dataKey="mes" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
                 <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} tickFormatter={fmtK} />
-                <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
-                <Area type="monotone" dataKey="receita" stroke={REVENUE} fill="rgba(63,185,80,0.08)" strokeWidth={1.75} name="Receita" />
-              </AreaChart>
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                <Bar dataKey="receita" name="Receita" radius={[3, 3, 0, 0]} barSize={18}>
+                  {finS.map((_, i) => (
+                    <Cell key={i} fill={i === highlightIndex ? REVENUE : `${REVENUE}59`} />
+                  ))}
+                </Bar>
+                <Bar dataKey="despesa" name="Investimento" fill={LINE} radius={[3, 3, 0, 0]} barSize={18} />
+                <Line type="monotone" dataKey="lucro" name="Lucro" stroke={chart.light} strokeWidth={1.75} dot={{ r: 2 }} />
+              </ComposedChart>
             </ResponsiveContainer>
           )}
         </ChartCard>
+      </div>
 
+      {/* Análise mês a mês */}
+      <div style={{ marginBottom: '16px' }}>
+        <SectionTitle>Análise mês a mês</SectionTitle>
+        <p style={{ fontSize: '12px', color: text.tertiary, margin: '0 0 10px 0' }}>
+          Selecione as métricas e clique em uma linha para fixar o mês na análise acima.
+        </p>
+        <MonthlyTable
+          rows={monthRows}
+          selected={selMetrics}
+          onSelectedChange={setSelMetrics}
+          highlightedMonth={highlightedMonth}
+          onSelectMonth={setMonth}
+          loading={finance.loading || mrr.loading}
+        />
+      </div>
+
+      {/* Gráficos de detalhe */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
         <ChartCard title="MRR">
           {mrr.loading ? <QueryLoading /> : (
             <ResponsiveContainer width="100%" height={190}>
@@ -177,6 +265,49 @@ export default function Dashboard() {
             </ResponsiveContainer>
           )}
         </ChartCard>
+
+        <ChartCard title="Fluxo de caixa semanal">
+          {cashFlow.loading ? <QueryLoading /> : (
+            <ResponsiveContainer width="100%" height={190}>
+              <BarChart data={cashFlow.data} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                <XAxis dataKey="semana" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
+                <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} tickFormatter={fmtK} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                <Bar dataKey="entradas" name="Entradas" fill={REVENUE} radius={[2, 2, 0, 0]} barSize={12} />
+                <Bar dataKey="saidas" name="Saídas" fill={LINE} radius={[2, 2, 0, 0]} barSize={12} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        <ChartCard title="Novos vs ativos">
+          {contactsChart.loading ? <QueryLoading /> : (
+            <ResponsiveContainer width="100%" height={190}>
+              <AreaChart data={contactsS} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                <XAxis dataKey="mes" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
+                <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
+                <Area type="monotone" dataKey="novos" stroke={chart.palette[1]} fill="rgba(16,185,129,0.08)" strokeWidth={1.5} name="Novos" />
+                <Area type="monotone" dataKey="ativos" stroke={chart.palette[2]} fill="rgba(139,139,139,0.06)" strokeWidth={1.5} name="Ativos" />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        <ChartCard title="Despesas por categoria">
+          {expenses.loading ? <QueryLoading /> : (
+            <ResponsiveContainer width="100%" height={190}>
+              <PieChart>
+                <Pie data={expenses.data} cx="50%" cy="50%" innerRadius={45} outerRadius={85} paddingAngle={2} dataKey="value" nameKey="name">
+                  {expenses.data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip content={<ChartTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
       </div>
 
       <Modal isOpen={drill !== null} onClose={() => setDrill(null)} title={drill?.title ?? ''} size="lg">
@@ -192,6 +323,12 @@ export default function Dashboard() {
         )}
       </Modal>
     </div>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 style={{ ...type.sectionTitle, color: text.label, margin: '0 0 10px 0' }}>{children}</h2>
   );
 }
 

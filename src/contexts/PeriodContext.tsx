@@ -80,6 +80,18 @@ export function recentMonths(count = 12): MonthKey[] {
   return out;
 }
 
+/** Últimos N meses terminando em `end` (mais antigo primeiro). O último item é `end`. */
+export function monthsEndingAt(end: MonthKey, count = 6): MonthKey[] {
+  const out: MonthKey[] = [];
+  const base = monthStart(end);
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(base);
+    d.setMonth(d.getMonth() - i);
+    out.push(toMonthKey(d));
+  }
+  return out;
+}
+
 interface PeriodContextValue {
   /** Mês selecionado ('YYYY-MM'), ou null quando o usuário escolhe "Todo o período" */
   month: MonthKey | null;

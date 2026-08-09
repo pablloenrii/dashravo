@@ -13,21 +13,21 @@ import { Button } from '@/components/Button';
 import { Modal } from '@/components/Modal';
 import { Input } from '@/components/Input';
 import { QueryError, QueryLoading } from '@/components/QueryState';
-import { MetricCard, pctChange } from '@/components/MetricCard';
+import { MetricCard } from '@/components/MetricCard';
 import { sb as supabase } from '@/services/supabase';
 import { useContactsData, ContactData } from '@/hooks/usePagesQueries';
 import { usePeriod, prevMonthKey, monthLabel } from '@/contexts/PeriodContext';
+import { fmtMoney, pctChange } from '@/utils/format';
 import {
   STAGES, STAGE_MAP, isOpen, daysSince, ROT_DAYS,
   computeCrmMetrics, computeFunnel, computeBySource,
 } from '@/utils/crmMetrics';
 import { useRevalidateStore } from '@/store/revalidate.store';
+import { chart, text, surface, semantic, layout, type } from '@/constants/theme';
 
 /* ---------- Configuração das fases (com probabilidade p/ forecast) ---------- */
 const ORIGENS = ['Indicação', 'Inbound', 'Outbound', 'Evento', 'Site', 'Outro'];
 
-const fmtMoney = (v: number) =>
-  v >= 1000 ? `R$ ${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k` : `R$ ${Math.round(v)}`;
 const initials = (nome: string) =>
   nome.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 const fmtDate = (iso: string) => { const d = new Date(iso); return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`; };
@@ -211,16 +211,16 @@ export default function CRMPage() {
   );
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Pipeline de Vendas</h1>
-          <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>
+          <h1 style={{ ...type.pageTitle, color: text.primary, margin: '0 0 4px 0' }}>Pipeline de Vendas</h1>
+          <p style={{ fontSize: '14px', color: text.secondary, margin: 0 }}>
             {periodLabel} · {m.novosLeadsCount} {m.novosLeadsCount === 1 ? 'novo lead' : 'novos leads'} · {m.ganhos.length} {m.ganhos.length === 1 ? 'fechado' : 'fechados'}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '3px' }}>
+          <div style={{ display: 'flex', background: surface.card, border: `1px solid ${surface.borderStrong}`, borderRadius: '8px', padding: '3px' }}>
             <ViewBtn active={view === 'board'} onClick={() => setView('board')} icon={<LayoutGrid size={15} />} label="Board" />
             <ViewBtn active={view === 'list'} onClick={() => setView('list')} icon={<ListIcon size={15} />} label="Lista" />
           </div>
@@ -287,13 +287,13 @@ export default function CRMPage() {
                   return (
                     <div key={f.etapa}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '11.5px', color: '#9CA3AF', fontWeight: 500 }}>{f.etapa}</span>
-                        <span style={{ fontSize: '11.5px', color: '#6E6E6E' }}>
-                          <strong style={{ color: '#EDEDED', fontWeight: 650 }}>{f.quantidade}</strong>
+                        <span style={{ fontSize: '11.5px', color: text.secondary, fontWeight: 500 }}>{f.etapa}</span>
+                        <span style={{ fontSize: '11.5px', color: text.tertiary }}>
+                          <strong style={{ color: chart.light, fontWeight: 650 }}>{f.quantidade}</strong>
                           {i > 0 && <span style={{ marginLeft: '6px' }}>{f.conversaoEtapa}%</span>}
                         </span>
                       </div>
-                      <div style={{ height: '6px', background: 'rgba(255,255,255,0.04)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ height: '6px', background: surface.input, borderRadius: '3px', overflow: 'hidden' }}>
                         <div style={{
                           width: `${largura}%`, height: '100%', background: f.color,
                           borderRadius: '3px', transition: 'width .5s cubic-bezier(0.4,0,0.2,1)',
@@ -311,20 +311,20 @@ export default function CRMPage() {
               <Vazio texto="Nenhum lead no período." />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 52px 52px 74px', gap: '8px', padding: '0 0 7px 0', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em', color: '#5B616E', fontWeight: 600 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 52px 52px 74px', gap: '8px', padding: '0 0 7px 0', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em', color: text.label, fontWeight: 600 }}>
                   <span>Canal</span><span style={{ textAlign: 'right' }}>Leads</span>
                   <span style={{ textAlign: 'right' }}>Win</span><span style={{ textAlign: 'right' }}>Receita</span>
                 </div>
                 {porOrigem.slice(0, 6).map((r) => (
                   <div key={r.origem} style={{
                     display: 'grid', gridTemplateColumns: '1fr 52px 52px 74px', gap: '8px',
-                    padding: '7px 0', borderTop: '1px solid rgba(255,255,255,0.04)',
+                    padding: '7px 0', borderTop: `1px solid ${surface.input}`,
                     fontSize: '12px', alignItems: 'center',
                   }}>
-                    <span style={{ color: '#EDEDED', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.origem}</span>
-                    <span style={{ textAlign: 'right', color: '#9CA3AF' }}>{r.leads}</span>
-                    <span style={{ textAlign: 'right', color: r.winRate >= 50 ? '#3FB950' : '#9CA3AF', fontWeight: 600 }}>{r.winRate}%</span>
-                    <span style={{ textAlign: 'right', color: r.receita > 0 ? '#3FB950' : '#5B616E', fontWeight: 600 }}>{fmtMoney(r.receita)}</span>
+                    <span style={{ color: chart.light, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.origem}</span>
+                    <span style={{ textAlign: 'right', color: text.secondary }}>{r.leads}</span>
+                    <span style={{ textAlign: 'right', color: r.winRate >= 50 ? chart.revenue : text.secondary, fontWeight: 600 }}>{r.winRate}%</span>
+                    <span style={{ textAlign: 'right', color: r.receita > 0 ? chart.revenue : text.label, fontWeight: 600 }}>{fmtMoney(r.receita)}</span>
                   </div>
                 ))}
               </div>
@@ -348,19 +348,19 @@ export default function CRMPage() {
                 onDrop={() => { if (dragId) moveTo(dragId, stage.key); setDragId(null); setOverCol(null); }}
                 style={{
                   flex: '0 0 250px', minWidth: '250px',
-                  background: overCol === stage.key ? 'rgba(255,255,255,0.06)' : '#0F0F0F',
-                  border: `1px solid ${overCol === stage.key ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                  background: overCol === stage.key ? surface.hover : surface.card,
+                  border: `1px solid ${overCol === stage.key ? 'rgba(255,255,255,0.4)' : surface.borderStrong}`,
                   borderRadius: '12px', padding: '10px', transition: 'background 150ms, border-color 150ms',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', padding: '2px 4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: stage.color }} />
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#F5F5F7' }}>{stage.key}</span>
-                    <span style={{ fontSize: '11px', color: '#6B7280' }}>{cards.length}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: text.bright }}>{stage.key}</span>
+                    <span style={{ fontSize: '11px', color: text.dim }}>{cards.length}</span>
                   </div>
                 </div>
-                <div style={{ fontSize: '11px', color: '#9CA3AF', padding: '0 4px 8px 4px', fontWeight: 600 }}>{fmtMoney(total)}</div>
+                <div style={{ fontSize: '11px', color: text.secondary, padding: '0 4px 8px 4px', fontWeight: 600 }}>{fmtMoney(total)}</div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minHeight: '80px' }}>
                   {cards.map((c) => {
@@ -372,25 +372,25 @@ export default function CRMPage() {
                         onDragStart={() => setDragId(c.id)}
                         onDragEnd={() => { setDragId(null); setOverCol(null); }}
                         style={{
-                          background: '#1A1A1A', border: `1px solid ${rot ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                          background: surface.elevated, border: `1px solid ${rot ? 'rgba(239,68,68,0.35)' : surface.borderStrong}`,
                           borderRadius: '10px', padding: '10px', cursor: 'grab',
                           opacity: dragId === c.id ? 0.5 : 1,
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                          <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
+                          <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: surface.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center', color: text.white, fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
                             {initials(c.nome)}
                           </div>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#F5F5F7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nome}</div>
-                            <div style={{ fontSize: '11px', color: '#9CA3AF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.empresa || '—'}</div>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: text.bright, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nome}</div>
+                            <div style={{ fontSize: '11px', color: text.secondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.empresa || '—'}</div>
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontSize: '13px', fontWeight: 700, color: c.etapa === 'Ganho' ? '#3FB950' : '#EDEDED' }}>{fmtMoney(c.valor)}</span>
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: c.etapa === 'Ganho' ? chart.revenue : chart.light }}>{fmtMoney(c.valor)}</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            {rot && <span title={`Parado há ${daysSince(c.updated_at)} dias`} style={{ display: 'flex', color: '#EF4444' }}><AlertTriangle size={13} /></span>}
-                            <span style={{ fontSize: '10px', color: '#6B7280' }}>{daysSince(c.updated_at)}d</span>
+                            {rot && <span title={`Parado há ${daysSince(c.updated_at)} dias`} style={{ display: 'flex', color: semantic.danger }}><AlertTriangle size={13} /></span>}
+                            <span style={{ fontSize: '10px', color: text.dim }}>{daysSince(c.updated_at)}d</span>
                             <button onClick={() => handleOpenModal(c)} style={cardBtn} aria-label={`Editar ${c.nome}`}><Edit2 size={13} /></button>
                             <button onClick={() => handleDelete(c.id)} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={13} /></button>
                           </div>
@@ -398,15 +398,15 @@ export default function CRMPage() {
                         {(c.origem || (isOpen(c.etapa) && c.data_prevista) || (!isOpen(c.etapa) && c.motivo)) && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
                             {c.origem && <span style={tag}>{c.origem}</span>}
-                            {isOpen(c.etapa) && c.data_prevista && <span style={{ fontSize: '10px', color: '#6E6E6E' }}>fecha {fmtDate(c.data_prevista)}</span>}
-                            {!isOpen(c.etapa) && c.motivo && <span style={{ fontSize: '10px', color: '#6E6E6E' }}>{c.motivo}</span>}
+                            {isOpen(c.etapa) && c.data_prevista && <span style={{ fontSize: '10px', color: text.tertiary }}>fecha {fmtDate(c.data_prevista)}</span>}
+                            {!isOpen(c.etapa) && c.motivo && <span style={{ fontSize: '10px', color: text.tertiary }}>{c.motivo}</span>}
                           </div>
                         )}
                       </div>
                     );
                   })}
                   {cards.length === 0 && (
-                    <div style={{ fontSize: '11px', color: '#4B5563', textAlign: 'center', padding: '16px 0' }}>Arraste um lead aqui</div>
+                    <div style={{ fontSize: '11px', color: text.faint, textAlign: 'center', padding: '16px 0' }}>Arraste um lead aqui</div>
                   )}
                 </div>
               </div>
@@ -414,9 +414,9 @@ export default function CRMPage() {
           })}
         </div>
       ) : (
-        <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden' }}>
+        <div style={{ background: surface.card, border: `1px solid ${surface.borderStrong}`, borderRadius: '12px', overflow: 'hidden' }}>
           {visiveis.length === 0 ? (
-            <div style={{ padding: '32px', textAlign: 'center', fontSize: '13px', color: '#9CA3AF' }}>
+            <div style={{ padding: '32px', textAlign: 'center', fontSize: '13px', color: text.secondary }}>
               {items.length === 0
                 ? 'Nenhum lead cadastrado. Clique em Novo Lead para começar.'
                 : `Nenhum lead em ${periodLabel.toLowerCase()}. Troque o período no topo da tela.`}
@@ -425,7 +425,7 @@ export default function CRMPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                  <tr style={{ background: surface.input, borderBottom: `1px solid ${surface.borderStrong}` }}>
                     <th style={thStyle}>Lead</th>
                     <th style={thStyle}>Empresa</th>
                     <th style={{ ...thStyle, textAlign: 'center' }}>Valor</th>
@@ -437,20 +437,20 @@ export default function CRMPage() {
                 <tbody>
                   {visiveis.map((c) => (
                     <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = surface.input)}
                       onMouseLeave={(e) => (e.currentTarget.style.background = '')}>
-                      <td style={{ padding: '12px 16px', fontSize: '13px', color: '#F5F5F7', fontWeight: 500 }}>
+                      <td style={{ padding: '12px 16px', fontSize: '13px', color: text.bright, fontWeight: 500 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#2A2A2A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '11px', fontWeight: 700 }}>{initials(c.nome)}</div>
+                          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: surface.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center', color: text.white, fontSize: '11px', fontWeight: 700 }}>{initials(c.nome)}</div>
                           {c.nome}
                         </div>
                       </td>
-                      <td style={{ padding: '12px 16px', fontSize: '13px', color: '#A1A1A6' }}>{c.empresa || '—'}</td>
-                      <td style={{ padding: '12px 16px', fontSize: '13px', color: c.etapa === 'Ganho' ? '#3FB950' : '#EDEDED', fontWeight: 600, textAlign: 'center' }}>{fmtMoney(c.valor)}</td>
+                      <td style={{ padding: '12px 16px', fontSize: '13px', color: text.secondaryAlt }}>{c.empresa || '—'}</td>
+                      <td style={{ padding: '12px 16px', fontSize: '13px', color: c.etapa === 'Ganho' ? chart.revenue : chart.light, fontWeight: 600, textAlign: 'center' }}>{fmtMoney(c.valor)}</td>
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: STAGE_MAP[c.etapa]?.color ?? '#9CA3AF', background: `${STAGE_MAP[c.etapa]?.color ?? '#9CA3AF'}1f`, padding: '3px 10px', borderRadius: '999px' }}>{c.etapa}</span>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: STAGE_MAP[c.etapa]?.color ?? text.secondary, background: `${STAGE_MAP[c.etapa]?.color ?? text.secondary}1f`, padding: '3px 10px', borderRadius: '999px' }}>{c.etapa}</span>
                       </td>
-                      <td style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', color: daysSince(c.updated_at) >= ROT_DAYS && isOpen(c.etapa) ? '#EF4444' : '#9CA3AF' }}>{daysSince(c.updated_at)}d</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', color: daysSince(c.updated_at) >= ROT_DAYS && isOpen(c.etapa) ? semantic.danger : text.secondary }}>{daysSince(c.updated_at)}d</td>
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                           <button onClick={() => handleOpenModal(c)} style={cardBtn} aria-label={`Editar ${c.nome}`}><Edit2 size={16} /></button>
@@ -475,9 +475,9 @@ export default function CRMPage() {
           <Input label="Telefone" placeholder="11 98765-4321" value={formData.telefone} onChange={(e) => setFormData({ ...formData, telefone: e.target.value })} />
           <Input label="Valor (R$)" type="number" placeholder="50000" value={formData.valor} onChange={(e) => setFormData({ ...formData, valor: Number(e.target.value) })} />
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#9CA3AF', marginBottom: '6px' }}>Fase</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: text.secondary, marginBottom: '6px' }}>Fase</label>
             <select
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F5F7', fontSize: '13px' }}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: text.bright, fontSize: '13px' }}
               value={formData.etapa} onChange={(e) => setFormData({ ...formData, etapa: e.target.value })}>
               {STAGES.map((s) => <option key={s.key} value={s.key}>{s.key}</option>)}
             </select>
@@ -511,10 +511,10 @@ export default function CRMPage() {
 
 function Panel({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '14px 16px' }}>
+    <div style={{ background: surface.card, border: `1px solid ${surface.border}`, borderRadius: '10px', padding: '14px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
-        <h3 style={{ fontSize: '12.5px', fontWeight: 650, color: '#F2F2F3', margin: 0, letterSpacing: '-0.01em' }}>{title}</h3>
-        {hint && <span style={{ fontSize: '10.5px', color: '#5B616E' }}>{hint}</span>}
+        <h3 style={{ fontSize: '12.5px', fontWeight: 650, color: text.primary, margin: 0, letterSpacing: '-0.01em' }}>{title}</h3>
+        {hint && <span style={{ fontSize: '10.5px', color: text.label }}>{hint}</span>}
       </div>
       {children}
     </div>
@@ -522,7 +522,7 @@ function Panel({ title, hint, children }: { title: string; hint?: string; childr
 }
 
 function Vazio({ texto }: { texto: string }) {
-  return <div style={{ padding: '20px 0', textAlign: 'center', fontSize: '12px', color: '#5B616E' }}>{texto}</div>;
+  return <div style={{ padding: '20px 0', textAlign: 'center', fontSize: '12px', color: text.label }}>{texto}</div>;
 }
 
 function ViewBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
@@ -530,13 +530,13 @@ function ViewBtn({ active, onClick, icon, label }: { active: boolean; onClick: (
     <button onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer',
       fontSize: '12px', fontWeight: 600,
-      background: active ? '#1E1E1E' : 'transparent', color: active ? '#EDEDED' : '#8B8B8B',
+      background: active ? surface.active : 'transparent', color: active ? chart.light : chart.line,
     }}>{icon}{label}</button>
   );
 }
 
-const thStyle: React.CSSProperties = { padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#9CA3AF' };
-const cardBtn: React.CSSProperties = { background: 'transparent', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: '#8A8F98', marginBottom: '6px' };
-const fld: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#EDEDED', fontSize: '13px' };
-const tag: React.CSSProperties = { fontSize: '10px', fontWeight: 500, color: '#8B8B8B', background: 'rgba(255,255,255,0.05)', padding: '2px 7px', borderRadius: '5px' };
+const thStyle: React.CSSProperties = { padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: text.secondary };
+const cardBtn: React.CSSProperties = { background: 'transparent', border: 'none', color: text.secondary, cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' };
+const lbl: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: text.muted, marginBottom: '6px' };
+const fld: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: chart.light, fontSize: '13px' };
+const tag: React.CSSProperties = { fontSize: '10px', fontWeight: 500, color: chart.line, background: surface.divider, padding: '2px 7px', borderRadius: '5px' };

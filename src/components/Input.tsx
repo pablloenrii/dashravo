@@ -1,4 +1,5 @@
 import React from 'react';
+import { text, surface, semantic } from '@/constants/theme';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -21,7 +22,7 @@ export function Input({
           style={{
             fontSize: '13px',
             fontWeight: '500',
-            color: '#9CA3AF',
+            color: text.secondary,
             textTransform: 'uppercase',
             letterSpacing: '0.02em',
           }}
@@ -43,24 +44,24 @@ export function Input({
                 ? 'rgba(239, 68, 68, 0.5)'
                 : success
                   ? 'rgba(16, 185, 129, 0.5)'
-                  : 'rgba(255,255,255,0.08)'
+                  : surface.hover
             }`,
             background: 'rgba(255,255,255,0.02)',
-            color: '#EBEBF0',
+            color: text.highlight,
             transition: 'all 300ms ease-out',
             minHeight: '44px',
             ...props.style,
           }}
           onFocus={(e) => {
             e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
-            e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+            e.currentTarget.style.background = surface.divider;
           }}
           onBlur={(e) => {
             e.currentTarget.style.borderColor = error
               ? 'rgba(239, 68, 68, 0.5)'
               : success
                 ? 'rgba(16, 185, 129, 0.5)'
-                : 'rgba(255,255,255,0.08)';
+                : surface.hover;
             e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
           }}
         />
@@ -72,7 +73,7 @@ export function Input({
               left: '12px',
               display: 'flex',
               alignItems: 'center',
-              color: '#9CA3AF',
+              color: text.secondary,
               pointerEvents: 'none',
             }}
           >
@@ -82,13 +83,13 @@ export function Input({
       </div>
 
       {error && (
-        <span style={{ fontSize: '12px', color: '#EF4444' }}>
+        <span style={{ fontSize: '12px', color: semantic.danger }}>
           {error}
         </span>
       )}
 
       {success && (
-        <span style={{ fontSize: '12px', color: '#10B981' }}>
+        <span style={{ fontSize: '12px', color: semantic.success }}>
           ✓ Válido
         </span>
       )}

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, ChevronRight } from 'lucide-react';
+import { surface, text } from '@/constants/theme';
 
 interface CommandItem {
   id: string;
@@ -15,34 +17,48 @@ interface CommandPaletteProps {
   onClose: () => void;
 }
 
-const commands: CommandItem[] = [
-  {
-    id: 'crm',
-    title: 'Ir para CRM',
-    description: 'Gerenciar leads e pipeline',
-    category: 'Navegação',
-    shortcut: 'Cmd K',
-    action: () => window.location.href = '/crm',
-  },
-  {
-    id: 'finance',
-    title: 'Ir para Finance',
-    description: 'Análise financeira',
-    category: 'Navegação',
-    action: () => window.location.href = '/finance',
-  },
-  {
-    id: 'goals',
-    title: 'Ir para Goals',
-    description: 'Acompanhar KPIs',
-    category: 'Navegação',
-    action: () => window.location.href = '/goals',
-  },
-];
-
 export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const commands: CommandItem[] = [
+    {
+      id: 'dashboard',
+      title: 'Ir para Dashboard',
+      description: 'Visão geral do negócio',
+      category: 'Navegação',
+      action: () => navigate('/dashboard'),
+    },
+    {
+      id: 'crm',
+      title: 'Ir para CRM',
+      description: 'Gerenciar leads e pipeline',
+      category: 'Navegação',
+      action: () => navigate('/crm'),
+    },
+    {
+      id: 'cs',
+      title: 'Ir para Customer Success',
+      description: 'Tickets e satisfação',
+      category: 'Navegação',
+      action: () => navigate('/cs'),
+    },
+    {
+      id: 'finance',
+      title: 'Ir para Finance',
+      description: 'Análise financeira',
+      category: 'Navegação',
+      action: () => navigate('/finance'),
+    },
+    {
+      id: 'goals',
+      title: 'Ir para Goals',
+      description: 'Acompanhar KPIs',
+      category: 'Navegação',
+      action: () => navigate('/goals'),
+    },
+  ];
 
   const filtered = commands.filter(cmd =>
     cmd.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -87,16 +103,38 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.5)', zIndex: 40 }}
         onClick={onClose}
       />
 
       {/* Command Palette */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md z-50">
-        <div className="bg-var(--bg-tertiary) border border-var(--border-primary) rounded-xl shadow-xl overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Busca de comandos"
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '100%',
+          maxWidth: '440px',
+          zIndex: 50,
+          animation: 'fadeIn 150ms ease-out',
+        }}
+      >
+        <div
+          style={{
+            background: surface.card,
+            border: `1px solid ${surface.borderStrong}`,
+            borderRadius: '12px',
+            boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
+            overflow: 'hidden',
+          }}
+        >
           {/* Search Input */}
-          <div className="p-4 border-b border-var(--border-primary) flex items-center gap-3">
-            <Search className="w-5 h-5 text-var(--text-tertiary) flex-shrink-0" strokeWidth={2} />
+          <div style={{ padding: '14px 16px', borderBottom: `1px solid ${surface.borderStrong}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Search size={17} style={{ color: text.tertiary, flexShrink: 0 }} />
             <input
               autoFocus
               type="text"
@@ -106,18 +144,25 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                 setSearch(e.target.value);
                 setSelectedIndex(0);
               }}
-              className="flex-1 bg-transparent border-none outline-none text-var(--text-primary) placeholder-var(--text-tertiary)"
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: text.primary,
+                fontSize: '14px',
+              }}
             />
           </div>
 
           {/* Commands List */}
-          <div className="max-h-96 overflow-y-auto">
+          <div style={{ maxHeight: '384px', overflowY: 'auto' }}>
             {filtered.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className="text-var(--text-tertiary)">Nenhum comando encontrado</p>
+              <div style={{ padding: '32px', textAlign: 'center', color: text.tertiary, fontSize: '13px' }}>
+                Nenhum comando encontrado
               </div>
             ) : (
-              <div className="py-2">
+              <div style={{ padding: '6px 0' }}>
                 {filtered.map((cmd, index) => (
                   <button
                     key={cmd.id}
@@ -125,17 +170,27 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                       cmd.action();
                       onClose();
                     }}
-                    className={`w-full px-4 py-3 flex items-center justify-between hover:bg-var(--bg-hover) transition-colors ${
-                      index === selectedIndex ? 'bg-var(--bg-hover)' : ''
-                    }`}
+                    style={{
+                      width: '100%',
+                      padding: '10px 16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: index === selectedIndex ? surface.borderStrong : 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      color: text.primary,
+                    }}
+                    onMouseEnter={() => setSelectedIndex(index)}
                   >
-                    <div className="text-left">
-                      <p className="text-var(--text-primary) font-medium">{cmd.title}</p>
+                    <div>
+                      <div style={{ fontSize: '13.5px', fontWeight: 500, color: text.primary }}>{cmd.title}</div>
                       {cmd.description && (
-                        <p className="text-xs text-var(--text-tertiary) mt-0.5">{cmd.description}</p>
+                        <div style={{ fontSize: '12px', color: text.tertiary, marginTop: '2px' }}>{cmd.description}</div>
                       )}
                     </div>
-                    <ChevronRight className="w-4 h-4 text-var(--text-tertiary) flex-shrink-0" strokeWidth={2} />
+                    <ChevronRight size={15} style={{ color: text.tertiary, flexShrink: 0 }} />
                   </button>
                 ))}
               </div>
@@ -143,8 +198,18 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-3 border-t border-var(--border-primary) bg-var(--bg-secondary) text-xs text-var(--text-tertiary) flex items-center justify-between">
-            <span>↑ ↓ para navegar • ⏎ para executar • Esc para fechar</span>
+          <div
+            style={{
+              padding: '10px 16px',
+              borderTop: `1px solid ${surface.borderStrong}`,
+              fontSize: '11px',
+              color: text.tertiary,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <span>↑ ↓ navegar • Enter executar • Esc fechar</span>
           </div>
         </div>
       </div>

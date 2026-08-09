@@ -10,6 +10,7 @@ import { MobileMenu } from '@/components/MobileMenu';
 import { NotificationsPanel } from '@/components/NotificationsPanel';
 import { PeriodSelector } from '@/components/PeriodSelector';
 import { useNotifications } from '@/hooks/useNotifications';
+import { chart, text, surface, semantic } from '@/constants/theme';
 
 interface NavItem {
   path: string;
@@ -59,6 +60,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   }, []);
 
   const isActive = (path: string) => location.pathname.startsWith(path);
+  const currentLabel = navItems.find((i) => isActive(i.path))?.label ?? 'Dashboard';
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -80,11 +82,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
         items={navItems}
         isActive={isActive}
       />
-      <div style={{ display: 'flex', height: '100vh', background: '#0A0A0A', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', height: '100vh', background: surface.app, overflow: 'hidden' }}>
         {/* Sidebar - Hidden on mobile */}
         <aside style={{
           width: sidebarOpen ? '16rem' : '5rem',
-          background: '#0D0D0D',
+          background: surface.sidebar,
           borderRight: '0.5px solid rgba(255,255,255,0.04)',
           display: isMobile ? 'none' : 'flex',
           flexDirection: 'column',
@@ -100,15 +102,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
               <div style={{
                 width: '34px', height: '34px', borderRadius: '9px',
-                background: '#1A1A1A', border: '0.5px solid rgba(255,255,255,0.1)',
+                background: surface.elevated, border: '0.5px solid rgba(255,255,255,0.1)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'white', fontWeight: 700, fontSize: '17px',
+                color: text.white, fontWeight: 700, fontSize: '17px',
                 boxShadow: '0 4px 16px rgba(255,255,255, 0.25)'
               }}>R</div>
               {sidebarOpen && (
                 <div>
-                  <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#EDEDED' }}>RAVO</h1>
-                  <p style={{ margin: 0, fontSize: '11px', color: '#6B7280', fontWeight: '500' }}>INTELLIGENCE</p>
+                  <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: chart.light }}>RAVO</h1>
+                  <p style={{ margin: 0, fontSize: '11px', color: text.dim, fontWeight: '500' }}>INTELLIGENCE</p>
                 </div>
               )}
             </Link>
@@ -127,9 +129,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   padding: '10px 12px',
                   borderRadius: '8px',
                   textDecoration: 'none',
-                  color: isActive(item.path) ? '#EDEDED' : '#9CA3AF',
-                  background: isActive(item.path) ? 'rgba(255,255,255, 0.12)' : 'rgba(255,255,255,0.02)',
-                  borderLeft: isActive(item.path) ? '2.5px solid #EDEDED' : '2.5px solid transparent',
+                  color: isActive(item.path) ? chart.light : text.secondary,
+                  background: isActive(item.path) ? surface.hover : 'rgba(255,255,255,0.02)',
+                  borderLeft: isActive(item.path) ? `2.5px solid ${chart.light}` : '2.5px solid transparent',
                   transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
                   fontSize: '13px',
                   fontWeight: isActive(item.path) ? '600' : '500',
@@ -150,7 +152,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 padding: '12px',
                 borderRadius: '8px',
                 border: 'none',
-                color: '#94A3B8',
+                color: text.secondaryAlt,
                 background: 'transparent',
                 cursor: 'pointer',
                 fontSize: '16px'
@@ -171,7 +173,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         }}>
           {/* Header */}
           <header style={{
-            background: '#0D0D0D',
+            background: surface.sidebar,
             borderBottom: '0.5px solid rgba(255,255,255,0.04)',
             height: '64px',
             display: 'flex',
@@ -189,7 +191,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#9CA3AF',
+                  color: text.secondary,
                   cursor: 'pointer',
                   padding: '8px',
                   display: 'flex',
@@ -197,13 +199,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   justifyContent: 'center',
                   transition: 'all 200ms ease-out',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#EBEBF0'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#9CA3AF'}
+                onMouseEnter={(e) => e.currentTarget.style.color = text.highlight}
+                onMouseLeave={(e) => e.currentTarget.style.color = text.secondary}
               >
                 <Menu size={20} />
               </button>
             )}
-            {!isMobile && <Breadcrumb items={[{ label: 'Dashboard' }]} />}
+            {!isMobile && <Breadcrumb items={[{ label: currentLabel }]} />}
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
               <PeriodSelector compact={isMobile} />
               {!isMobile && <SearchBar onSearchClick={() => setCommandOpen(true)} />}
@@ -211,15 +213,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <button
                   onClick={() => setNotifOpen((v) => !v)}
                   aria-label="Notificações"
-                  style={{ position: 'relative', padding: '8px 12px', color: '#9CA3AF', background: 'rgba(255,255,255, 0.08)', border: '0.5px solid rgba(255,255,255, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = '#EDEDED'; e.currentTarget.style.background = 'rgba(255,255,255, 0.15)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.background = 'rgba(255,255,255, 0.08)'; }}
+                  style={{ position: 'relative', padding: '8px 12px', color: text.secondary, background: surface.hover, border: '0.5px solid rgba(255,255,255, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = chart.light; e.currentTarget.style.background = 'rgba(255,255,255, 0.15)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = text.secondary; e.currentTarget.style.background = surface.hover; }}
                 >
-                  <Bell className="w-5 h-5" strokeWidth={1.5} />
+                  <Bell size={20} strokeWidth={1.5} />
                   {notifications.length > 0 && (
                     <span style={{
                       position: 'absolute', top: '4px', right: '4px', width: '7px', height: '7px',
-                      borderRadius: '50%', background: '#EF4444', border: '1.5px solid #0D0D0D',
+                      borderRadius: '50%', background: semantic.danger, border: `1.5px solid ${surface.sidebar}`,
                     }} />
                   )}
                 </button>
@@ -237,18 +239,18 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 title="Sair"
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
-                  color: '#EDEDED', background: 'rgba(255,255,255, 0.12)',
+                  color: chart.light, background: 'rgba(255,255,255, 0.12)',
                   border: '0.5px solid rgba(255,255,255, 0.2)', borderRadius: '6px',
                   cursor: 'pointer', transition: 'all 300ms ease-out'
                 }}
               >
                 <div style={{
                   width: '24px', height: '24px', borderRadius: '50%',
-                  background: '#1A1A1A', border: '0.5px solid rgba(255,255,255,0.1)',
+                  background: surface.elevated, border: '0.5px solid rgba(255,255,255,0.1)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'white', fontSize: '11px', fontWeight: 'bold'
+                  color: text.white, fontSize: '11px', fontWeight: 'bold'
                 }}>P</div>
-                <LogOut className="w-4 h-4" strokeWidth={2} />
+                <LogOut size={16} strokeWidth={2} />
                 <span style={{ fontSize: '12px', fontWeight: 600 }}>Sair</span>
               </button>
             </div>

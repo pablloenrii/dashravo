@@ -23,7 +23,7 @@
 
 ```bash
 # Opção 1: Pelo terminal
-cd C:\Users\FAMILY BOOK\Documents\RAVO DEV\dashravo
+cd C:\Users\FAMILY BOOK\Documents\RAVO COMPANY\03_DOCUMENTACAO_TECNICA\Repositorios\dashravo
 code .
 
 # Opção 2: Arrastar pasta para VS Code
@@ -68,10 +68,9 @@ Abrirá automaticamente em: **http://localhost:5173**
 ### Comece por aqui:
 
 1. **[README.md](./README.md)** — Visão geral completa
-2. **[REFACTORING_SUMMARY.md](./REFACTORING_SUMMARY.md)** — O que mudou
-3. **[ESTRUTURA.md](./ESTRUTURA.md)** — Onde tudo fica
-4. **[docs/BUGLIST.md](./docs/BUGLIST.md)** — Bugs corrigidos
-5. **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** — Como funciona
+2. **[ESTRUTURA.md](./ESTRUTURA.md)** — Onde tudo fica
+3. **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** — Como funciona
+4. **[docs/BUGLIST.md](./docs/BUGLIST.md)** — Histórico de bugs corrigidos
 
 ---
 
@@ -80,27 +79,36 @@ Abrirá automaticamente em: **http://localhost:5173**
 ```
 dashravo/
 ├── 📄 README.md                ← COMECE AQUI
-├── 📄 REFACTORING_SUMMARY.md   ← O que mudou
 ├── 📄 ESTRUTURA.md             ← Mapa de pastas
 ├── 📄 SETUP.md                 ← Este arquivo
-├── 📄 package.json             ← Dependências
+├── 📄 DEPLOYMENT.md            ← Deploy (Vercel)
+├── 📄 package.json             ← Dependências & scripts
 ├── 📄 tsconfig.json            ← TypeScript
 ├── 📄 vite.config.ts           ← Build tool
 ├── 📄 .env.example             ← Template vars
 │
+├── 📂 database/
+│   ├── schema.sql              ← Tabelas + RPCs + RLS (aplicar no Supabase)
+│   └── seed.sql                ← Dados de exemplo
+│
 ├── 📂 docs/
-│   ├── README.md               ← Índice de docs
-│   ├── ARCHITECTURE.md         ← Arquitetura
-│   └── BUGLIST.md              ← Bugs encontrados
+│   ├── ARCHITECTURE.md         ← Arquitetura e fluxo de dados
+│   ├── BUGLIST.md              ← Histórico de bugs corrigidos
+│   └── supabase-schema.sql     ← Índice do schema
 │
 ├── 📂 src/
-│   ├── 📄 main.ts              ← Entry point (TODO)
-│   ├── 📂 types/               ← TypeScript types
-│   ├── 📂 services/            ← Lógica de negócio
-│   ├── 📂 modules/             ← Páginas/features
-│   ├── 📂 components/          ← Componentes
-│   ├── 📂 utils/               ← Funções auxiliares
-│   └── 📂 styles/              ← CSS modular
+│   ├── 📄 main.tsx             ← Entry point (rotas + auth guard)
+│   ├── 📂 pages/               ← Páginas (Dashboard, CRM, Finance…)
+│   ├── 📂 layouts/             ← AppLayout (sidebar + header + período)
+│   ├── 📂 contexts/            ← ThemeContext, PeriodContext
+│   ├── 📂 hooks/               ← Queries Supabase (useSupabaseQuery…)
+│   ├── 📂 store/               ← Zustand (toasts, revalidação)
+│   ├── 📂 components/          ← Componentes reutilizáveis
+│   ├── 📂 utils/               ← Formatação e regras
+│   ├── 📂 constants/           ← Design tokens
+│   ├── 📂 services/            ← Cliente Supabase
+│   ├── 📂 styles/              ← CSS do design system
+│   └── 📂 test/                ← Testes unitários (Vitest)
 │
 └── 📂 public/
     └── index.html              ← Template HTML
@@ -153,17 +161,17 @@ npm run type-check    # TypeScript
 ### P: Por onde começo a programar?
 **R**: 
 1. Leia `docs/ARCHITECTURE.md`
-2. Crie novo módulo em `src/modules/seu-modulo/`
-3. Seguindo padrão em `ESTRUTURA.md`
+2. Crie nova página em `src/pages/` e registre a rota em `src/main.tsx`
+3. Siga o padrão em `ESTRUTURA.md`
 
-### P: Como adicionar novo serviço?
-**R**: Criar arquivo em `src/services/novo-service.ts` seguindo padrão de `crmService`
+### P: Como adicionar nova query?
+**R**: Criar query em `src/hooks/usePagesQueries.ts` (ou `useMetricsQueries.ts`), reutilizando `useSupabaseQuery`. Se for uma métrica nova, crie a RPC em `database/schema.sql` e re-aplique no Supabase.
 
 ### P: Como criar teste?
-**R**: Criar arquivo em `src/__tests__/seu-teste.test.ts` (exemplos em docs)
+**R**: Criar arquivo em `src/test/seu-teste.test.ts` (ver exemplos existentes)
 
 ### P: Como fazer deploy?
-**R**: Veja `docs/DEPLOY.md` (será criado) — suporta Vercel, Netlify, Docker
+**R**: Veja `DEPLOYMENT.md` (CI no `.github/workflows/deploy.yml` → Vercel)
 
 ### P: Preciso do Supabase?
 **R**: Sim, mas pode adaptar qualquer outro backend editando `src/services/supabase.ts`

@@ -17,7 +17,9 @@ import { sb as supabase } from '@/services/supabase';
 import { useGoalsData, useContactsData, GoalData, GoalMetric, GoalUnit } from '@/hooks/usePagesQueries';
 import { usePeriod, monthISO, monthLabelLong, toMonthKey } from '@/contexts/PeriodContext';
 import { computeCrmMetrics } from '@/utils/crmMetrics';
+import { fmtMoney } from '@/utils/format';
 import { useRevalidateStore } from '@/store/revalidate.store';
+import { chart, text, surface, semantic, soft, layout, type } from '@/constants/theme';
 
 /** Catálogo de métricas automáticas — o realizado vem do próprio sistema. */
 const METRICAS: { value: GoalMetric; label: string; unidade: GoalUnit; hint: string }[] = [
@@ -32,7 +34,7 @@ const METRICAS: { value: GoalMetric; label: string; unidade: GoalUnit; hint: str
 const METRICA_MAP = Object.fromEntries(METRICAS.map((m) => [m.value, m] as const));
 
 const fmtValor = (v: number, u: GoalUnit) => {
-  if (u === 'moeda') return v >= 1000 ? `R$ ${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k` : `R$ ${Math.round(v)}`;
+  if (u === 'moeda') return fmtMoney(v);
   if (u === 'percentual') return `${Math.round(v)}%`;
   return v.toLocaleString('pt-BR');
 };
@@ -141,12 +143,12 @@ export default function GoalsPage() {
   const unidadeForm = METRICA_MAP[form.metrica]?.unidade ?? 'numero';
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Metas</h1>
-          <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>
+          <h1 style={{ ...type.pageTitle, color: text.primary, margin: '0 0 4px 0' }}>Metas</h1>
+          <p style={{ fontSize: '14px', color: text.secondary, margin: 0 }}>
             {periodLabel} · {lista.length} {lista.length === 1 ? 'meta' : 'metas'} · {atingidas} {atingidas === 1 ? 'atingida' : 'atingidas'}
           </p>
         </div>
@@ -175,14 +177,14 @@ export default function GoalsPage() {
         <QueryLoading height={220} />
       ) : lista.length === 0 ? (
         <div style={{
-          background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px',
+          background: surface.card, border: `1px solid ${surface.borderStrong}`, borderRadius: '12px',
           padding: '44px 32px', textAlign: 'center',
         }}>
-          <Target size={26} style={{ color: '#3A3A3A', marginBottom: '12px' }} />
-          <div style={{ fontSize: '14px', color: '#EDEDED', fontWeight: 600, marginBottom: '4px' }}>
+          <Target size={26} style={{ color: surface.skeleton, marginBottom: '12px' }} />
+          <div style={{ fontSize: '14px', color: chart.light, fontWeight: 600, marginBottom: '4px' }}>
             Nenhuma meta em {periodLabel.toLowerCase()}
           </div>
-          <div style={{ fontSize: '12.5px', color: '#6E6E6E', marginBottom: '18px' }}>
+          <div style={{ fontSize: '12.5px', color: text.tertiary, marginBottom: '18px' }}>
             Defina um alvo e acompanhe o progresso — o sistema pode calcular o realizado sozinho.
           </div>
           <Button onClick={() => openModal()} style={{ display: 'inline-flex', gap: '8px', alignItems: 'center' }}>
@@ -193,28 +195,28 @@ export default function GoalsPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
           {lista.map((g) => {
             const pct = Math.min(g.percentual, 100);
-            const cor = g.percentual >= 100 ? '#3FB950' : g.percentual >= 50 ? '#EDEDED' : '#8B8B8B';
+            const cor = g.percentual >= 100 ? chart.revenue : g.percentual >= 50 ? chart.light : chart.line;
             const auto = g.metrica !== 'manual';
             return (
               <div key={g.id} style={{
-                background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)',
+                background: surface.card, border: `1px solid ${surface.border}`,
                 borderRadius: '10px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px',
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '10px' }}>
                   <div style={{ minWidth: 0 }}>
-                    <h4 style={{ fontSize: '13.5px', fontWeight: 650, color: '#F2F2F3', margin: '0 0 4px 0', letterSpacing: '-0.01em' }}>{g.nome}</h4>
-                    <p style={{ fontSize: '11.5px', color: '#6E6E6E', margin: 0 }}>
+                    <h4 style={{ fontSize: '13.5px', fontWeight: 650, color: text.primary, margin: '0 0 4px 0', letterSpacing: '-0.01em' }}>{g.nome}</h4>
+                    <p style={{ fontSize: '11.5px', color: text.tertiary, margin: 0 }}>
                       {fmtValor(g.realizado, g.unidade)} de {fmtValor(g.meta, g.unidade)}
-                      {auto && <span style={{ marginLeft: '6px', color: '#5B616E' }}>· auto</span>}
+                      {auto && <span style={{ marginLeft: '6px', color: text.label }}>· auto</span>}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                     <button onClick={() => openModal(g)} aria-label={`Editar ${g.nome}`}
-                      style={{ background: 'transparent', border: 'none', color: '#6E6E6E', cursor: 'pointer', padding: '3px', display: 'flex' }}>
+                      style={{ background: 'transparent', border: 'none', color: text.tertiary, cursor: 'pointer', padding: '3px', display: 'flex' }}>
                       <Edit2 size={13} />
                     </button>
                     <button onClick={() => handleDelete(g.id)} aria-label={`Excluir ${g.nome}`}
-                      style={{ background: 'transparent', border: 'none', color: '#6E6E6E', cursor: 'pointer', padding: '3px', display: 'flex' }}>
+                      style={{ background: 'transparent', border: 'none', color: text.tertiary, cursor: 'pointer', padding: '3px', display: 'flex' }}>
                       <Trash2 size={13} />
                     </button>
                   </div>
@@ -226,8 +228,8 @@ export default function GoalsPage() {
                   <span style={{ fontSize: '18px', fontWeight: 650, color: cor, letterSpacing: '-0.02em' }}>{g.percentual}%</span>
                   <span style={{
                     fontSize: '10.5px', fontWeight: 600, padding: '3px 8px', borderRadius: '5px',
-                    color: g.percentual >= 100 ? '#3FB950' : g.percentual >= 50 ? '#9CA3AF' : '#EF4444',
-                    background: g.percentual >= 100 ? 'rgba(63,185,80,0.1)' : g.percentual >= 50 ? 'rgba(255,255,255,0.05)' : 'rgba(239,68,68,0.1)',
+                    color: g.percentual >= 100 ? chart.revenue : g.percentual >= 50 ? text.secondary : semantic.danger,
+                    background: g.percentual >= 100 ? soft.revenue : g.percentual >= 50 ? surface.divider : soft.danger,
                   }}>
                     {g.percentual >= 100 ? 'Atingida' : g.percentual >= 50 ? 'Em andamento' : 'Em risco'}
                   </span>
@@ -253,7 +255,7 @@ export default function GoalsPage() {
               onChange={(e) => setForm({ ...form, metrica: e.target.value as GoalMetric })} style={fld}>
               {METRICAS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
             </select>
-            <p style={{ fontSize: '11px', color: '#6E6E6E', margin: '6px 0 0 0' }}>
+            <p style={{ fontSize: '11px', color: text.tertiary, margin: '6px 0 0 0' }}>
               {METRICA_MAP[form.metrica]?.hint}
             </p>
           </div>
@@ -277,8 +279,8 @@ export default function GoalsPage() {
             )}
           </div>
 
-          <p style={{ fontSize: '11.5px', color: '#5B616E', margin: 0 }}>
-            Meta do mês de <strong style={{ color: '#9CA3AF' }}>{monthLabelLong(effectiveMonth)}</strong>
+          <p style={{ fontSize: '11.5px', color: text.label, margin: 0 }}>
+            Meta do mês de <strong style={{ color: text.secondary }}>{monthLabelLong(effectiveMonth)}</strong>
             {isAllTime && ' (mês atual — troque o período no topo para outro mês)'}
           </p>
 
@@ -286,8 +288,8 @@ export default function GoalsPage() {
 
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' }}>
             <button onClick={() => setShowModal(false)} style={{
-              padding: '9px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)',
-              background: 'transparent', color: '#9CA3AF', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+              padding: '9px 16px', borderRadius: '8px', border: `1px solid ${surface.borderStrong}`,
+              background: 'transparent', color: text.secondary, fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             }}>Cancelar</button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? 'Salvando…' : editingId ? 'Salvar' : 'Criar meta'}
@@ -299,9 +301,9 @@ export default function GoalsPage() {
   );
 }
 
-const lbl: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: '#8A8F98', marginBottom: '6px' };
+const lbl: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: text.muted, marginBottom: '6px' };
 const fld: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: '8px',
-  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-  color: '#EDEDED', fontSize: '13px', boxSizing: 'border-box',
+  background: surface.input, border: `1px solid ${surface.borderStrong}`,
+  color: chart.light, fontSize: '13px', boxSizing: 'border-box',
 };

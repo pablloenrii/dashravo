@@ -13,6 +13,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { RequireAuth } from './components/RequireAuth';
 import './styles/minimalist.css';
 import './index.css';
+import { text } from './constants/theme';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const LoginPage = lazy(() => import('./pages/Login'));
@@ -26,7 +27,7 @@ function PageFallback() {
   return (
     <div style={{
       minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      color: '#9CA3AF', fontSize: '14px'
+      color: text.secondary, fontSize: '14px'
     }}>
       Carregando…
     </div>

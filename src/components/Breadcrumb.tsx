@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { text } from '@/constants/theme';
 
 export interface BreadcrumbItem {
   label: string;
@@ -12,22 +13,26 @@ interface BreadcrumbProps {
 
 export function Breadcrumb({ items }: BreadcrumbProps) {
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm">
+    <nav aria-label="Breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
       {items.map((item, index) => (
-        <div key={index} className="flex items-center gap-2">
-          {index > 0 && (
-            <ChevronRight className="w-4 h-4 text-var(--text-tertiary)" strokeWidth={2} />
-          )}
+        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {index > 0 && <ChevronRight size={14} style={{ color: text.tertiary }} />}
 
           {item.href ? (
             <Link
               to={item.href}
-              className="text-var(--text-secondary) hover:text-var(--accent) transition-colors"
+              style={{ color: text.secondary, textDecoration: 'none', transition: 'color .15s ease' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = text.primary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = text.secondary;
+              }}
             >
               {item.label}
             </Link>
           ) : (
-            <span className="text-var(--text-primary) font-medium">{item.label}</span>
+            <span style={{ color: text.primary, fontWeight: 500 }}>{item.label}</span>
           )}
         </div>
       ))}

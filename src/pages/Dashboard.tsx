@@ -8,17 +8,19 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
 import { ArrowUpRight, ArrowDownRight, Trophy, Target, Percent, Timer } from 'lucide-react';
 import { Modal } from '@/components/Modal';
 import { ChartTooltip } from '@/components/ChartTooltip';
+import { ChartCard } from '@/components/ChartCard';
 import { QueryError, QueryLoading } from '@/components/QueryState';
-import { MetricCard, pctChange } from '@/components/MetricCard';
+import { MetricCard } from '@/components/MetricCard';
 import { useMRRData, useChurnData, useFunnelData, useCustomerMetrics } from '@/hooks/useMetricsQueries';
 import { useFinanceChartData, useContactsData } from '@/hooks/usePagesQueries';
 import { usePeriod, prevMonthKey, monthLabel } from '@/contexts/PeriodContext';
 import { computeCrmMetrics } from '@/utils/crmMetrics';
+import { fmtK, fmtMoney, pctChange } from '@/utils/format';
+import { chart, type, layout, surface, text } from '@/constants/theme';
 
-const REVENUE = '#3FB950';
-const LINE = '#8B8B8B';
-const AXIS = '#454545';
-const fmtK = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v.toFixed(0));
+const REVENUE = chart.revenue;
+const LINE = chart.line;
+const AXIS = chart.axis;
 
 type Drill = { title: string; data: object[]; dataKey: string; color: string } | null;
 
@@ -41,8 +43,6 @@ export default function Dashboard() {
   );
   const dc = (cur: number, prev: number) => (isAllTime ? undefined : pctChange(cur, prev));
   const vsLabel = isAllTime ? 'acumulado' : `vs ${monthLabel(prevMonthKey(month as string))}`;
-  const fmtMoney = (v: number) =>
-    v >= 1000 ? `R$ ${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k` : `R$ ${Math.round(v)}`;
 
   const [period, setPeriod] = useState<'3m' | '6m'>('6m');
   const [drill, setDrill] = useState<Drill>(null);
@@ -73,17 +73,17 @@ export default function Dashboard() {
   const loading = mrr.loading || churn.loading || metrics.loading;
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
         <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: '0 0 4px 0' }}>Dashboard</h1>
-          <p style={{ fontSize: '14px', color: '#9CA3AF', margin: 0 }}>{periodLabel} · visão geral do negócio</p>
+          <h1 style={{ ...type.pageTitle, color: text.primary, margin: '0 0 4px 0' }}>Dashboard</h1>
+          <p style={{ fontSize: '14px', color: text.secondary, margin: 0 }}>{periodLabel} · visão geral do negócio</p>
         </div>
-        <div style={{ display: 'flex', background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '3px' }}>
+        <div style={{ display: 'flex', background: surface.card, border: `1px solid ${surface.border}`, borderRadius: '8px', padding: '3px' }}>
           {(['3m', '6m'] as const).map((pp) => (
             <button key={pp} onClick={() => setPeriod(pp)} style={{
               padding: '5px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 600,
-              background: period === pp ? '#1E1E1E' : 'transparent', color: period === pp ? '#EDEDED' : '#6E6E6E',
+              background: period === pp ? surface.active : 'transparent', color: period === pp ? chart.light : text.tertiary,
             }}>{pp === '3m' ? '3 meses' : '6 meses'}</button>
           ))}
         </div>
@@ -96,7 +96,7 @@ export default function Dashboard() {
 
       {/* Desempenho comercial do período */}
       <div style={{ marginBottom: '16px' }}>
-        <h2 style={{ fontSize: '12px', fontWeight: 650, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#5B616E', margin: '0 0 10px 0' }}>
+        <h2 style={{ ...type.sectionTitle, color: text.label, margin: '0 0 10px 0' }}>
           Comercial
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px' }}>
@@ -114,13 +114,13 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <h2 style={{ fontSize: '12px', fontWeight: 650, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#5B616E', margin: '0 0 10px 0' }}>
+      <h2 style={{ ...type.sectionTitle, color: text.label, margin: '0 0 10px 0' }}>
         Recorrência
       </h2>
 
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
-        border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', overflow: 'hidden', marginBottom: '16px',
+        border: `1px solid ${surface.border}`, borderRadius: '10px', overflow: 'hidden', marginBottom: '16px',
       }}>
         {kpis.map((k, i) => <KPI key={k.label} kpi={k} first={i === 0} loading={loading} onOpen={() => k.drill && setDrill(k.drill)} />)}
       </div>
@@ -172,7 +172,7 @@ export default function Dashboard() {
                 <XAxis type="number" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
                 <YAxis type="category" dataKey="estagio" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} width={84} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                <Bar dataKey="quantidade" fill="#5A5A5A" radius={[0, 2, 2, 0]} name="Contatos" barSize={12} />
+                <Bar dataKey="quantidade" fill={chart.seriesAlt} radius={[0, 2, 2, 0]} name="Contatos" barSize={12} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -208,19 +208,19 @@ function KPI({ kpi, first, loading, onOpen }: { kpi: KpiDef; first: boolean; loa
     <div
       onClick={clickable ? onOpen : undefined}
       style={{
-        padding: '14px 16px', background: '#0F0F0F',
-        borderLeft: first ? 'none' : '1px solid rgba(255,255,255,0.05)',
+        padding: '14px 16px', background: surface.card,
+        borderLeft: first ? 'none' : `1px solid ${surface.divider}`,
         cursor: clickable ? 'pointer' : 'default',
       }}
     >
-      <div style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.02em', color: '#6E6E6E', marginBottom: '8px' }}>{kpi.label}</div>
+      <div style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.02em', color: text.tertiary, marginBottom: '8px' }}>{kpi.label}</div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-        <span style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.02em', color: '#EDEDED' }}>{loading ? '—' : kpi.value}</span>
-        {kpi.unit && <span style={{ fontSize: '12px', color: '#6E6E6E' }}>{kpi.unit}</span>}
+        <span style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.02em', color: chart.light }}>{loading ? '—' : kpi.value}</span>
+        {kpi.unit && <span style={{ fontSize: '12px', color: text.tertiary }}>{kpi.unit}</span>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px', minHeight: '20px' }}>
         {d ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '2px', fontSize: '11px', color: '#8B8B8B' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '2px', fontSize: '11px', color: chart.line }}>
             {d.dir === 'up' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
             {Math.abs(d.pct)}%
           </span>
@@ -239,7 +239,7 @@ function computeDelta(series: number[]): { pct: number; dir: 'up' | 'down' } | n
   return { pct, dir: pct >= 0 ? 'up' : 'down' };
 }
 
-function Sparkline({ data, color = '#5A5A5A' }: { data: number[]; color?: string }) {
+function Sparkline({ data, color = chart.seriesAlt }: { data: number[]; color?: string }) {
   if (data.length < 2) return null;
   const w = 62, h = 18;
   const min = Math.min(...data), max = Math.max(...data), range = max - min || 1;
@@ -248,14 +248,5 @@ function Sparkline({ data, color = '#5A5A5A' }: { data: number[]; color?: string
     <svg width={w} height={h} style={{ display: 'block' }} aria-hidden="true">
       <polyline points={pts} fill="none" stroke={color} strokeWidth={1.25} strokeLinejoin="round" strokeLinecap="round" />
     </svg>
-  );
-}
-
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', padding: '14px 16px' }}>
-      <h3 style={{ fontSize: '12px', fontWeight: 500, letterSpacing: '0.01em', color: '#8B8B8B', margin: '0 0 12px 0' }}>{title}</h3>
-      {children}
-    </div>
   );
 }

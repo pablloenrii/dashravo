@@ -9,9 +9,20 @@
 import { sb as supabase } from '@/services/supabase';
 import { useSupabaseQuery, toNumber, QueryResult } from './useSupabaseQuery';
 import type { MonthKey } from '@/contexts/PeriodContext';
+import { chart } from '@/constants/theme';
 
-// Paleta oficial (máx. 3 cores + neutro)
-const PALETTE = ['#EDEDED', '#10B981', '#8B8B8B', '#6B7280'];
+const PALETTE = chart.palette;
+
+/**
+ * Argumentos das RPCs com âncora de período: inclui `ref_month` (primeiro dia do
+ * mês selecionado) apenas quando um mês está ativo. Sem mês selecionado, as RPCs
+ * usam o default CURRENT_DATE/NOW() — mesmo comportamento de antes.
+ */
+function periodArgs(extra: Record<string, unknown>, refMonth?: MonthKey | null): Record<string, unknown> {
+  const args = { ...extra };
+  if (refMonth) args.ref_month = `${refMonth}-01`;
+  return args;
+}
 
 // ============================================================================
 // CRM
@@ -83,21 +94,21 @@ export function useContactsData(): QueryResult<ContactData[]> {
   });
 }
 
-export function useContactsChartData(): QueryResult<ContactChartData[]> {
+export function useContactsChartData(refMonth?: MonthKey | null): QueryResult<ContactChartData[]> {
   return useSupabaseQuery<ContactChartData[]>({
-    queryFn: () => supabase.rpc('get_contacts_by_month', { months_back: 6 }),
+    queryFn: () => supabase.rpc('get_contacts_by_month', periodArgs({ months_back: 6 }, refMonth)),
     transform: (rows) =>
       ((rows as { mes: string; novos: number | string; ativos: number | string }[]) ?? []).map(
         (r) => ({ mes: r.mes, novos: toNumber(r.novos), ativos: toNumber(r.ativos) })
       ),
     empty: [],
     mockKey: 'MOCK_CONTACTS_CHART',
-  });
+  }, [refMonth ?? null]);
 }
 
-export function useOpportunitiesData(): QueryResult<OpportunityData[]> {
+export function useOpportunitiesData(refMonth?: MonthKey | null): QueryResult<OpportunityData[]> {
   return useSupabaseQuery<OpportunityData[]>({
-    queryFn: () => supabase.rpc('get_opportunities_by_stage'),
+    queryFn: () => supabase.rpc('get_opportunities_by_stage', periodArgs({}, refMonth)),
     transform: (rows) =>
       ((rows as { estagio: string; quantidade: number | string }[]) ?? []).map((r, i) => ({
         name: r.estagio,
@@ -106,7 +117,7 @@ export function useOpportunitiesData(): QueryResult<OpportunityData[]> {
       })),
     empty: [],
     mockKey: 'MOCK_OPPORTUNITIES',
-  });
+  }, [refMonth ?? null]);
 }
 
 // ============================================================================
@@ -134,10 +145,8 @@ export interface ExpenseData {
 }
 
 export function useFinanceChartData(refMonth?: MonthKey | null): QueryResult<FinanceChartData[]> {
-  const args: Record<string, unknown> = { months_back: 6 };
-  if (refMonth) args.ref_month = `${refMonth}-01`;
   return useSupabaseQuery<FinanceChartData[]>({
-    queryFn: () => supabase.rpc('get_revenue_by_month', args),
+    queryFn: () => supabase.rpc('get_revenue_by_month', periodArgs({ months_back: 6 }, refMonth)),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
         mes: String(r.mes),
@@ -150,9 +159,9 @@ export function useFinanceChartData(refMonth?: MonthKey | null): QueryResult<Fin
   }, [refMonth ?? null]);
 }
 
-export function useCashFlowData(): QueryResult<CashFlowData[]> {
+export function useCashFlowData(refMonth?: MonthKey | null): QueryResult<CashFlowData[]> {
   return useSupabaseQuery<CashFlowData[]>({
-    queryFn: () => supabase.rpc('get_cash_flow_by_week', { weeks_back: 4 }),
+    queryFn: () => supabase.rpc('get_cash_flow_by_week', periodArgs({ weeks_back: 4 }, refMonth)),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
         semana: String(r.semana),
@@ -161,12 +170,12 @@ export function useCashFlowData(): QueryResult<CashFlowData[]> {
       })),
     empty: [],
     mockKey: 'MOCK_CASH_FLOW',
-  });
+  }, [refMonth ?? null]);
 }
 
-export function useExpensesData(): QueryResult<ExpenseData[]> {
+export function useExpensesData(refMonth?: MonthKey | null): QueryResult<ExpenseData[]> {
   return useSupabaseQuery<ExpenseData[]>({
-    queryFn: () => supabase.rpc('get_expenses_by_category'),
+    queryFn: () => supabase.rpc('get_expenses_by_category', periodArgs({}, refMonth)),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r, i) => ({
         name: String(r.categoria),
@@ -176,7 +185,7 @@ export function useExpensesData(): QueryResult<ExpenseData[]> {
       })),
     empty: [],
     mockKey: 'MOCK_EXPENSES',
-  });
+  }, [refMonth ?? null]);
 }
 
 // ============================================================================
@@ -210,9 +219,9 @@ export interface GoalData {
   unidade: GoalUnit;
 }
 
-export function useGoalProgressData(): QueryResult<GoalProgressData[]> {
+export function useGoalProgressData(refMonth?: MonthKey | null): QueryResult<GoalProgressData[]> {
   return useSupabaseQuery<GoalProgressData[]>({
-    queryFn: () => supabase.rpc('get_goal_progress_by_week', { weeks_back: 4 }),
+    queryFn: () => supabase.rpc('get_goal_progress_by_week', periodArgs({ weeks_back: 4 }, refMonth)),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
         semana: String(r.semana),
@@ -221,7 +230,7 @@ export function useGoalProgressData(): QueryResult<GoalProgressData[]> {
       })),
     empty: [],
     mockKey: 'MOCK_GOAL_PROGRESS',
-  });
+  }, [refMonth ?? null]);
 }
 
 export function useGoalsData(): QueryResult<GoalData[]> {
@@ -300,9 +309,9 @@ export function useTicketsData(): QueryResult<TicketData[]> {
   });
 }
 
-export function useAttendanceChartData(): QueryResult<AttendanceChartData[]> {
+export function useAttendanceChartData(refMonth?: MonthKey | null): QueryResult<AttendanceChartData[]> {
   return useSupabaseQuery<AttendanceChartData[]>({
-    queryFn: () => supabase.rpc('get_attendance_by_day', { days_back: 5 }),
+    queryFn: () => supabase.rpc('get_attendance_by_day', periodArgs({ days_back: 5 }, refMonth)),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
         dia: String(r.dia),
@@ -312,12 +321,12 @@ export function useAttendanceChartData(): QueryResult<AttendanceChartData[]> {
       })),
     empty: [],
     mockKey: 'MOCK_ATTENDANCE',
-  });
+  }, [refMonth ?? null]);
 }
 
-export function useSatisfactionData(): QueryResult<SatisfactionData[]> {
+export function useSatisfactionData(refMonth?: MonthKey | null): QueryResult<SatisfactionData[]> {
   return useSupabaseQuery<SatisfactionData[]>({
-    queryFn: () => supabase.rpc('get_satisfaction_by_week', { weeks_back: 4 }),
+    queryFn: () => supabase.rpc('get_satisfaction_by_week', periodArgs({ weeks_back: 4 }, refMonth)),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
         semana: String(r.semana),
@@ -326,7 +335,7 @@ export function useSatisfactionData(): QueryResult<SatisfactionData[]> {
       })),
     empty: [],
     mockKey: 'MOCK_SATISFACTION',
-  });
+  }, [refMonth ?? null]);
 }
 
 // ============================================================================

@@ -1,4 +1,6 @@
+import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { surface } from '@/constants/theme';
 
 export function ThemeToggle() {
   const { mode, toggleMode } = useTheme();
@@ -6,21 +8,39 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleMode}
-      className={`
-        w-12 h-12 rounded-lg flex items-center justify-center
-        transition-all duration-300 hover-lift
-        ${mode === 'light'
-          ? 'bg-gray-100 text-yellow-600 hover:bg-gray-200'
-          : 'bg-gray-800 text-blue-400 hover:bg-gray-700'
-        }
-      `}
-      title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}
+      title={mode === 'light' ? 'Mudar para tema escuro' : 'Mudar para tema claro'}
+      aria-label="Alternar tema"
+      style={{
+        width: '34px',
+        height: '34px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: surface.card,
+        border: `1px solid ${surface.borderStrong}`,
+        borderRadius: '8px',
+        color: textTertiary(),
+        cursor: 'pointer',
+        transition: 'color .15s ease, border-color .15s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = textPrimary();
+        e.currentTarget.style.borderColor = surface.borderHover;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = textTertiary();
+        e.currentTarget.style.borderColor = surface.borderStrong;
+      }}
     >
-      {mode === 'light' ? (
-        <span className="text-xl">🌙</span>
-      ) : (
-        <span className="text-xl">☀️</span>
-      )}
+      {mode === 'light' ? <Moon size={16} /> : <Sun size={16} />}
     </button>
   );
+}
+
+function textPrimary() {
+  return 'var(--text-primary)';
+}
+
+function textTertiary() {
+  return 'var(--text-secondary)';
 }

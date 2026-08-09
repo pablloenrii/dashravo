@@ -12,6 +12,7 @@
 
 import { ContactData } from '@/hooks/usePagesQueries';
 import { MonthKey, monthEnd, toMonthKey } from '@/contexts/PeriodContext';
+import { chart, text, semantic } from '@/constants/theme';
 
 export interface Stage {
   key: string;
@@ -20,13 +21,13 @@ export interface Stage {
 }
 
 export const STAGES: Stage[] = [
-  { key: 'Novo Lead', prob: 0.10, color: '#626873' },
-  { key: 'Contato Feito', prob: 0.25, color: '#8B8B8B' },
-  { key: 'Qualificado', prob: 0.50, color: '#EDEDED' },
-  { key: 'Proposta', prob: 0.65, color: '#8B8B8B' },
-  { key: 'Negociação', prob: 0.80, color: '#6E6E6E' },
-  { key: 'Ganho', prob: 1.00, color: '#3FB950' },
-  { key: 'Perdido', prob: 0.00, color: '#EF4444' },
+  { key: 'Novo Lead', prob: 0.10, color: text.faint },
+  { key: 'Contato Feito', prob: 0.25, color: chart.line },
+  { key: 'Qualificado', prob: 0.50, color: chart.light },
+  { key: 'Proposta', prob: 0.65, color: chart.line },
+  { key: 'Negociação', prob: 0.80, color: text.tertiary },
+  { key: 'Ganho', prob: 1.00, color: chart.revenue },
+  { key: 'Perdido', prob: 0.00, color: semantic.danger },
 ];
 
 export const STAGE_MAP: Record<string, Stage> = Object.fromEntries(
@@ -152,7 +153,7 @@ export function computeFunnel(deals: ContactData[]): FunnelStep[] {
       quantidade: alcancaram.length,
       valor: alcancaram.reduce((s, c) => s + c.valor, 0),
       conversaoEtapa: 0,
-      color: STAGE_MAP[etapa]?.color ?? '#6E6E6E',
+      color: STAGE_MAP[etapa]?.color ?? text.tertiary,
     };
   });
 

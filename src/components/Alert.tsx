@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { X, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { chart, text, soft, semantic } from '@/constants/theme';
 
 export interface AlertProps {
   type?: 'success' | 'error' | 'warning' | 'info';
@@ -13,27 +14,27 @@ export interface AlertProps {
 
 const typeStyles = {
   success: {
-    bg: 'rgba(16, 185, 129, 0.1)',
+    bg: soft.success,
     border: 'rgba(16, 185, 129, 0.3)',
-    color: '#10B981',
+    color: semantic.success,
     icon: CheckCircle,
   },
   error: {
-    bg: 'rgba(239, 68, 68, 0.1)',
+    bg: soft.danger,
     border: 'rgba(239, 68, 68, 0.3)',
-    color: '#EF4444',
+    color: semantic.danger,
     icon: AlertCircle,
   },
   warning: {
-    bg: 'rgba(245, 158, 11, 0.1)',
+    bg: soft.warning,
     border: 'rgba(245, 158, 11, 0.3)',
-    color: '#8B8B8B',
+    color: chart.line,
     icon: AlertCircle,
   },
   info: {
     bg: 'rgba(255,255,255, 0.1)',
     border: 'rgba(255,255,255, 0.3)',
-    color: '#EDEDED',
+    color: text.strong,
     icon: Info,
   },
 };
@@ -81,11 +82,11 @@ export function Alert({
 
       <div style={{ flex: 1 }}>
         {title && (
-          <div style={{ fontSize: '13px', fontWeight: '600', color: '#EBEBF0', marginBottom: '4px' }}>
+          <div style={{ fontSize: '13px', fontWeight: '600', color: text.highlight, marginBottom: '4px' }}>
             {title}
           </div>
         )}
-        <div style={{ fontSize: '13px', color: '#9CA3AF', lineHeight: '1.5' }}>
+        <div style={{ fontSize: '13px', color: text.secondary, lineHeight: '1.5' }}>
           {message}
         </div>
       </div>

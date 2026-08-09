@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { AlertTriangle, X } from 'lucide-react';
 import type { NotificationItem } from '@/hooks/useNotifications';
+import { chart, text, surface, semantic } from '@/constants/theme';
 
 export function NotificationsPanel({
   items,
@@ -18,8 +19,8 @@ export function NotificationsPanel({
         top: '52px',
         right: 0,
         width: '320px',
-        background: '#0F0F0F',
-        border: '1px solid rgba(255,255,255,0.1)',
+        background: surface.card,
+        border: `1px solid ${surface.borderStrong}`,
         borderRadius: '10px',
         boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
         zIndex: 60,
@@ -32,14 +33,14 @@ export function NotificationsPanel({
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '12px 14px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: `1px solid ${surface.border}`,
         }}
       >
-        <span style={{ fontSize: '13px', fontWeight: 600, color: '#EDEDED' }}>Notificações</span>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: text.strong }}>Notificações</span>
         <button
           onClick={onClose}
           aria-label="Fechar notificações"
-          style={{ background: 'transparent', border: 'none', color: '#6E6E6E', cursor: 'pointer', display: 'flex' }}
+          style={{ background: 'transparent', border: 'none', color: text.tertiary, cursor: 'pointer', display: 'flex' }}
         >
           <X size={16} />
         </button>
@@ -47,9 +48,9 @@ export function NotificationsPanel({
 
       <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
         {loading ? (
-          <div style={{ padding: '20px', textAlign: 'center', fontSize: '12px', color: '#6E6E6E' }}>Carregando…</div>
+          <div style={{ padding: '20px', textAlign: 'center', fontSize: '12px', color: text.tertiary }}>Carregando…</div>
         ) : items.length === 0 ? (
-          <div style={{ padding: '20px', textAlign: 'center', fontSize: '12px', color: '#6E6E6E' }}>
+          <div style={{ padding: '20px', textAlign: 'center', fontSize: '12px', color: text.tertiary }}>
             Tudo em dia — nenhum alerta no momento.
           </div>
         ) : (
@@ -66,12 +67,12 @@ export function NotificationsPanel({
                 borderBottom: '1px solid rgba(255,255,255,0.04)',
               }}
             >
-              <span style={{ color: n.severity === 'danger' ? '#EF4444' : '#8B8B8B', flexShrink: 0, marginTop: '1px' }}>
+              <span style={{ color: n.severity === 'danger' ? semantic.danger : chart.line, flexShrink: 0, marginTop: '1px' }}>
                 <AlertTriangle size={15} />
               </span>
               <div>
-                <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#EDEDED' }}>{n.title}</div>
-                <div style={{ fontSize: '11.5px', color: '#9CA3AF', marginTop: '2px' }}>{n.message}</div>
+                <div style={{ fontSize: '12.5px', fontWeight: 600, color: text.strong }}>{n.title}</div>
+                <div style={{ fontSize: '11.5px', color: text.secondary, marginTop: '2px' }}>{n.message}</div>
               </div>
             </Link>
           ))

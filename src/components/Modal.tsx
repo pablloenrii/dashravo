@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { text } from '@/constants/theme';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -93,7 +94,7 @@ export function Modal({
                 style={{
                   fontSize: '18px',
                   fontWeight: '600',
-                  color: '#EBEBF0',
+                  color: text.highlight,
                   margin: 0,
                 }}
               >
@@ -106,15 +107,15 @@ export function Modal({
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#9CA3AF',
+                  color: text.secondary,
                   cursor: 'pointer',
                   padding: '4px',
                   display: 'flex',
                   transition: 'all 200ms ease-out',
                   marginLeft: 'auto',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#EBEBF0'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#9CA3AF'}
+                onMouseEnter={(e) => e.currentTarget.style.color = text.highlight}
+                onMouseLeave={(e) => e.currentTarget.style.color = text.secondary}
               >
                 <X size={20} />
               </button>
@@ -127,7 +128,7 @@ export function Modal({
             flex: 1,
             overflow: 'auto',
             padding: '24px',
-            color: '#EBEBF0',
+            color: text.highlight,
             fontSize: '14px',
             lineHeight: '1.6',
           }}

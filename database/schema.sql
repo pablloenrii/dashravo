@@ -222,7 +222,7 @@ CREATE INDEX IF NOT EXISTS idx_satisfacao_user_id ON satisfacao(user_id);
 -- ----------------------------------------------------------------------------
 -- CRM: contatos novos e ativos por mês
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_contacts_by_month(months_back INT DEFAULT 6)
+CREATE OR REPLACE FUNCTION get_contacts_by_month(months_back INT DEFAULT 6, ref_month DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
   mes TEXT,
   novos BIGINT,
@@ -231,7 +231,8 @@ RETURNS TABLE(
 BEGIN
   RETURN QUERY
   WITH months AS (
-    SELECT DATE_TRUNC('month', NOW() - INTERVAL '1 month' * generate_series(0, months_back - 1))::DATE as month_start
+    SELECT (DATE_TRUNC('month', ref_month) - INTERVAL '1 month' * gs)::DATE as month_start
+    FROM generate_series(0, months_back - 1) AS gs
   )
   SELECT
     TO_CHAR(m.month_start, 'Mon') as mes,
@@ -240,14 +241,14 @@ BEGIN
   FROM months m
   LEFT JOIN contatos c ON c.user_id = auth.uid()
   GROUP BY m.month_start
-  ORDER BY m.month_start DESC;
+  ORDER BY m.month_start ASC;
 END;
 $$ LANGUAGE plpgsql;
 
 -- ----------------------------------------------------------------------------
--- CRM: oportunidades por etapa
+-- CRM: oportunidades por etapa (visão ao fim do mês de referência)
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_opportunities_by_stage()
+CREATE OR REPLACE FUNCTION get_opportunities_by_stage(ref_month DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
   estagio TEXT,
   quantidade BIGINT
@@ -259,6 +260,7 @@ BEGIN
     COUNT(*) as quantidade
   FROM contatos
   WHERE user_id = auth.uid()
+    AND created_at < DATE_TRUNC('month', ref_month) + INTERVAL '1 month'
   GROUP BY etapa
   ORDER BY quantidade DESC;
 END;
@@ -322,7 +324,7 @@ $$ LANGUAGE plpgsql;
 -- ----------------------------------------------------------------------------
 -- Financeiro: fluxo de caixa semanal
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_cash_flow_by_week(weeks_back INT DEFAULT 4)
+CREATE OR REPLACE FUNCTION get_cash_flow_by_week(weeks_back INT DEFAULT 4, ref_month DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
   semana TEXT,
   entradas DECIMAL,
@@ -336,16 +338,17 @@ BEGIN
     f.saidas
   FROM fluxo_caixa f
   WHERE f.user_id = auth.uid()
-    AND f.semana >= NOW()::DATE - INTERVAL '1 week' * weeks_back
+    AND f.semana >= DATE_TRUNC('month', ref_month)::DATE
+    AND f.semana < DATE_TRUNC('month', ref_month)::DATE + INTERVAL '1 month'
   ORDER BY f.semana DESC
   LIMIT weeks_back;
 END;
 $$ LANGUAGE plpgsql;
 
 -- ----------------------------------------------------------------------------
--- Financeiro: despesas por categoria (mês atual)
+-- Financeiro: despesas por categoria (mês de referência)
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_expenses_by_category()
+CREATE OR REPLACE FUNCTION get_expenses_by_category(ref_month DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
   categoria VARCHAR,
   valor DECIMAL,
@@ -353,11 +356,16 @@ RETURNS TABLE(
 ) AS $$
 DECLARE
   total_despesas DECIMAL;
+  inicio DATE;
+  fim DATE;
 BEGIN
+  inicio := DATE_TRUNC('month', ref_month)::DATE;
+  fim := (DATE_TRUNC('month', ref_month) + INTERVAL '1 month')::DATE;
+
   SELECT SUM(d.valor) INTO total_despesas
   FROM despesas d
   WHERE d.user_id = auth.uid()
-    AND d.mes >= DATE_TRUNC('month', NOW())::DATE;
+    AND d.mes >= inicio AND d.mes < fim;
 
   RETURN QUERY
   SELECT
@@ -369,7 +377,7 @@ BEGIN
     END as percentual
   FROM despesas d
   WHERE d.user_id = auth.uid()
-    AND d.mes >= DATE_TRUNC('month', NOW())::DATE
+    AND d.mes >= inicio AND d.mes < fim
   GROUP BY d.categoria
   ORDER BY SUM(d.valor) DESC;
 END;
@@ -378,7 +386,7 @@ $$ LANGUAGE plpgsql;
 -- ----------------------------------------------------------------------------
 -- Metas: progresso semanal
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_goal_progress_by_week(weeks_back INT DEFAULT 4)
+CREATE OR REPLACE FUNCTION get_goal_progress_by_week(weeks_back INT DEFAULT 4, ref_month DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
   semana TEXT,
   atingido INTEGER,
@@ -392,7 +400,8 @@ BEGIN
     p.meta
   FROM progresso_semanal p
   WHERE p.user_id = auth.uid()
-    AND p.semana >= NOW()::DATE - INTERVAL '1 week' * weeks_back
+    AND p.semana >= DATE_TRUNC('month', ref_month)::DATE
+    AND p.semana < DATE_TRUNC('month', ref_month)::DATE + INTERVAL '1 month'
   ORDER BY p.semana DESC
   LIMIT weeks_back;
 END;
@@ -401,7 +410,7 @@ $$ LANGUAGE plpgsql;
 -- ----------------------------------------------------------------------------
 -- CS: atendimentos por dia
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_attendance_by_day(days_back INT DEFAULT 5)
+CREATE OR REPLACE FUNCTION get_attendance_by_day(days_back INT DEFAULT 5, ref_month DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
   dia TEXT,
   recebidos BIGINT,
@@ -413,7 +422,7 @@ DECLARE
 BEGIN
   RETURN QUERY
   WITH dates AS (
-    SELECT DATE_TRUNC('day', NOW() - INTERVAL '1 day' * generate_series(0, days_back - 1))::DATE as day_date
+    SELECT (DATE_TRUNC('month', ref_month) + INTERVAL '1 month' - INTERVAL '1 day' * generate_series(0, days_back - 1))::DATE as day_date
   )
   SELECT
     dias_semana[EXTRACT(ISODOW FROM d.day_date)::INT] as dia,
@@ -430,7 +439,7 @@ $$ LANGUAGE plpgsql;
 -- ----------------------------------------------------------------------------
 -- CS: satisfação (NPS) por semana
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_satisfaction_by_week(weeks_back INT DEFAULT 4)
+CREATE OR REPLACE FUNCTION get_satisfaction_by_week(weeks_back INT DEFAULT 4, ref_month DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE(
   semana TEXT,
   nps INTEGER,
@@ -444,7 +453,8 @@ BEGIN
     s.satisfacao
   FROM satisfacao s
   WHERE s.user_id = auth.uid()
-    AND s.semana >= NOW()::DATE - INTERVAL '1 week' * weeks_back
+    AND s.semana >= DATE_TRUNC('month', ref_month)::DATE
+    AND s.semana < DATE_TRUNC('month', ref_month)::DATE + INTERVAL '1 month'
   ORDER BY s.semana DESC
   LIMIT weeks_back;
 END;

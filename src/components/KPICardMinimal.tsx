@@ -1,4 +1,5 @@
 import React from 'react';
+import { chart, text, surface, semantic } from '@/constants/theme';
 
 interface KPICardMinimalProps {
   title: string;
@@ -15,15 +16,15 @@ export function KPICardMinimal({
   value,
   unit = '',
   icon,
-  color = '#EDEDED',
+  color = chart.light,
   trend,
   loading = false,
 }: KPICardMinimalProps) {
   if (loading) {
     return (
       <div style={{
-        background: '#0F0F0F',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: surface.card,
+        border: `1px solid ${surface.border}`,
         borderRadius: '8px',
         padding: '12px',
         minHeight: '100px',
@@ -32,17 +33,17 @@ export function KPICardMinimal({
         justifyContent: 'space-between',
         animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
       }}>
-        <div style={{ height: '12px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', marginBottom: '8px' }}></div>
-        <div style={{ height: '20px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', marginBottom: '4px' }}></div>
-        <div style={{ height: '12px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', width: '60%' }}></div>
+        <div style={{ height: '12px', background: surface.borderStrong, borderRadius: '4px', marginBottom: '8px' }}></div>
+        <div style={{ height: '20px', background: surface.borderStrong, borderRadius: '4px', marginBottom: '4px' }}></div>
+        <div style={{ height: '12px', background: surface.borderStrong, borderRadius: '4px', width: '60%' }}></div>
       </div>
     );
   }
 
   return (
     <div style={{
-      background: '#0F0F0F',
-      border: '1px solid rgba(255,255,255,0.06)',
+      background: surface.card,
+      border: `1px solid ${surface.border}`,
       borderLeft: `3px solid ${color}`,
       borderRadius: '8px',
       padding: '12px',
@@ -55,23 +56,23 @@ export function KPICardMinimal({
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.borderColor = `${color}`;
-      e.currentTarget.style.background = 'rgba(255,255,255, 0.04)';
+      e.currentTarget.style.background = surface.input;
     }}
     onMouseLeave={(e) => {
-      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-      e.currentTarget.style.background = '#0F0F0F';
+      e.currentTarget.style.borderColor = surface.borderStrong;
+      e.currentTarget.style.background = surface.card;
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', color }}>
         {icon && <span style={{ fontSize: '14px' }}>{icon}</span>}
       </div>
       <div>
-        <div style={{ fontSize: '18px', fontWeight: '700', color: '#F5F5F7', marginBottom: '2px' }}>
+        <div style={{ fontSize: '18px', fontWeight: '700', color: text.bright, marginBottom: '2px' }}>
           {value}
-          {unit && <span style={{ fontSize: '12px', color: '#9CA3AF', marginLeft: '4px', fontWeight: '500' }}>{unit}</span>}
+          {unit && <span style={{ fontSize: '12px', color: text.secondary, marginLeft: '4px', fontWeight: '500' }}>{unit}</span>}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '10px', color: '#6B7280', fontWeight: '500' }}>{title}</span>
-          {trend && <span style={{ fontSize: '10px', color: '#10B981', fontWeight: '600' }}>{trend}</span>}
+          <span style={{ fontSize: '10px', color: text.dim, fontWeight: '500' }}>{title}</span>
+          {trend && <span style={{ fontSize: '10px', color: semantic.success, fontWeight: '600' }}>{trend}</span>}
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { useEffect, useState, ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import { sb as supabase } from '@/services/supabase';
+import { surface, text } from '@/constants/theme';
 
 export function RequireAuth({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -35,7 +36,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#0A0A0A', color: '#9CA3AF', fontSize: '14px'
+        background: surface.app, color: text.secondary, fontSize: '14px'
       }}>
         Verificando sessão…
       </div>

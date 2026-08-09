@@ -4,6 +4,7 @@
  */
 
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { chart, text } from '@/constants/theme';
 
 interface QueryErrorProps {
   message: string;
@@ -22,17 +23,17 @@ export function QueryError({ message, onRetry }: QueryErrorProps) {
         padding: '12px 16px',
         background: 'rgba(245, 158, 11, 0.08)',
         border: '1px solid rgba(245, 158, 11, 0.35)',
-        borderLeft: '3px solid #8B8B8B',
+        borderLeft: `3px solid ${chart.line}`,
         borderRadius: '8px',
         margin: '8px 0',
       }}
     >
-      <AlertTriangle size={16} color="#8B8B8B" style={{ flexShrink: 0 }} />
+      <AlertTriangle size={16} color={chart.line} style={{ flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '12px', fontWeight: 600, color: '#F5F5F7' }}>
+        <div style={{ fontSize: '12px', fontWeight: 600, color: text.bright }}>
           Erro ao carregar dados
         </div>
-        <div style={{ fontSize: '11px', color: '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ fontSize: '11px', color: text.secondary, overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {message}
         </div>
       </div>
@@ -46,7 +47,7 @@ export function QueryError({ message, onRetry }: QueryErrorProps) {
             background: 'transparent',
             border: '1px solid rgba(245, 158, 11, 0.35)',
             borderRadius: '6px',
-            color: '#8B8B8B',
+            color: chart.line,
             fontSize: '11px',
             fontWeight: 600,
             padding: '6px 10px',

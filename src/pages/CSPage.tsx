@@ -6,6 +6,7 @@ import { Badge } from '@/components/Badge';
 import { Alert } from '@/components/Alert';
 import { Table } from '@/components/Table';
 import { ChartTooltip } from '@/components/ChartTooltip';
+import { ChartCard } from '@/components/ChartCard';
 import { Button } from '@/components/Button';
 import { Modal } from '@/components/Modal';
 import { QueryError, QueryLoading } from '@/components/QueryState';
@@ -13,8 +14,10 @@ import { colorSystem } from '@/styles/color-system';
 import { colorSystemPremium } from '@/styles/color-system-premium';
 import { sb as supabase } from '@/services/supabase';
 import { useTicketsData, useAttendanceChartData, useSatisfactionData, useContactsData } from '@/hooks/usePagesQueries';
+import { usePeriod } from '@/contexts/PeriodContext';
 import { parseTempoResposta } from '@/utils/tickets';
 import { useRevalidateStore } from '@/store/revalidate.store';
+import { chart, text, surface, layout, type } from '@/constants/theme';
 
 const PRIORIDADES = ['baixa', 'média', 'alta', 'crítica'];
 const genTicketId = () => `TK-${Date.now().toString(36).toUpperCase().slice(-6)}`;
@@ -30,10 +33,12 @@ export function CSPage() {
   const [showWaitAlert, setShowWaitAlert] = useState(true);
   const [showNpsAlert, setShowNpsAlert] = useState(true);
 
+  const { month } = usePeriod();
+
   // Fetch data from Supabase
   const { data: tickets, loading: loadingTickets, error: errorTickets, refetch: refetchTickets } = useTicketsData();
-  const { data: dadosAtendimentos, loading: loadingAttendance, error: errorAttendance } = useAttendanceChartData();
-  const { data: dadosSatisfacao, loading: loadingSatisfaction, error: errorSatisfaction } = useSatisfactionData();
+  const { data: dadosAtendimentos, loading: loadingAttendance, error: errorAttendance } = useAttendanceChartData(month);
+  const { data: dadosSatisfacao, loading: loadingSatisfaction, error: errorSatisfaction } = useSatisfactionData(month);
   const { data: contatos } = useContactsData();
 
   const [showTicketModal, setShowTicketModal] = useState(false);
@@ -81,7 +86,7 @@ export function CSPage() {
   // Show error state
   if (errorTickets || errorAttendance || errorSatisfaction) {
     return (
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
         <QueryError message={errorTickets || errorAttendance || errorSatisfaction || ''} onRetry={refetchTickets} />
       </div>
     );
@@ -90,7 +95,7 @@ export function CSPage() {
   // Show loading state
   if (loadingTickets || loadingAttendance || loadingSatisfaction) {
     return (
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
         <QueryLoading height={400} />
       </div>
     );
@@ -101,7 +106,7 @@ export function CSPage() {
   const npsRecorde = dadosSatisfacao.length > 0 && npsAtual >= Math.max(...dadosSatisfacao.map((d) => d.nps));
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
       {/* Alerts */}
       <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {showWaitAlert && ticketsEmEspera > 0 && (
@@ -127,12 +132,12 @@ export function CSPage() {
       <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'start', justifyContent: 'space-between' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-            <h1 style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.01em', color: '#F2F2F3', margin: 0 }}>
+            <h1 style={{ ...type.pageTitle, color: text.primary, margin: 0 }}>
               Atendimento ao Cliente
             </h1>
             <Badge variant="info">SUPORTE</Badge>
           </div>
-          <p style={{ fontSize: '12px', color: '#A1A1A6', margin: 0 }}>
+          <p style={{ fontSize: '12px', color: text.secondaryAlt, margin: 0 }}>
             Gestão de tickets, satisfação e relacionamento
           </p>
         </div>
@@ -155,55 +160,53 @@ export function CSPage() {
           return recebidos > 0 ? ((resolvidos / recebidos) * 100).toFixed(1) : 0;
         })()} unit="%" icon={<TrendingUp />} color={colorSystem.success} />
         <KPICardMinimal title="NPS Score" value={dadosSatisfacao.length > 0 ? dadosSatisfacao[dadosSatisfacao.length - 1].nps : 0} unit="pontos" icon={<BarChart3 />} color={colorSystem.conversion.primary} />
-        <KPICardMinimal title="Tempo Médio" value={tickets.length > 0 ? (tickets.reduce((sum, t) => sum + parseTempoResposta(t.tempo_resposta), 0) / tickets.length / 60).toFixed(1) : 0} unit="horas" icon={<Clock />} color={'#8B8B8B'} />
+        <KPICardMinimal title="Tempo Médio" value={tickets.length > 0 ? (tickets.reduce((sum, t) => sum + parseTempoResposta(t.tempo_resposta), 0) / tickets.length / 60).toFixed(1) : 0} unit="horas" icon={<Clock />} color={chart.line} />
       </div>
 
       {/* Gráficos */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-        <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
-          <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 8px 0' }}>Atendimentos Diários</h3>
+        <ChartCard title="Atendimentos Diários">
           {dadosAtendimentos.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={dadosAtendimentos}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                <XAxis dataKey="dia" stroke="#86868B" style={{ fontSize: '11px' }} />
-                <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
+                <XAxis dataKey="dia" stroke={chart.axisAlt} style={{ fontSize: '11px' }} />
+                <YAxis stroke={chart.axisAlt} style={{ fontSize: '11px' }} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Bar dataKey="recebidos" fill="#8B8B8B" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="resolvidos" fill="#5A5A5A" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="recebidos" fill={chart.line} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="resolvidos" fill={chart.seriesAlt} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', fontSize: '13px' }}>
+            <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: text.dim, fontSize: '13px' }}>
               Nenhum dado disponível
             </div>
           )}
-        </div>
+        </ChartCard>
 
-        <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px' }}>
-          <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#F5F5F7', margin: '0 0 8px 0' }}>Satisfação</h3>
+        <ChartCard title="Satisfação">
           {dadosSatisfacao.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={dadosSatisfacao}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                <XAxis dataKey="semana" stroke="#86868B" style={{ fontSize: '11px' }} />
-                <YAxis stroke="#86868B" style={{ fontSize: '11px' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} />
+                <XAxis dataKey="semana" stroke={chart.axisAlt} style={{ fontSize: '11px' }} />
+                <YAxis stroke={chart.axisAlt} style={{ fontSize: '11px' }} />
                 <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Line type="monotone" dataKey="nps" stroke="#8B8B8B" dot={false} />
-                <Line type="monotone" dataKey="satisfacao" stroke="#5A5A5A" dot={false} />
+                <Line type="monotone" dataKey="nps" stroke={chart.line} dot={false} />
+                <Line type="monotone" dataKey="satisfacao" stroke={chart.seriesAlt} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', fontSize: '13px' }}>
+            <div style={{ height: '250px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: text.dim, fontSize: '13px' }}>
               Nenhum dado disponível
             </div>
           )}
-        </div>
+        </ChartCard>
       </div>
 
       {/* Tickets Premium */}
       <div style={{ marginTop: '16px' }}>
-        <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#EBEBF0', margin: '0 0 12px 0' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: '600', color: text.highlight, margin: '0 0 12px 0' }}>
           Tickets em Aberto
         </h3>
         {tickets.length > 0 ? (
@@ -253,7 +256,7 @@ export function CSPage() {
               sortable: true,
               align: 'right',
               render: (value) => (
-                <span style={{ color: '#9CA3AF', fontSize: '12px' }}>
+                <span style={{ color: text.secondary, fontSize: '12px' }}>
                   {value}
                 </span>
               ),
@@ -268,7 +271,7 @@ export function CSPage() {
                     onClick={() => handleResolveTicket(String(row.id))}
                     aria-label="Marcar como resolvido"
                     title="Marcar como resolvido"
-                    style={{ background: 'transparent', border: 'none', color: '#3FB950', cursor: 'pointer', padding: '2px', display: 'flex' }}
+                    style={{ background: 'transparent', border: 'none', color: chart.revenue, cursor: 'pointer', padding: '2px', display: 'flex' }}
                   >
                     <CheckCircle2 size={15} />
                   </button>
@@ -276,7 +279,7 @@ export function CSPage() {
                     onClick={() => handleDeleteTicket(String(row.id))}
                     aria-label="Deletar ticket"
                     title="Deletar ticket"
-                    style={{ background: 'transparent', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '2px', display: 'flex' }}
+                    style={{ background: 'transparent', border: 'none', color: text.secondary, cursor: 'pointer', padding: '2px', display: 'flex' }}
                   >
                     <Trash2 size={15} />
                   </button>
@@ -292,7 +295,7 @@ export function CSPage() {
           striped={true}
         />
         ) : (
-          <div style={{ background: '#0F0F0F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '32px', textAlign: 'center', color: '#6B7280', fontSize: '13px' }}>
+          <div style={{ background: surface.card, border: `1px solid ${surface.borderStrong}`, borderRadius: '8px', padding: '32px', textAlign: 'center', color: text.dim, fontSize: '13px' }}>
             Nenhum ticket disponível
           </div>
         )}
@@ -302,14 +305,14 @@ export function CSPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {ticketError && <QueryError message={ticketError} />}
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#9CA3AF', marginBottom: '6px' }}>Cliente *</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: text.secondary, marginBottom: '6px' }}>Cliente *</label>
             {contatos.length === 0 ? (
-              <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>
+              <p style={{ fontSize: '12px', color: text.dim, margin: 0 }}>
                 Nenhum lead cadastrado ainda — cadastre um no CRM primeiro para poder abrir um ticket para ele.
               </p>
             ) : (
               <select
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F5F7', fontSize: '13px' }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: text.bright, fontSize: '13px' }}
                 value={ticketForm.contatoId}
                 onChange={(e) => setTicketForm({ ...ticketForm, contatoId: e.target.value })}
               >
@@ -319,18 +322,18 @@ export function CSPage() {
             )}
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#9CA3AF', marginBottom: '6px' }}>Assunto *</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: text.secondary, marginBottom: '6px' }}>Assunto *</label>
             <input
               placeholder="Ex: Erro na integração"
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#EDEDED', fontSize: '13px' }}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: chart.light, fontSize: '13px' }}
               value={ticketForm.assunto}
               onChange={(e) => setTicketForm({ ...ticketForm, assunto: e.target.value })}
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#9CA3AF', marginBottom: '6px' }}>Prioridade</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: text.secondary, marginBottom: '6px' }}>Prioridade</label>
             <select
-              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F5F7', fontSize: '13px' }}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: text.bright, fontSize: '13px' }}
               value={ticketForm.prioridade}
               onChange={(e) => setTicketForm({ ...ticketForm, prioridade: e.target.value })}
             >

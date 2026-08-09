@@ -1,79 +1,81 @@
-# RAVO OS v3.0
+# RAVO OS
 
-**Enterprise AI Operating System** — Central de Operações Estratégicas
+**Enterprise Operations Platform** — Central de Operações Estratégicas (CRM, Financeiro, Metas, Customer Success e Dashboard).
 
-## 🎯 Overview
+Interface profissional dark-first, inspirada em Linear/Stripe/Vercel, construída com React + TypeScript + Supabase.
 
-RAVO OS é uma plataforma empresarial integrada para gerenciamento de operações, CRM, finanças, metas e customer success. Interface profissional inspirada em Linear, Stripe e Vercel.
+## Stack
 
-## 🚀 Quick Start
+- **React 18** + **TypeScript** (strict) — UI
+- **Vite 8** — build, code-splitting por página e chunks de vendor
+- **React Router v7** — rotas
+- **Zustand** — estado global (toasts, revalidação pós-CRUD)
+- **Supabase** — autenticação, banco (PostgreSQL + RLS) e RPCs de métricas
+- **Recharts** — gráficos
+- **Lucide React** — ícones
+- **Vitest + Testing Library** — testes (threshold de cobertura no CI)
 
-### 1. Clone o Repositório
+## Módulos
+
+| Rota | Página | Descrição |
+|------|--------|-----------|
+| `/dashboard` | `Dashboard.tsx` | MRR/ARR, churn, funil, métricas comerciais, drill-down |
+| `/crm` | `CRMPage.tsx` | Kanban de leads com drag-and-drop + CRUD real |
+| `/cs` | `CSPage.tsx` | Tickets, atendimento, NPS |
+| `/finance` | `FinancePage.tsx` | Receitas, despesas, fluxo de caixa, DRE |
+| `/goals` | `GoalsPage.tsx` | Metas (manuais ou automáticas, puxadas do CRM) |
+
+Todas as telas compartilham um **período global** (mês a mês) no header — os gráficos reagem ao mês selecionado.
+
+## Começando
+
 ```bash
-git clone https://github.com/your-org/ravo-os.git
-cd ravo-os
-```
-
-### 2. Instale Dependências
-```bash
+# 1. Instalar dependências
 npm install
-```
 
-### 3. Configure Variáveis de Ambiente
-```bash
+# 2. Configurar ambiente (obrigatório — o build falha sem as credenciais)
 cp .env.example .env.local
+#  VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+#  VITE_SUPABASE_ANON_KEY=sua_chave_anon
+
+# 3. Aplicar o schema no Supabase (SQL Editor → database/schema.sql)
+#    e, se quiser dados de exemplo, database/seed.sql
+
+# 4. Rodar
+npm run dev   # http://localhost:5173
 ```
 
-Preencha com suas credenciais do Supabase.
+> **Mock de dados (desenvolvimento):** defina `VITE_USE_MOCK=true` no `.env.local`. No build de produção esse caminho é eliminado do bundle.
 
-### 4. Inicie o Servidor
-```bash
-npm run dev
-```
-
-Acesse em `http://localhost:5173`
-
-## 📦 Stack Tecnológico
-
-- **React 18** + **TypeScript** — UI Framework
-- **Tailwind CSS** — Styling
-- **React Router v7** — Routing
-- **Zustand** — State Management
-- **Supabase** — Backend & Auth
-- **Recharts** — Data Visualization
-- **Lucide React** — Icons
-- **Framer Motion** — Animations
-- **Vite** — Build Tool
-
-## 🎨 Design
-
-- **Dark Mode First** — Preto (#09090B) + Laranja (#FF6200)
-- **Premium Components** — KPICard, HeroSection, ActivityFeed
-- **Responsive Design** — Mobile, tablet, desktop
-- **Microinteractions** — Smooth animations e transitions
-
-## 📊 Módulos
-
-- **Dashboard** — Centro de Comando com health score
-- **CRM** — Gerenciamento de leads
-- **Finance** — Análise financeira
-- **Goals** — Acompanhamento de KPIs
-- **CS** — Customer Success & Tickets
-
-## 🔧 Comandos
+## Scripts
 
 ```bash
-npm run dev           # Desenvolvimento
-npm run build         # Build produção
-npm run preview       # Preview do build
-npm run test          # Testes
-npm run lint          # Lint
+npm run dev             # desenvolvimento (hot reload)
+npm run build           # build de produção
+npm run preview         # preview do build
+npm test                # testes unitários (Vitest)
+npm run test:coverage   # testes + relatório de cobertura
+npm run lint            # ESLint
+npm run type-check      # tsc --noEmit
+npm run insert-data     # insere dados de teste no Supabase
 ```
 
-## 📝 License
+## Estrutura
 
-MIT
+Veja [ESTRUTURA.md](./ESTRUTURA.md) para o mapa de pastas e [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) para o fluxo de dados.
+
+## Banco de dados
+
+- Schema canônico (tabelas + RPCs + RLS): [`database/schema.sql`](./database/schema.sql)
+- Dados de exemplo: [`database/seed.sql`](./database/seed.sql)
+- **Importante:** após alterar as RPCs, re-aplique o `schema.sql` no Supabase antes do deploy — o frontend chama as funções por nome e parâmetro.
+
+## Qualidade
+
+- CI (`.github/workflows/deploy.yml`): type-check → lint → testes com coverage → build → deploy Vercel.
+- RLS ativa em todas as tabelas (cada usuário só enxerga os próprios registros).
+- Credenciais somente via variáveis de ambiente; fail-fast no build se faltarem.
 
 ---
 
-**RAVO OS — Enterprise Operations Platform**
+**RAVO OS** — Enterprise Operations Platform

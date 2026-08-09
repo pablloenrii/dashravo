@@ -1,4 +1,5 @@
 import React from 'react';
+import { chart, text, surface, semantic } from '@/constants/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -13,16 +14,16 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const variantStyles: Record<ButtonVariant, string> = {
   primary: `
-    background: #EDEDED;
-    color: #0A0A0A;
+    background: ${chart.light};
+    color: ${surface.app};
     border: 1px solid rgba(255,255,255, 0.5);
     &:hover {
-      background: #FFFFFF;
+      background: ${text.white};
     }
   `,
   secondary: `
     background: rgba(255,255,255, 0.08);
-    color: #EDEDED;
+    color: ${chart.light};
     border: 1px solid rgba(255,255,255, 0.3);
     &:hover {
       background: rgba(255,255,255, 0.15);
@@ -30,16 +31,16 @@ export const variantStyles: Record<ButtonVariant, string> = {
   `,
   ghost: `
     background: transparent;
-    color: #9CA3AF;
+    color: ${text.secondary};
     border: 1px solid rgba(255,255,255,0.1);
     &:hover {
       background: rgba(255,255,255,0.04);
-      color: #EBEBF0;
+      color: ${text.highlight};
     }
   `,
   danger: `
     background: rgba(239, 68, 68, 0.12);
-    color: #EF4444;
+    color: ${semantic.danger};
     border: 1px solid rgba(239, 68, 68, 0.3);
     &:hover {
       background: rgba(239, 68, 68, 0.2);
@@ -78,25 +79,25 @@ export function Button({
   const variantStyle: React.CSSProperties =
     variant === 'primary'
       ? {
-          background: '#EDEDED',
-          color: '#0A0A0A',
+          background: chart.light,
+          color: surface.app,
           border: '1px solid rgba(255,255,255, 0.5)',
         }
       : variant === 'secondary'
       ? {
           background: 'rgba(255,255,255, 0.08)',
-          color: '#EDEDED',
+          color: chart.light,
           border: '1px solid rgba(255,255,255, 0.3)',
         }
       : variant === 'danger'
       ? {
           background: 'rgba(239, 68, 68, 0.12)',
-          color: '#EF4444',
+          color: semantic.danger,
           border: '1px solid rgba(239, 68, 68, 0.3)',
         }
       : {
           background: 'transparent',
-          color: '#9CA3AF',
+          color: text.secondary,
           border: '1px solid rgba(255,255,255,0.1)',
         };
 
@@ -119,27 +120,27 @@ export function Button({
       onMouseEnter={(e) => {
         if (!disabled && !loading) {
           if (variant === 'primary') {
-            e.currentTarget.style.background = '#FFFFFF';
+            e.currentTarget.style.background = text.white;
           } else if (variant === 'secondary') {
             e.currentTarget.style.background = 'rgba(255,255,255, 0.15)';
           } else if (variant === 'danger') {
             e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
           } else {
             e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-            e.currentTarget.style.color = '#EBEBF0';
+            e.currentTarget.style.color = text.highlight;
           }
         }
       }}
       onMouseLeave={(e) => {
         if (variant === 'primary') {
-          e.currentTarget.style.background = '#EDEDED';
+          e.currentTarget.style.background = chart.light;
         } else if (variant === 'secondary') {
           e.currentTarget.style.background = 'rgba(255,255,255, 0.08)';
         } else if (variant === 'danger') {
           e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
         } else {
           e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.color = '#9CA3AF';
+          e.currentTarget.style.color = text.secondary;
         }
       }}
       className={className}

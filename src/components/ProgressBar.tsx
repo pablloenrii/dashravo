@@ -1,4 +1,6 @@
 
+import { chart, text, surface } from '@/constants/theme';
+
 export interface ProgressBarProps {
   value: number;
   max?: number;
@@ -12,7 +14,7 @@ export function ProgressBar({
   value,
   max = 100,
   label,
-  color = '#EDEDED',
+  color = chart.light,
   animated = true,
   showValue = true,
 }: ProgressBarProps) {
@@ -29,9 +31,9 @@ export function ProgressBar({
             fontSize: '13px',
           }}
         >
-          {label && <span style={{ color: '#9CA3AF', fontWeight: '500' }}>{label}</span>}
+          {label && <span style={{ color: text.secondary, fontWeight: '500' }}>{label}</span>}
           {showValue && (
-            <span style={{ color: '#EBEBF0', fontWeight: '600' }}>
+            <span style={{ color: text.highlight, fontWeight: '600' }}>
               {Math.round(percentage)}%
             </span>
           )}
@@ -42,7 +44,7 @@ export function ProgressBar({
         style={{
           width: '100%',
           height: '8px',
-          background: 'rgba(255,255,255,0.06)',
+          background: surface.border,
           borderRadius: '4px',
           overflow: 'hidden',
           position: 'relative',

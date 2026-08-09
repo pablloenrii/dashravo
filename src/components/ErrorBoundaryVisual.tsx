@@ -1,4 +1,5 @@
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { text, semantic, soft } from '@/constants/theme';
 
 export interface ErrorBoundaryVisualProps {
   error?: Error | string;
@@ -39,7 +40,7 @@ export function ErrorBoundaryVisual({
         <AlertCircle
           size={48}
           style={{
-            color: '#EF4444',
+            color: semantic.danger,
             opacity: 0.8,
           }}
         />
@@ -50,7 +51,7 @@ export function ErrorBoundaryVisual({
         style={{
           fontSize: '18px',
           fontWeight: '600',
-          color: '#EBEBF0',
+          color: text.highlight,
           margin: '0 0 8px 0',
           textAlign: 'center',
         }}
@@ -62,7 +63,7 @@ export function ErrorBoundaryVisual({
       <p
         style={{
           fontSize: '13px',
-          color: '#9CA3AF',
+          color: text.secondary,
           margin: '0 0 24px 0',
           textAlign: 'center',
           maxWidth: '300px',
@@ -87,7 +88,7 @@ export function ErrorBoundaryVisual({
           <code
             style={{
               fontSize: '11px',
-              color: '#FCA5A5',
+              color: semantic.dangerSoft,
               fontFamily: "'SF Mono', Monaco, monospace",
               wordBreak: 'break-all',
             }}
@@ -106,10 +107,10 @@ export function ErrorBoundaryVisual({
             alignItems: 'center',
             gap: '8px',
             padding: '10px 16px',
-            background: 'rgba(239, 68, 68, 0.1)',
+            background: soft.danger,
             border: '1px solid rgba(239, 68, 68, 0.3)',
             borderRadius: '6px',
-            color: '#EBEBF0',
+            color: text.highlight,
             fontSize: '13px',
             fontWeight: '500',
             cursor: 'pointer',

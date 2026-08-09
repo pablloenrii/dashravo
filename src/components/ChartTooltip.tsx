@@ -1,4 +1,6 @@
 
+import { text } from '@/constants/theme';
+
 interface ChartTooltipProps {
   active?: boolean;
   payload?: Array<{
@@ -30,7 +32,7 @@ export function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
         style={{
           fontSize: '12px',
           fontWeight: '600',
-          color: '#9CA3AF',
+          color: text.secondary,
           marginBottom: '8px',
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
@@ -55,7 +57,7 @@ export function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
             />
             {/* Text */}
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flex: 1 }}>
-              <span style={{ fontSize: '12px', color: '#EBEBF0' }}>{entry.name}</span>
+              <span style={{ fontSize: '12px', color: text.highlight }}>{entry.name}</span>
               <span
                 style={{
                   fontSize: '12px',

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { sb as supabase } from '@/services/supabase';
+import { chart, text, surface, semantic, soft } from '@/constants/theme';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -39,13 +40,13 @@ export default function SignupPage() {
   };
 
   const labelStyle: React.CSSProperties = {
-    display: 'block', fontSize: '12px', fontWeight: 600, color: '#9CA3AF',
+    display: 'block', fontSize: '12px', fontWeight: 600, color: text.secondary,
     marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em',
   };
   const inputStyle = (name: string): React.CSSProperties => ({
-    width: '100%', padding: '12px 14px', fontSize: '14px', color: '#F5F5F7',
-    background: '#0A0A0A',
-    border: `1px solid ${focus === name ? '#EDEDED' : 'rgba(255,255,255,0.08)'}`,
+    width: '100%', padding: '12px 14px', fontSize: '14px', color: text.bright,
+    background: surface.app,
+    border: `1px solid ${focus === name ? chart.light : surface.borderStrong}`,
     borderRadius: '10px', outline: 'none', boxSizing: 'border-box',
     transition: 'border-color .15s ease',
   });
@@ -53,36 +54,36 @@ export default function SignupPage() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,0.10), transparent), #0A0A0A',
+      background: `radial-gradient(1200px 600px at 50% -10%, ${surface.hover}, transparent), ${surface.app}`,
       padding: '24px',
     }}>
       <div style={{
-        width: '100%', maxWidth: '400px', background: '#0F0F0F',
-        border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px',
+        width: '100%', maxWidth: '400px', background: surface.card,
+        border: `1px solid ${surface.border}`, borderRadius: '16px',
         padding: '40px 32px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
           <div style={{
-            width: '42px', height: '42px', borderRadius: '11px', background: '#EDEDED',
+            width: '42px', height: '42px', borderRadius: '11px', background: chart.light,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, fontSize: '22px', color: '#0A0A0A',
+            fontWeight: 800, fontSize: '22px', color: surface.app,
           }}>R</div>
           <div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em' }}>RAVO OS</div>
-            <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Criar nova conta</div>
+            <div style={{ fontSize: '20px', fontWeight: 800, color: text.white, letterSpacing: '-0.02em' }}>RAVO OS</div>
+            <div style={{ fontSize: '12px', color: text.secondary }}>Criar nova conta</div>
           </div>
         </div>
 
         {error && (
           <div style={{
-            marginBottom: '16px', padding: '10px 12px', fontSize: '13px', color: '#FCA5A5',
-            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px',
+            marginBottom: '16px', padding: '10px 12px', fontSize: '13px', color: semantic.dangerSoft,
+            background: soft.danger, border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px',
           }}>{error}</div>
         )}
         {success && (
           <div style={{
-            marginBottom: '16px', padding: '10px 12px', fontSize: '13px', color: '#86EFAC',
-            background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '10px',
+            marginBottom: '16px', padding: '10px 12px', fontSize: '13px', color: semantic.successSoft,
+            background: soft.success, border: '1px solid rgba(34,197,94,0.3)', borderRadius: '10px',
           }}>{success}</div>
         )}
 
@@ -115,8 +116,8 @@ export default function SignupPage() {
             type="submit" disabled={loading}
             onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
             style={{
-              width: '100%', padding: '12px', fontSize: '15px', fontWeight: 700, color: '#0A0A0A',
-              background: loading ? '#B34600' : (hover ? '#8B8B8B' : '#EDEDED'),
+              width: '100%', padding: '12px', fontSize: '15px', fontWeight: 700, color: surface.app,
+              background: loading ? 'rgba(255,255,255,0.2)' : (hover ? chart.line : chart.light),
               border: 'none', borderRadius: '10px',
               cursor: loading ? 'not-allowed' : 'pointer', transition: 'background .15s ease',
             }}
@@ -125,8 +126,8 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: '#9CA3AF' }}>
-          Já tem conta? <a href="/login" style={{ color: '#EDEDED', fontWeight: 600, textDecoration: 'none' }}>Fazer login</a>
+        <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: text.secondary }}>
+          Já tem conta? <a href="/login" style={{ color: chart.light, fontWeight: 600, textDecoration: 'none' }}>Fazer login</a>
         </p>
       </div>
     </div>

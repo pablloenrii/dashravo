@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronUp, ChevronDown, Check, Minus } from 'lucide-react';
+import { chart, text, surface } from '@/constants/theme';
 
 export interface TableColumn<T> {
   key: keyof T;
@@ -105,7 +106,7 @@ export function Table<T extends { id?: string | number }>({
           borderRadius: '8px',
           border: '0.5px solid rgba(255,255,255,0.04)',
           overflow: 'hidden',
-          background: '#0D0D0D',
+          background: surface.sidebar,
           minWidth: 'fit-content',
         }}
       >
@@ -135,8 +136,8 @@ export function Table<T extends { id?: string | number }>({
                   <button
                     onClick={handleSelectAll}
                     style={{
-                      background: selectedRows.size > 0 ? '#EDEDED' : 'transparent',
-                      border: `1px solid ${selectedRows.size > 0 ? '#EDEDED' : 'rgba(255,255,255,0.2)'}`,
+                      background: selectedRows.size > 0 ? chart.light : 'transparent',
+                      border: `1px solid ${selectedRows.size > 0 ? chart.light : 'rgba(255,255,255,0.2)'}`,
                       borderRadius: '4px',
                       width: '18px',
                       height: '18px',
@@ -146,7 +147,7 @@ export function Table<T extends { id?: string | number }>({
                       cursor: 'pointer',
                       transition: 'all 200ms ease-out',
                       padding: 0,
-                      color: 'white',
+                      color: text.white,
                     }}
                   >
                     {selectedRows.size === paginatedData.length && <Check size={12} strokeWidth={3} />}
@@ -164,7 +165,7 @@ export function Table<T extends { id?: string | number }>({
                     padding: '12px 16px',
                     textAlign: col.align || 'left',
                     width: col.width,
-                    color: '#9CA3AF',
+                    color: text.secondary,
                     fontWeight: '600',
                     fontSize: '12px',
                     textTransform: 'uppercase',
@@ -175,11 +176,11 @@ export function Table<T extends { id?: string | number }>({
                   }}
                   onMouseEnter={(e) => {
                     if (col.sortable) {
-                      (e.currentTarget as HTMLElement).style.color = '#EBEBF0';
+                      (e.currentTarget as HTMLElement).style.color = text.highlight;
                     }
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.color = '#9CA3AF';
+                    (e.currentTarget as HTMLElement).style.color = text.secondary;
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -222,7 +223,7 @@ export function Table<T extends { id?: string | number }>({
                   style={{
                     borderBottom: '0.5px solid rgba(255,255,255,0.03)',
                     background: isSelected
-                      ? 'rgba(255,255,255,0.08)'
+                      ? surface.hover
                       : striped && idx % 2 === 0
                         ? 'rgba(255,255,255,0.01)'
                         : 'transparent',
@@ -231,12 +232,12 @@ export function Table<T extends { id?: string | number }>({
                   }}
                   onMouseEnter={(e) => {
                     if (hoverable) {
-                      (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)';
+                      (e.currentTarget as HTMLElement).style.background = surface.divider;
                     }
                   }}
                   onMouseLeave={(e) => {
                     (e.currentTarget as HTMLElement).style.background = isSelected
-                      ? 'rgba(255,255,255,0.08)'
+                      ? surface.hover
                       : striped && idx % 2 === 0
                         ? 'rgba(255,255,255,0.01)'
                         : 'transparent';
@@ -250,8 +251,8 @@ export function Table<T extends { id?: string | number }>({
                           handleSelectRow(actualIndex);
                         }}
                         style={{
-                          background: isSelected ? '#EDEDED' : 'transparent',
-                          border: `1px solid ${isSelected ? '#EDEDED' : 'rgba(255,255,255,0.2)'}`,
+                          background: isSelected ? chart.light : 'transparent',
+                          border: `1px solid ${isSelected ? chart.light : 'rgba(255,255,255,0.2)'}`,
                           borderRadius: '4px',
                           width: '18px',
                           height: '18px',
@@ -261,7 +262,7 @@ export function Table<T extends { id?: string | number }>({
                           cursor: 'pointer',
                           transition: 'all 200ms ease-out',
                           padding: 0,
-                          color: 'white',
+                          color: text.white,
                         }}
                       >
                         {isSelected && <Check size={12} strokeWidth={3} />}
@@ -274,7 +275,7 @@ export function Table<T extends { id?: string | number }>({
                       style={{
                         padding: '12px 16px',
                         textAlign: col.align || 'left',
-                        color: '#EBEBF0',
+                        color: text.highlight,
                       }}
                     >
                       {col.render
@@ -299,7 +300,7 @@ export function Table<T extends { id?: string | number }>({
             justifyContent: 'space-between',
             padding: '16px',
             fontSize: '13px',
-            color: '#9CA3AF',
+            color: text.secondary,
           }}
         >
           <span>
@@ -317,7 +318,7 @@ export function Table<T extends { id?: string | number }>({
                 borderRadius: '4px',
                 border: '0.5px solid rgba(255,255,255,0.1)',
                 background: 'rgba(255,255,255,0.02)',
-                color: currentPage === 0 ? '#6B7280' : '#9CA3AF',
+                color: currentPage === 0 ? text.dim : text.secondary,
                 cursor: currentPage === 0 ? 'not-allowed' : 'pointer',
                 transition: 'all 200ms ease-out',
               }}
@@ -335,12 +336,12 @@ export function Table<T extends { id?: string | number }>({
                     height: '32px',
                     borderRadius: '4px',
                     border: currentPage === i
-                      ? '0.5px solid #EDEDED'
+                      ? `0.5px solid ${chart.light}`
                       : '0.5px solid rgba(255,255,255,0.1)',
                     background: currentPage === i
-                      ? 'rgba(255,255,255, 0.15)'
+                      ? surface.hover
                       : 'rgba(255,255,255,0.02)',
-                    color: currentPage === i ? '#EDEDED' : '#9CA3AF',
+                    color: currentPage === i ? chart.light : text.secondary,
                     cursor: 'pointer',
                     fontWeight: currentPage === i ? '600' : '400',
                     transition: 'all 200ms ease-out',
@@ -359,7 +360,7 @@ export function Table<T extends { id?: string | number }>({
                 borderRadius: '4px',
                 border: '0.5px solid rgba(255,255,255,0.1)',
                 background: 'rgba(255,255,255,0.02)',
-                color: currentPage === totalPages - 1 ? '#6B7280' : '#9CA3AF',
+                color: currentPage === totalPages - 1 ? text.dim : text.secondary,
                 cursor: currentPage === totalPages - 1 ? 'not-allowed' : 'pointer',
                 transition: 'all 200ms ease-out',
               }}

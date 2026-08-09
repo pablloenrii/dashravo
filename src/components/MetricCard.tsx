@@ -5,6 +5,7 @@
 
 import { ReactNode } from 'react';
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { chart, text, surface, semantic } from '@/constants/theme';
 
 export interface MetricCardProps {
   label: string;
@@ -21,9 +22,9 @@ export interface MetricCardProps {
   onClick?: () => void;
 }
 
-const GOOD = '#3FB950';
-const BAD = '#EF4444';
-const NEUTRAL = '#6E6E6E';
+const GOOD = chart.revenue;
+const BAD = semantic.danger;
+const NEUTRAL = text.tertiary;
 
 export function MetricCard({
   label, value, icon, deltaPct, invertDelta = false,
@@ -40,8 +41,8 @@ export function MetricCard({
     <div
       onClick={onClick}
       style={{
-        background: '#0F0F0F',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: surface.card,
+        border: `1px solid ${surface.border}`,
         borderRadius: '10px',
         padding: '14px 16px',
         display: 'flex',
@@ -52,26 +53,26 @@ export function MetricCard({
       }}
       onMouseEnter={(e) => {
         if (!onClick) return;
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)';
+        e.currentTarget.style.borderColor = surface.borderHover;
       }}
       onMouseLeave={(e) => {
         if (!onClick) return;
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+        e.currentTarget.style.borderColor = surface.border;
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
         <span style={{
           fontSize: '10.5px', fontWeight: 600, letterSpacing: '0.05em',
-          textTransform: 'uppercase', color: '#8A8F98',
+          textTransform: 'uppercase', color: text.muted,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{label}</span>
-        {icon && <span style={{ color: '#5B616E', display: 'flex', flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: text.label, display: 'flex', flexShrink: 0 }}>{icon}</span>}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
         <span style={{
           fontSize: '23px', fontWeight: 650, letterSpacing: '-0.025em',
-          color: loading ? '#3A3A3A' : '#F2F2F3', lineHeight: 1.1,
+          color: loading ? surface.skeleton : text.primary, lineHeight: 1.1,
         }}>
           {loading ? '—' : value}
         </span>
@@ -87,17 +88,17 @@ export function MetricCard({
       </div>
 
       {progress !== undefined && !loading && (
-        <div style={{ height: '3px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
+        <div style={{ height: '3px', background: surface.border, borderRadius: '2px', overflow: 'hidden' }}>
           <div style={{
             width: `${Math.max(0, Math.min(100, progress))}%`, height: '100%',
-            background: progress >= 100 ? GOOD : progress >= 70 ? '#EDEDED' : '#6E6E6E',
+            background: progress >= 100 ? GOOD : progress >= 70 ? chart.light : text.tertiary,
             borderRadius: '2px', transition: 'width .5s cubic-bezier(0.4,0,0.2,1)',
           }} />
         </div>
       )}
 
       {sublabel && (
-        <span style={{ fontSize: '11px', color: '#6E6E6E', lineHeight: 1.3 }}>{sublabel}</span>
+        <span style={{ fontSize: '11px', color: text.tertiary, lineHeight: 1.3 }}>{sublabel}</span>
       )}
     </div>
   );

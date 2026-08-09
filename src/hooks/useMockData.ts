@@ -6,6 +6,8 @@
  * (v6: remover este arquivo do bundle de produção via code-splitting)
  */
 
+import { chart } from '@/constants/theme';
+
 export const MOCK_CONTATOS = [
   { id: '1', nome: 'João Silva', empresa: 'Acme Corp', email: 'joao@example.com', telefone: '11 98765-4321', etapa: 'Qualificado', valor: 45000, created_at: '2026-07-10' },
   { id: '2', nome: 'Maria Santos', empresa: 'TechStart', email: 'maria@example.com', telefone: '21 99876-5432', etapa: 'Proposta', valor: 28000, created_at: '2026-07-09' },
@@ -23,10 +25,10 @@ export const MOCK_CONTACTS_CHART = [
 ];
 
 export const MOCK_OPPORTUNITIES = [
-  { name: 'Qualificado', quantidade: 320, fill: '#EDEDED' },
-  { name: 'Proposta', quantidade: 280, fill: '#10B981' },
-  { name: 'Negociação', quantidade: 190, fill: '#8B8B8B' },
-  { name: 'Fechado', quantidade: 105, fill: '#6B7280' },
+  { name: 'Qualificado', quantidade: 320, fill: chart.light },
+  { name: 'Proposta', quantidade: 280, fill: chart.success },
+  { name: 'Negociação', quantidade: 190, fill: chart.line },
+  { name: 'Fechado', quantidade: 105, fill: chart.neutral },
 ];
 
 export const MOCK_FINANCE_CHART = [
@@ -46,10 +48,10 @@ export const MOCK_CASH_FLOW = [
 ];
 
 export const MOCK_EXPENSES = [
-  { name: 'Pessoal', value: 45000, percentual: 42, fill: '#EDEDED' },
-  { name: 'Infraestrutura', value: 25000, percentual: 24, fill: '#10B981' },
-  { name: 'Marketing', value: 18000, percentual: 17, fill: '#8B8B8B' },
-  { name: 'Outros', value: 12000, percentual: 12, fill: '#6B7280' },
+  { name: 'Pessoal', value: 45000, percentual: 42, fill: chart.light },
+  { name: 'Infraestrutura', value: 25000, percentual: 24, fill: chart.success },
+  { name: 'Marketing', value: 18000, percentual: 17, fill: chart.line },
+  { name: 'Outros', value: 12000, percentual: 12, fill: chart.neutral },
 ];
 
 export const MOCK_GOAL_PROGRESS = [

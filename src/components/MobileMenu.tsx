@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
+import { chart, text, surface } from '@/constants/theme';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -49,7 +50,7 @@ export function MobileMenu({ isOpen, onClose, items, isActive }: MobileMenuProps
           top: 0,
           bottom: 0,
           width: '280px',
-          background: '#0D0D0D',
+          background: surface.sidebar,
           borderRight: '0.5px solid rgba(255,255,255,0.04)',
           zIndex: 51,
           animation: 'slideInLeft 300ms ease-out',
@@ -69,17 +70,17 @@ export function MobileMenu({ isOpen, onClose, items, isActive }: MobileMenuProps
           }}
         >
           <div>
-            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#EDEDED', margin: 0 }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '700', color: chart.light, margin: 0 }}>
               RAVO
             </h2>
-            <p style={{ fontSize: '11px', color: '#6B7280', margin: 0 }}>INTELLIGENCE</p>
+            <p style={{ fontSize: '11px', color: text.dim, margin: 0 }}>INTELLIGENCE</p>
           </div>
           <button
             onClick={onClose}
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#9CA3AF',
+              color: text.secondary,
               cursor: 'pointer',
               padding: '8px',
               display: 'flex',
@@ -104,9 +105,9 @@ export function MobileMenu({ isOpen, onClose, items, isActive }: MobileMenuProps
                 padding: '12px',
                 borderRadius: '8px',
                 textDecoration: 'none',
-                color: isActive(item.path) ? '#EDEDED' : '#9CA3AF',
-                background: isActive(item.path) ? 'rgba(255,255,255, 0.12)' : 'rgba(255,255,255,0.02)',
-                borderLeft: isActive(item.path) ? '2.5px solid #EDEDED' : '2.5px solid transparent',
+                color: isActive(item.path) ? chart.light : text.secondary,
+                background: isActive(item.path) ? surface.hover : 'rgba(255,255,255,0.02)',
+                borderLeft: isActive(item.path) ? `2.5px solid ${chart.light}` : '2.5px solid transparent',
                 transition: 'all 300ms ease-out',
                 fontSize: '14px',
                 fontWeight: isActive(item.path) ? '600' : '500',
@@ -122,7 +123,7 @@ export function MobileMenu({ isOpen, onClose, items, isActive }: MobileMenuProps
           style={{
             padding: '12px',
             borderTop: '0.5px solid rgba(255,255,255,0.04)',
-            color: '#6B7280',
+            color: text.dim,
             fontSize: '11px',
             textAlign: 'center',
           }}

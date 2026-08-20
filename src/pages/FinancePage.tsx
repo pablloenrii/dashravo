@@ -13,7 +13,7 @@ import { MetricCard } from '@/components/MetricCard';
 import { useFinanceChartData, useCashFlowData, useExpensesData, useReceitasRawData } from '@/hooks/usePagesQueries';
 import { usePeriod, prevMonthKey, monthLabel, toMonthKey } from '@/contexts/PeriodContext';
 import { fmtK, fmtMoney, pctChange } from '@/utils/format';
-import { chart, layout, text, surface } from '@/constants/theme';
+import { chart, layout, text } from '@/constants/theme';
 
 export default function FinancePage() {
   const { effectiveMonth, isAllTime, label: periodLabel, month } = usePeriod();
@@ -81,14 +81,14 @@ export default function FinancePage() {
         <MetricCard label="Lucro" value={fmtMoney(lucroMes)} icon={<TrendingUp size={14} />}
           deltaPct={d(lucroMes, lucroAnt)} sublabel={vsLabel} loading={receitas.loading} />
         <MetricCard label="Margem" value={`${margemMes.toFixed(1)}%`} icon={<Percent size={14} />}
-          progress={Math.max(0, margemMes)} sublabel="lucro / receita" loading={receitas.loading} />
+          progress={margemMes} sublabel="lucro / receita" loading={receitas.loading} />
       </div>
 
       {/* Contexto histórico (6 meses) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-        <KPICard title="Receita (6m)" value={finance.loading ? '…' : fmtK(totalRevenue)} unit="" color={chart.revenue} icon={<DollarSign size={20} />} />
-        <KPICard title="Lucro (6m)" value={finance.loading ? '…' : fmtK(profit)} unit="" color={chart.light} icon={<TrendingUp size={20} />} />
-        <KPICard title="Caixa (4 sem)" value={cashFlow.loading ? '…' : fmtK(cash)} unit="" color={chart.revenue} icon={<Wallet size={20} />} />
+        <MetricCard label="Receita (6m)" value={fmtK(totalRevenue)} unit="acumulado" valueColor={chart.revenue} icon={<DollarSign size={14} />} sublabel="últimos 6 meses" loading={finance.loading} />
+        <MetricCard label="Lucro (6m)" value={fmtK(profit)} unit="acumulado" valueColor={chart.light} icon={<TrendingUp size={14} />} sublabel="últimos 6 meses" loading={finance.loading} />
+        <MetricCard label="Caixa (4 sem)" value={fmtK(cash)} valueColor={chart.revenue} icon={<Wallet size={14} />} sublabel="últimas 4 semanas" loading={cashFlow.loading} />
       </div>
 
       {/* Gráfico principal — Receita vs Despesa */}
@@ -146,21 +146,6 @@ export default function FinancePage() {
             </ResponsiveContainer>
           )}
         </ChartCard>
-      </div>
-    </div>
-  );
-}
-
-function KPICard({ title, value, unit, color, icon }: { title: string; value: string; unit: string; color: string; icon: React.ReactNode }) {
-  return (
-    <div style={{ background: surface.card, border: `1px solid ${surface.border}`, borderRadius: '10px', padding: '16px 18px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: text.muted }}>{title}</span>
-        <span style={{ color: text.label, display: 'flex' }}>{icon}</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-        <span style={{ fontSize: '24px', fontWeight: 650, letterSpacing: '-0.02em', color }}>{value}</span>
-        {unit && <span style={{ fontSize: '13px', color: text.muted }}>{unit}</span>}
       </div>
     </div>
   );

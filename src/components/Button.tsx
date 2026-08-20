@@ -1,4 +1,5 @@
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 import { chart, text, surface, semantic } from '@/constants/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -145,7 +146,7 @@ export function Button({
       }}
       className={className}
     >
-      {loading && <span style={{ animation: 'spin 1s linear infinite' }}>⚙️</span>}
+      {loading && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} aria-hidden="true" />}
       {icon && !loading && icon}
       {children}
     </button>

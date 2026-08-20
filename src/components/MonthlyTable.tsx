@@ -47,7 +47,8 @@ export function MonthlyTable({
 
       <div style={{
         border: `1px solid ${surface.border}`,
-        borderRadius: '12px', overflow: 'hidden', background: surface.card,
+        borderRadius: '12px', overflowX: 'auto', overflowY: 'hidden', background: surface.card,
+        WebkitOverflowScrolling: 'touch',
       }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
           <thead>

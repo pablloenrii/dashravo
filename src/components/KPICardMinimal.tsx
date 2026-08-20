@@ -1,5 +1,6 @@
 import React from 'react';
-import { chart, text, surface, semantic } from '@/constants/theme';
+import { chart, surface } from '@/constants/theme';
+import { MetricCard } from '@/components/MetricCard';
 
 interface KPICardMinimalProps {
   title: string;
@@ -11,6 +12,11 @@ interface KPICardMinimalProps {
   loading?: boolean;
 }
 
+/**
+ * Variante compacta do MetricCard (wrapper). Mantém identidade própria
+ * (borda de acento + skeleton de loading), mas delega o render ao MetricCard
+ * para garantir um único padrão de KPI no app.
+ */
 export function KPICardMinimal({
   title,
   value,
@@ -41,40 +47,13 @@ export function KPICardMinimal({
   }
 
   return (
-    <div style={{
-      background: surface.card,
-      border: `1px solid ${surface.border}`,
-      borderLeft: `3px solid ${color}`,
-      borderRadius: '8px',
-      padding: '12px',
-      minHeight: '100px',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      transition: 'all 200ms ease-out',
-      cursor: 'default'
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.borderColor = `${color}`;
-      e.currentTarget.style.background = surface.input;
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.borderColor = surface.borderStrong;
-      e.currentTarget.style.background = surface.card;
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', color }}>
-        {icon && <span style={{ fontSize: '14px' }}>{icon}</span>}
-      </div>
-      <div>
-        <div style={{ fontSize: '18px', fontWeight: '700', color: text.bright, marginBottom: '2px' }}>
-          {value}
-          {unit && <span style={{ fontSize: '12px', color: text.secondary, marginLeft: '4px', fontWeight: '500' }}>{unit}</span>}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '10px', color: text.dim, fontWeight: '500' }}>{title}</span>
-          {trend && <span style={{ fontSize: '10px', color: semantic.success, fontWeight: '600' }}>{trend}</span>}
-        </div>
-      </div>
-    </div>
+    <MetricCard
+      label={title}
+      value={String(value)}
+      unit={unit}
+      icon={icon}
+      accent={color}
+      sublabel={trend}
+    />
   );
 }

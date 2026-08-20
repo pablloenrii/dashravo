@@ -185,7 +185,7 @@ export default function Dashboard() {
           <MetricCard label="Lucro" value={fmtMoney(monthKPIs.lucro)} icon={<ArrowUpRight size={14} />}
             deltaPct={monthKPIs.deltaLucro} sublabel="receita − investimento" loading={finance.loading} />
           <MetricCard label="Margem" value={`${monthKPIs.margem.toFixed(1)}%`} icon={<Percent size={14} />}
-            progress={Math.max(0, monthKPIs.margem)} sublabel="lucro / receita" loading={finance.loading} />
+            progress={monthKPIs.margem} sublabel="lucro / receita" loading={finance.loading} />
         </div>
 
         <ChartCard title="Receita, Investimento e Lucro" subtitle={periodLabel}>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { text } from '@/constants/theme';
 
@@ -41,6 +41,20 @@ export function Modal({
     };
   }, [isOpen, onClose]);
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const timer = window.setTimeout(() => {
+      dialogRef.current?.focus();
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      previouslyFocused?.focus();
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -58,6 +72,11 @@ export function Modal({
       />
 
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title ?? 'Diálogo'}
+        tabIndex={-1}
         style={{
           position: 'fixed',
           top: '50%',

@@ -10,8 +10,6 @@ import { ChartCard } from '@/components/ChartCard';
 import { Button } from '@/components/Button';
 import { Modal } from '@/components/Modal';
 import { QueryError, QueryLoading } from '@/components/QueryState';
-import { colorSystem } from '@/styles/color-system';
-import { colorSystemPremium } from '@/styles/color-system-premium';
 import { sb as supabase } from '@/services/supabase';
 import { useTicketsData, useAttendanceChartData, useSatisfactionData, useContactsData } from '@/hooks/usePagesQueries';
 import { usePeriod } from '@/contexts/PeriodContext';
@@ -37,8 +35,8 @@ export function CSPage() {
 
   // Fetch data from Supabase
   const { data: tickets, loading: loadingTickets, error: errorTickets, refetch: refetchTickets } = useTicketsData();
-  const { data: dadosAtendimentos, loading: loadingAttendance, error: errorAttendance } = useAttendanceChartData(month);
-  const { data: dadosSatisfacao, loading: loadingSatisfaction, error: errorSatisfaction } = useSatisfactionData(month);
+  const { data: dadosAtendimentos, loading: loadingAttendance, error: errorAttendance, refetch: refetchAttendance } = useAttendanceChartData(month);
+  const { data: dadosSatisfacao, loading: loadingSatisfaction, error: errorSatisfaction, refetch: refetchSatisfaction } = useSatisfactionData(month);
   const { data: contatos } = useContactsData();
 
   const [showTicketModal, setShowTicketModal] = useState(false);
@@ -87,7 +85,10 @@ export function CSPage() {
   if (errorTickets || errorAttendance || errorSatisfaction) {
     return (
       <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
-        <QueryError message={errorTickets || errorAttendance || errorSatisfaction || ''} onRetry={refetchTickets} />
+        <QueryError
+          message={errorTickets || errorAttendance || errorSatisfaction || ''}
+          onRetry={() => { refetchTickets(); refetchAttendance(); refetchSatisfaction(); }}
+        />
       </div>
     );
   }
@@ -153,13 +154,13 @@ export function CSPage() {
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginBottom: '16px' }}>
-        <KPICardMinimal title="Tickets Recebidos" value={dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0)} unit="tickets" icon={<MessageSquare />} color={colorSystem.customers.primary} />
+        <KPICardMinimal title="Tickets Recebidos" value={dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0)} unit="tickets" icon={<MessageSquare />} color={chart.light} />
         <KPICardMinimal title="Taxa de Resolução" value={(() => {
           const recebidos = dadosAtendimentos.reduce((sum, a) => sum + (a.recebidos || 0), 0);
           const resolvidos = dadosAtendimentos.reduce((sum, a) => sum + (a.resolvidos || 0), 0);
           return recebidos > 0 ? ((resolvidos / recebidos) * 100).toFixed(1) : 0;
-        })()} unit="%" icon={<TrendingUp />} color={colorSystem.success} />
-        <KPICardMinimal title="NPS Score" value={dadosSatisfacao.length > 0 ? dadosSatisfacao[dadosSatisfacao.length - 1].nps : 0} unit="pontos" icon={<BarChart3 />} color={colorSystem.conversion.primary} />
+        })()} unit="%" icon={<TrendingUp />} color={chart.revenue} />
+        <KPICardMinimal title="NPS Score" value={dadosSatisfacao.length > 0 ? dadosSatisfacao[dadosSatisfacao.length - 1].nps : 0} unit="pontos" icon={<BarChart3 />} color={chart.revenue} />
         <KPICardMinimal title="Tempo Médio" value={tickets.length > 0 ? (tickets.reduce((sum, t) => sum + parseTempoResposta(t.tempo_resposta), 0) / tickets.length / 60).toFixed(1) : 0} unit="horas" icon={<Clock />} color={chart.line} />
       </div>
 
@@ -218,7 +219,7 @@ export function CSPage() {
               sortable: true,
               width: '15%',
               render: (value) => (
-                <span style={{ color: colorSystemPremium.data.blue, fontWeight: '600' }}>
+                <span style={{ color: chart.light, fontWeight: '600' }}>
                   {String(value).slice(0, 8)}
                 </span>
               ),

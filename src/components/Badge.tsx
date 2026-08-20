@@ -1,5 +1,5 @@
 import React from 'react';
-import { chart, text, soft, surface, semantic } from '@/constants/theme';
+import { text, soft, surface, semantic } from '@/constants/theme';
 
 type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 
@@ -28,8 +28,8 @@ const variantStyles: Record<BadgeVariant, { bg: string; text: string; border: st
   },
   warning: {
     bg: soft.warning,
-    text: chart.line,
-    border: 'rgba(245, 158, 11, 0.3)',
+    text: semantic.warning,
+    border: 'rgba(217, 119, 6, 0.35)',
   },
   error: {
     bg: soft.danger,

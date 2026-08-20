@@ -10,6 +10,7 @@ import { chart, text, surface, semantic } from '@/constants/theme';
 export interface MetricCardProps {
   label: string;
   value: string;
+  unit?: string;
   icon?: ReactNode;
   /** Variação percentual vs período anterior. undefined = não exibe. */
   deltaPct?: number;
@@ -20,6 +21,10 @@ export interface MetricCardProps {
   progress?: number;
   loading?: boolean;
   onClick?: () => void;
+  /** Cor do valor numérico (ex.: receita) */
+  valueColor?: string;
+  /** Borda de acento à esquerda + cor do ícone (identidade do KPI) */
+  accent?: string;
 }
 
 const GOOD = chart.revenue;
@@ -27,8 +32,8 @@ const BAD = semantic.danger;
 const NEUTRAL = text.tertiary;
 
 export function MetricCard({
-  label, value, icon, deltaPct, invertDelta = false,
-  sublabel, progress, loading = false, onClick,
+  label, value, unit, icon, deltaPct, invertDelta = false,
+  sublabel, progress, loading = false, onClick, valueColor, accent,
 }: MetricCardProps) {
   const hasDelta = deltaPct !== undefined && Number.isFinite(deltaPct);
   const flat = hasDelta && Math.abs(deltaPct as number) < 0.5;
@@ -43,6 +48,7 @@ export function MetricCard({
       style={{
         background: surface.card,
         border: `1px solid ${surface.border}`,
+        borderLeft: accent ? `3px solid ${accent}` : `1px solid ${surface.border}`,
         borderRadius: '10px',
         padding: '14px 16px',
         display: 'flex',
@@ -52,11 +58,11 @@ export function MetricCard({
         transition: 'border-color .15s ease, background .15s ease',
       }}
       onMouseEnter={(e) => {
-        if (!onClick) return;
+        if (!onClick || accent) return;
         e.currentTarget.style.borderColor = surface.borderHover;
       }}
       onMouseLeave={(e) => {
-        if (!onClick) return;
+        if (!onClick || accent) return;
         e.currentTarget.style.borderColor = surface.border;
       }}
     >
@@ -66,16 +72,19 @@ export function MetricCard({
           textTransform: 'uppercase', color: text.muted,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{label}</span>
-        {icon && <span style={{ color: text.label, display: 'flex', flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: accent ?? text.label, display: 'flex', flexShrink: 0 }}>{icon}</span>}
       </div>
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
         <span style={{
           fontSize: '23px', fontWeight: 650, letterSpacing: '-0.025em',
-          color: loading ? surface.skeleton : text.primary, lineHeight: 1.1,
+          color: loading ? surface.skeleton : (valueColor ?? text.primary), lineHeight: 1.1,
         }}>
           {loading ? '—' : value}
         </span>
+        {unit && !loading && (
+          <span style={{ fontSize: '12px', color: text.tertiary, fontWeight: 500 }}>{unit}</span>
+        )}
         {!loading && hasDelta && (
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '2px',
@@ -88,10 +97,12 @@ export function MetricCard({
       </div>
 
       {progress !== undefined && !loading && (
-        <div style={{ height: '3px', background: surface.border, borderRadius: '2px', overflow: 'hidden' }}>
+        <div style={{
+          height: '3px', background: progress < 0 ? BAD : surface.border, borderRadius: '2px', overflow: 'hidden',
+        }}>
           <div style={{
             width: `${Math.max(0, Math.min(100, progress))}%`, height: '100%',
-            background: progress >= 100 ? GOOD : progress >= 70 ? chart.light : text.tertiary,
+            background: progress < 0 ? 'transparent' : progress >= 100 ? GOOD : progress >= 70 ? chart.light : text.tertiary,
             borderRadius: '2px', transition: 'width .5s cubic-bezier(0.4,0,0.2,1)',
           }} />
         </div>

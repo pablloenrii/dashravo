@@ -104,7 +104,7 @@ export function Table<T extends { id?: string | number }>({
       <div
         style={{
           borderRadius: '8px',
-          border: '0.5px solid rgba(255,255,255,0.04)',
+          border: `0.5px solid ${surface.border}`,
           overflow: 'hidden',
           background: surface.sidebar,
           minWidth: 'fit-content',
@@ -121,7 +121,7 @@ export function Table<T extends { id?: string | number }>({
           <thead>
             <tr
               style={{
-                borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+                borderBottom: `0.5px solid ${surface.divider}`,
                 background: 'rgba(255,255,255,0.01)',
               }}
             >
@@ -135,6 +135,12 @@ export function Table<T extends { id?: string | number }>({
                 >
                   <button
                     onClick={handleSelectAll}
+                    role="checkbox"
+                    aria-checked={
+                      selectedRows.size === paginatedData.length ? true
+                        : selectedRows.size > 0 ? 'mixed' : false
+                    }
+                    aria-label="Selecionar todos"
                     style={{
                       background: selectedRows.size > 0 ? chart.light : 'transparent',
                       border: `1px solid ${selectedRows.size > 0 ? chart.light : 'rgba(255,255,255,0.2)'}`,
@@ -161,6 +167,19 @@ export function Table<T extends { id?: string | number }>({
                 <th
                   key={String(col.key)}
                   onClick={() => col.sortable && handleSort(col.key)}
+                  tabIndex={col.sortable ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (!col.sortable) return;
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSort(col.key);
+                    }
+                  }}
+                  aria-sort={
+                    sortConfig?.key === col.key
+                      ? sortConfig.direction === 'asc' ? 'ascending' : 'descending'
+                      : undefined
+                  }
                   style={{
                     padding: '12px 16px',
                     textAlign: col.align || 'left',
@@ -245,12 +264,15 @@ export function Table<T extends { id?: string | number }>({
                 >
                   {selectable && (
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSelectRow(actualIndex);
-                        }}
-                        style={{
+<button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectRow(actualIndex);
+                    }}
+                    role="checkbox"
+                    aria-checked={isSelected}
+                    aria-label={`Selecionar linha ${actualIndex + 1}`}
+                    style={{
                           background: isSelected ? chart.light : 'transparent',
                           border: `1px solid ${isSelected ? chart.light : 'rgba(255,255,255,0.2)'}`,
                           borderRadius: '4px',
@@ -313,10 +335,11 @@ export function Table<T extends { id?: string | number }>({
             <button
               onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
               disabled={currentPage === 0}
+              aria-label="Página anterior"
               style={{
                 padding: '6px 12px',
                 borderRadius: '4px',
-                border: '0.5px solid rgba(255,255,255,0.1)',
+                border: `0.5px solid ${surface.borderStrong}`,
                 background: 'rgba(255,255,255,0.02)',
                 color: currentPage === 0 ? text.dim : text.secondary,
                 cursor: currentPage === 0 ? 'not-allowed' : 'pointer',
@@ -331,13 +354,15 @@ export function Table<T extends { id?: string | number }>({
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i)}
+                  aria-label={`Página ${i + 1}`}
+                  aria-current={currentPage === i ? 'page' : undefined}
                   style={{
                     width: '32px',
                     height: '32px',
                     borderRadius: '4px',
                     border: currentPage === i
                       ? `0.5px solid ${chart.light}`
-                      : '0.5px solid rgba(255,255,255,0.1)',
+                      : `0.5px solid ${surface.borderStrong}`,
                     background: currentPage === i
                       ? surface.hover
                       : 'rgba(255,255,255,0.02)',
@@ -355,10 +380,11 @@ export function Table<T extends { id?: string | number }>({
             <button
               onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
               disabled={currentPage === totalPages - 1}
+              aria-label="Próxima página"
               style={{
                 padding: '6px 12px',
                 borderRadius: '4px',
-                border: '0.5px solid rgba(255,255,255,0.1)',
+                border: `0.5px solid ${surface.borderStrong}`,
                 background: 'rgba(255,255,255,0.02)',
                 color: currentPage === totalPages - 1 ? text.dim : text.secondary,
                 cursor: currentPage === totalPages - 1 ? 'not-allowed' : 'pointer',

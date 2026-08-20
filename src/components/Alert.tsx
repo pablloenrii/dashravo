@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { X, AlertCircle, CheckCircle, Info } from 'lucide-react';
-import { chart, text, soft, semantic } from '@/constants/theme';
+import { text, soft, semantic } from '@/constants/theme';
 
 export interface AlertProps {
   type?: 'success' | 'error' | 'warning' | 'info';
@@ -27,8 +27,8 @@ const typeStyles = {
   },
   warning: {
     bg: soft.warning,
-    border: 'rgba(245, 158, 11, 0.3)',
-    color: chart.line,
+    border: 'rgba(217, 119, 6, 0.35)',
+    color: semantic.warning,
     icon: AlertCircle,
   },
   info: {
@@ -97,6 +97,7 @@ export function Alert({
             setIsVisible(false);
             onClose?.();
           }}
+          aria-label="Fechar"
           style={{
             background: 'transparent',
             border: 'none',

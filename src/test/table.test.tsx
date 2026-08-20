@@ -99,8 +99,8 @@ describe('Table', () => {
       <Table<Row> columns={columns} data={rows} selectable onSelectionChange={onSelectionChange} />
     );
 
-    // botões de seleção ficam na primeira coluna de cada linha
-    const rowButtons = screen.getAllByRole('button');
+    // checkboxes de seleção ficam na primeira coluna de cada linha
+    const rowButtons = screen.getAllByRole('checkbox');
     fireEvent.click(rowButtons[1]);
     expect(onSelectionChange).toHaveBeenLastCalledWith([0]);
   });
@@ -111,7 +111,7 @@ describe('Table', () => {
       <Table<Row> columns={columns} data={rows} selectable onSelectionChange={onSelectionChange} />
     );
 
-    const headerButton = screen.getAllByRole('button')[0];
+    const headerButton = screen.getAllByRole('checkbox')[0];
     fireEvent.click(headerButton);
     expect(onSelectionChange).toHaveBeenLastCalledWith([0, 1, 2]);
 
@@ -131,7 +131,7 @@ describe('Table', () => {
         onSelectionChange={onSelectionChange}
       />
     );
-    fireEvent.click(screen.getAllByRole('button')[1]);
+    fireEvent.click(screen.getAllByRole('checkbox')[1]);
     expect(onRowClick).not.toHaveBeenCalled();
     expect(onSelectionChange).toHaveBeenCalled();
   });

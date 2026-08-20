@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import {
-  Plus, Trash2, Edit2, LayoutGrid, List as ListIcon,
+  Plus, Trash2, Edit2, LayoutGrid, List as ListIcon, GripVertical,
   DollarSign, Target, Percent, Timer, AlertTriangle, Trophy,
 } from 'lucide-react';
 import { Button } from '@/components/Button';
@@ -48,6 +48,13 @@ export default function CRMPage() {
   const [view, setView] = useState<'board' | 'list'>('board');
   const [dragId, setDragId] = useState<string | null>(null);
   const [overCol, setOverCol] = useState<string | null>(null);
+  const [moveFor, setMoveFor] = useState<ContactData | null>(null);
+
+  // HTML5 DnD não funciona em touch — oferecemos menu "Mover para" nesses casos.
+  const isTouch = useMemo(
+    () => typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0),
+    []
+  );
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -391,6 +398,9 @@ export default function CRMPage() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             {rot && <span title={`Parado há ${daysSince(c.updated_at)} dias`} style={{ display: 'flex', color: semantic.danger }}><AlertTriangle size={13} /></span>}
                             <span style={{ fontSize: '10px', color: text.dim }}>{daysSince(c.updated_at)}d</span>
+                            {isTouch && (
+                              <button onClick={() => setMoveFor(c)} style={cardBtn} aria-label={`Mover ${c.nome}`} title="Mover para outra fase"><GripVertical size={13} /></button>
+                            )}
                             <button onClick={() => handleOpenModal(c)} style={cardBtn} aria-label={`Editar ${c.nome}`}><Edit2 size={13} /></button>
                             <button onClick={() => handleDelete(c.id)} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={13} /></button>
                           </div>
@@ -406,7 +416,9 @@ export default function CRMPage() {
                     );
                   })}
                   {cards.length === 0 && (
-                    <div style={{ fontSize: '11px', color: text.faint, textAlign: 'center', padding: '16px 0' }}>Arraste um lead aqui</div>
+                    <div style={{ fontSize: '11px', color: text.faint, textAlign: 'center', padding: '16px 0' }}>
+                      {isTouch ? 'Toque em um card para mover' : 'Arraste um lead aqui'}
+                    </div>
                   )}
                 </div>
               </div>
@@ -436,7 +448,7 @@ export default function CRMPage() {
                 </thead>
                 <tbody>
                   {visiveis.map((c) => (
-                    <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                    <tr key={c.id} style={{ borderBottom: `1px solid ${surface.divider}` }}
                       onMouseEnter={(e) => (e.currentTarget.style.background = surface.input)}
                       onMouseLeave={(e) => (e.currentTarget.style.background = '')}>
                       <td style={{ padding: '12px 16px', fontSize: '13px', color: text.bright, fontWeight: 500 }}>
@@ -503,6 +515,31 @@ export default function CRMPage() {
             <Button variant="ghost" onClick={() => setShowModal(false)}>Cancelar</Button>
             <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando…' : 'Salvar'}</Button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={moveFor !== null} onClose={() => setMoveFor(null)} title="Mover para outra fase" size="sm">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {STAGES.map((s) => {
+            const active = moveFor?.etapa === s.key;
+            return (
+              <button
+                key={s.key}
+                onClick={() => { if (moveFor) moveTo(moveFor.id, s.key); setMoveFor(null); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '12px',
+                  borderRadius: '8px', cursor: 'pointer', textAlign: 'left',
+                  background: active ? surface.hover : surface.input,
+                  border: `1px solid ${active ? surface.borderHover : surface.borderStrong}`,
+                  color: text.primary, fontSize: '13px', fontWeight: active ? 650 : 500,
+                }}
+              >
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color }} />
+                {s.key}
+                {active && <span style={{ marginLeft: 'auto', fontSize: '11px', color: text.label }}>fase atual</span>}
+              </button>
+            );
+          })}
         </div>
       </Modal>
     </div>

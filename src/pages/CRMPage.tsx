@@ -7,17 +7,21 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Trash2, Edit2, LayoutGrid, List as ListIcon, GripVertical,
-  DollarSign, Target, Percent, Timer, AlertTriangle, Trophy,
+  DollarSign, Target, Percent, Timer, AlertTriangle, Trophy, Search, X,
+  Inbox, Filter,
 } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { Modal } from '@/components/Modal';
 import { Input } from '@/components/Input';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { EmptyState } from '@/components/EmptyState';
 import { QueryError, QueryLoading } from '@/components/QueryState';
 import { MetricCard } from '@/components/MetricCard';
 import { sb as supabase } from '@/services/supabase';
 import { useContactsData, ContactData } from '@/hooks/usePagesQueries';
 import { usePeriod, prevMonthKey, monthLabel } from '@/contexts/PeriodContext';
 import { fmtMoney, pctChange } from '@/utils/format';
+import { toastSuccess, toastError } from '@/utils/toast';
 import {
   STAGES, STAGE_MAP, isOpen, daysSince, ROT_DAYS,
   computeCrmMetrics, computeFunnel, computeBySource,
@@ -25,7 +29,6 @@ import {
 import { useRevalidateStore } from '@/store/revalidate.store';
 import { chart, text, surface, semantic, layout, type } from '@/constants/theme';
 
-/* ---------- Configuração das fases (com probabilidade p/ forecast) ---------- */
 const ORIGENS = ['Indicação', 'Inbound', 'Outbound', 'Evento', 'Site', 'Outro'];
 
 const initials = (nome: string) =>
@@ -50,20 +53,41 @@ export default function CRMPage() {
   const [overCol, setOverCol] = useState<string | null>(null);
   const [moveFor, setMoveFor] = useState<ContactData | null>(null);
 
-  // HTML5 DnD não funciona em touch — oferecemos menu "Mover para" nesses casos.
   const isTouch = useMemo(
     () => typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0),
     []
   );
 
+  // --- Busca e filtros ---
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterEtapa, setFilterEtapa] = useState('');
+  const [filterOrigem, setFilterOrigem] = useState('');
+
+  const itemsFiltrados = useMemo(() => {
+    let result = items;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter((c) =>
+        c.nome.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        (c.empresa && c.empresa.toLowerCase().includes(q))
+      );
+    }
+    if (filterEtapa) result = result.filter((c) => c.etapa === filterEtapa);
+    if (filterOrigem) result = result.filter((c) => c.origem === filterOrigem);
+    return result;
+  }, [items, searchTerm, filterEtapa, filterOrigem]);
+
+  // --- Modal de lead ---
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<ContactForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const [mutationError, setMutationError] = useState<string | null>(null);
+
+  // --- Confirm dialog ---
+  const [confirmDelete, setConfirmDelete] = useState<ContactData | null>(null);
 
   const handleOpenModal = (c?: ContactData) => {
-    setMutationError(null);
     if (c) {
       setFormData({ nome: c.nome, empresa: c.empresa, email: c.email, telefone: c.telefone ?? '', valor: c.valor, etapa: c.etapa, origem: c.origem ?? '', dataPrevista: c.data_prevista ?? '', motivo: c.motivo ?? '' });
       setEditingId(c.id);
@@ -73,22 +97,12 @@ export default function CRMPage() {
     setShowModal(true);
   };
 
-  /**
-   * Integra um deal "Ganho" ao resto do sistema:
-   * 1) customers + subscriptions (mrr = valor do deal) → alimenta MRR/ARR,
-   *    Clientes ativos e LTV/CAC no Dashboard. Idempotente por e-mail.
-   * 2) receitas do mês corrente → alimenta o Financeiro e o gráfico de receita
-   *    do Dashboard. Usa `contatos.receita_integrada` para lançar só a diferença
-   *    (delta) caso o valor do deal seja editado depois de já ganho, evitando
-   *    somar o mesmo dinheiro duas vezes.
-   */
   const integrateWonDeal = async (deal: { id: string; nome: string; email: string; empresa: string; telefone?: string; valor: number }) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData?.user?.id;
       if (!userId || !deal.email) return;
 
-      // --- 1) customers + subscriptions (Dashboard) ---
       let customerId: string | undefined;
       const { data: existingCustomer } = await supabase
         .from('customers').select('id').eq('user_id', userId).eq('email', deal.email).maybeSingle();
@@ -103,7 +117,7 @@ export default function CRMPage() {
             company: deal.empresa || null, status: 'active', user_id: userId, source: 'crm',
           }])
           .select('id').single();
-        if (custError) { setMutationError(`Lead salvo, mas não integrou ao Dashboard: ${custError.message}`); return; }
+        if (custError) { toastError(`Lead salvo, mas não integrou ao Dashboard: ${custError.message}`); return; }
         customerId = createdCustomer?.id;
       }
       if (customerId) {
@@ -113,10 +127,9 @@ export default function CRMPage() {
         const { error: subError } = existingSub
           ? await supabase.from('subscriptions').update({ mrr: deal.valor }).eq('id', existingSub.id)
           : await supabase.from('subscriptions').insert([{ customer_id: customerId, mrr: deal.valor, status: 'active' }]);
-        if (subError) setMutationError(`Lead salvo, mas não integrou ao Dashboard: ${subError.message}`);
+        if (subError) toastError(`Lead salvo, mas não integrou ao Dashboard: ${subError.message}`);
       }
 
-      // --- 2) receitas (Financeiro + gráfico de receita do Dashboard) ---
       const { data: contatoRow } = await supabase
         .from('contatos').select('receita_integrada').eq('id', deal.id).maybeSingle();
       const jaIntegrado = Number(contatoRow?.receita_integrada ?? 0);
@@ -135,19 +148,20 @@ export default function CRMPage() {
           : await supabase.from('receitas').insert([{ user_id: userId, mes: mesISO, receita: delta, despesa: 0, lucro: delta }]);
 
         if (receitaError) {
-          setMutationError(`Lead salvo, mas não integrou ao Financeiro: ${receitaError.message}`);
+          toastError(`Lead salvo, mas não integrou ao Financeiro: ${receitaError.message}`);
         } else {
           await supabase.from('contatos').update({ receita_integrada: deal.valor }).eq('id', deal.id);
+          toastSuccess('Lead integrado ao Dashboard e Financeiro');
         }
       }
     } catch (err) {
-      setMutationError(`Lead salvo, mas não integrou ao Dashboard: ${err instanceof Error ? err.message : 'erro desconhecido'}`);
+      toastError(`Lead salvo, mas não integrou ao Dashboard: ${err instanceof Error ? err.message : 'erro desconhecido'}`);
     }
   };
 
   const handleSave = async () => {
-    if (!formData.nome || !formData.email) { setMutationError('Nome e email são obrigatórios.'); return; }
-    setSaving(true); setMutationError(null);
+    if (!formData.nome || !formData.email) { toastError('Nome e email são obrigatórios.'); return; }
+    setSaving(true);
     const payload = {
       nome: formData.nome, empresa: formData.empresa || null, email: formData.email,
       telefone: formData.telefone || null, valor: formData.valor, etapa: formData.etapa,
@@ -158,8 +172,9 @@ export default function CRMPage() {
       ? await supabase.from('contatos').update(payload).eq('id', editingId).select('id').single()
       : await supabase.from('contatos').insert([payload]).select('id').single();
     setSaving(false);
-    if (error) { setMutationError(error.message); return; }
+    if (error) { toastError(error.message); return; }
     setShowModal(false);
+    toastSuccess(editingId ? 'Lead atualizado com sucesso' : 'Lead criado com sucesso');
     contacts.refetch();
     if (formData.etapa === 'Ganho' && saved?.id) {
       await integrateWonDeal({ id: saved.id, ...formData });
@@ -168,12 +183,11 @@ export default function CRMPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Tem certeza que deseja deletar este lead?')) return;
-    setMutationError(null);
     const prev = items;
     setItems(items.filter((c) => c.id !== id));
     const { error } = await supabase.from('contatos').delete().eq('id', id);
-    if (error) { setItems(prev); setMutationError(error.message); return; }
+    if (error) { setItems(prev); toastError(error.message); return; }
+    toastSuccess('Lead removido');
     useRevalidateStore.getState().invalidate();
   };
 
@@ -184,14 +198,14 @@ export default function CRMPage() {
     const nowIso = new Date().toISOString();
     setItems(items.map((c) => (c.id === id ? { ...c, etapa, updated_at: nowIso } : c)));
     const { error } = await supabase.from('contatos').update({ etapa, updated_at: nowIso }).eq('id', id);
-    if (error) { setItems(prev); setMutationError(error.message); return; }
+    if (error) { setItems(prev); toastError(error.message); return; }
+    toastSuccess(`Lead movido para ${etapa}`);
     if (etapa === 'Ganho') {
       await integrateWonDeal(current);
     }
     useRevalidateStore.getState().invalidate();
   };
 
-  // Métricas do período selecionado + mês anterior (para variação)
   const m = useMemo(() => computeCrmMetrics(items, month), [items, month]);
   const mPrev = useMemo(
     () => computeCrmMetrics(items, month === null ? null : prevMonthKey(month)),
@@ -206,15 +220,15 @@ export default function CRMPage() {
     [items, m.novosLeads, month]
   );
 
-  // Sem mês anterior para comparar (visão acumulada), não mostramos variação.
   const d = (cur: number, prev: number) => (isAllTime ? undefined : pctChange(cur, prev));
   const vsLabel = isAllTime ? undefined : `vs ${monthLabel(prevMonthKey(month as string))}`;
 
-  // Board/lista seguem o mesmo recorte dos KPIs: pipeline aberto até o fim do
-  // mês + fechamentos ocorridos no mês. Assim o que se vê bate com os números.
   const visiveis = useMemo(
-    () => (isAllTime ? items : [...m.abertos, ...m.ganhos, ...m.perdidos]),
-    [isAllTime, items, m.abertos, m.ganhos, m.perdidos]
+    () => (isAllTime ? itemsFiltrados : itemsFiltrados.filter((c) => {
+      if (isOpen(c.etapa)) return true;
+      return m.ganhos.some((g) => g.id === c.id) || m.perdidos.some((p) => p.id === c.id);
+    })),
+    [isAllTime, itemsFiltrados, m.ganhos, m.perdidos]
   );
 
   return (
@@ -224,6 +238,7 @@ export default function CRMPage() {
           <h1 style={{ ...type.pageTitle, color: text.primary, margin: '0 0 4px 0' }}>Pipeline de Vendas</h1>
           <p style={{ fontSize: '14px', color: text.secondary, margin: 0 }}>
             {periodLabel} · {m.novosLeadsCount} {m.novosLeadsCount === 1 ? 'novo lead' : 'novos leads'} · {m.ganhos.length} {m.ganhos.length === 1 ? 'fechado' : 'fechados'}
+            {visiveis.length !== items.length && <span> · {visiveis.length} vis{visiveis.length === 1 ? 'ível' : 'íveis'}</span>}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -238,7 +253,48 @@ export default function CRMPage() {
       </div>
 
       {contacts.error && <QueryError message={contacts.error} onRetry={contacts.refetch} />}
-      {mutationError && !showModal && <QueryError message={mutationError} />}
+
+      {/* --- Barra de busca e filtros --- */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1 1 200px', minWidth: '180px' }}>
+          <Search size={14} color={text.dim} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+          <input
+            type="text"
+            placeholder="Buscar por nome, email ou empresa…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%', padding: '8px 10px 8px 30px', borderRadius: '8px',
+              background: surface.input, border: `1px solid ${surface.borderStrong}`,
+              color: text.bright, fontSize: '12px', outline: 'none',
+            }}
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: text.dim, cursor: 'pointer', padding: '2px', display: 'flex' }}>
+              <X size={13} />
+            </button>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Filter size={13} color={text.dim} />
+          <select
+            value={filterEtapa}
+            onChange={(e) => setFilterEtapa(e.target.value)}
+            style={{ padding: '7px 10px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: text.bright, fontSize: '12px' }}
+          >
+            <option value="">Todas as fases</option>
+            {STAGES.map((s) => <option key={s.key} value={s.key}>{s.key}</option>)}
+          </select>
+          <select
+            value={filterOrigem}
+            onChange={(e) => setFilterOrigem(e.target.value)}
+            style={{ padding: '7px 10px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: text.bright, fontSize: '12px' }}
+          >
+            <option value="">Todas as origens</option>
+            {ORIGENS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+      </div>
 
       {/* Métricas comerciais do período */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(165px, 1fr))', gap: '12px', marginBottom: '12px' }}>
@@ -285,7 +341,7 @@ export default function CRMPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px', marginBottom: '24px' }}>
           <Panel title="Conversão por etapa" hint={isAllTime ? 'todo o histórico' : 'leads do período'}>
             {funil[0]?.quantidade === 0 ? (
-              <Vazio texto="Nenhum lead no período." />
+              <EmptyState icon={<Inbox size={24} color={text.dim} />} title="Nenhum lead no período" description="Adicione leads para ver o funil de conversão." />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
                 {funil.map((f, i) => {
@@ -315,7 +371,7 @@ export default function CRMPage() {
 
           <Panel title="Desempenho por canal" hint="receita gerada">
             {porOrigem.length === 0 ? (
-              <Vazio texto="Nenhum lead no período." />
+              <EmptyState icon={<Inbox size={24} color={text.dim} />} title="Nenhum lead no período" description="Adicione leads para ver o desempenho por canal." />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 52px 52px 74px', gap: '8px', padding: '0 0 7px 0', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em', color: text.label, fontWeight: 600 }}>
@@ -402,7 +458,7 @@ export default function CRMPage() {
                               <button onClick={() => setMoveFor(c)} style={cardBtn} aria-label={`Mover ${c.nome}`} title="Mover para outra fase"><GripVertical size={13} /></button>
                             )}
                             <button onClick={() => handleOpenModal(c)} style={cardBtn} aria-label={`Editar ${c.nome}`}><Edit2 size={13} /></button>
-                            <button onClick={() => handleDelete(c.id)} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={13} /></button>
+                            <button onClick={() => setConfirmDelete(c)} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={13} /></button>
                           </div>
                         </div>
                         {(c.origem || (isOpen(c.etapa) && c.data_prevista) || (!isOpen(c.etapa) && c.motivo)) && (
@@ -416,9 +472,10 @@ export default function CRMPage() {
                     );
                   })}
                   {cards.length === 0 && (
-                    <div style={{ fontSize: '11px', color: text.faint, textAlign: 'center', padding: '16px 0' }}>
-                      {isTouch ? 'Toque em um card para mover' : 'Arraste um lead aqui'}
-                    </div>
+                    <EmptyState
+                      icon={<Inbox size={18} color={text.dim} />}
+                      title={isTouch ? 'Toque para mover' : 'Arraste um lead aqui'}
+                    />
                   )}
                 </div>
               </div>
@@ -428,11 +485,15 @@ export default function CRMPage() {
       ) : (
         <div style={{ background: surface.card, border: `1px solid ${surface.borderStrong}`, borderRadius: '12px', overflow: 'hidden' }}>
           {visiveis.length === 0 ? (
-            <div style={{ padding: '32px', textAlign: 'center', fontSize: '13px', color: text.secondary }}>
-              {items.length === 0
-                ? 'Nenhum lead cadastrado. Clique em Novo Lead para começar.'
-                : `Nenhum lead em ${periodLabel.toLowerCase()}. Troque o período no topo da tela.`}
-            </div>
+            <EmptyState
+              icon={<Inbox size={24} color={text.dim} />}
+              title={items.length === 0 ? 'Nenhum lead cadastrado' : 'Nenhum lead encontrado'}
+              description={items.length === 0
+                ? 'Clique em "Novo Lead" para começar a organizar seus deals.'
+                : 'Altere os filtros ou troque o período no topo da tela.'}
+              actionLabel={items.length === 0 ? 'Novo Lead' : undefined}
+              onAction={items.length === 0 ? () => handleOpenModal() : undefined}
+            />
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -466,7 +527,7 @@ export default function CRMPage() {
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                           <button onClick={() => handleOpenModal(c)} style={cardBtn} aria-label={`Editar ${c.nome}`}><Edit2 size={16} /></button>
-                          <button onClick={() => handleDelete(c.id)} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={16} /></button>
+                          <button onClick={() => setConfirmDelete(c)} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={16} /></button>
                         </div>
                       </td>
                     </tr>
@@ -480,7 +541,6 @@ export default function CRMPage() {
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingId ? 'Editar Lead' : 'Novo Lead'} size="md">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {mutationError && <QueryError message={mutationError} />}
           <Input label="Nome *" placeholder="João Silva" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} />
           <Input label="Email *" type="email" placeholder="joao@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
           <Input label="Empresa" placeholder="Tech Corp" value={formData.empresa} onChange={(e) => setFormData({ ...formData, empresa: e.target.value })} />
@@ -542,6 +602,16 @@ export default function CRMPage() {
           })}
         </div>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmDelete !== null}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => { if (confirmDelete) handleDelete(confirmDelete.id); }}
+        title="Deletar lead"
+        message={`Tem certeza que deseja deletar o lead "${confirmDelete?.nome}"? Esta ação não pode ser desfeita.`}
+        confirmLabel="Deletar"
+        danger
+      />
     </div>
   );
 }
@@ -556,10 +626,6 @@ function Panel({ title, hint, children }: { title: string; hint?: string; childr
       {children}
     </div>
   );
-}
-
-function Vazio({ texto }: { texto: string }) {
-  return <div style={{ padding: '20px 0', textAlign: 'center', fontSize: '12px', color: text.label }}>{texto}</div>;
 }
 
 function ViewBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {

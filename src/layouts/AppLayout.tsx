@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Bell, LogOut, Menu } from 'lucide-react';
 import { sb as supabase } from '@/services/supabase';
+import { ToastContainer } from '@/components/ToastContainer';
 import { CommandPalette } from '@/components/CommandPalette';
 import { SearchBar } from '@/components/SearchBar';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -75,6 +76,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
+      <ToastContainer />
       <CommandPalette isOpen={commandOpen} onClose={() => setCommandOpen(false)} />
       <MobileMenu
         isOpen={mobileMenuOpen}

@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS contatos (
   empresa VARCHAR(255),
   email VARCHAR(255),
   telefone VARCHAR(20),
-  etapa VARCHAR(50) NOT NULL DEFAULT 'Contatado',
+  etapa VARCHAR(50) NOT NULL DEFAULT 'Novo Lead',
   valor DECIMAL(12, 2) DEFAULT 0,
   origem VARCHAR(100),
   motivo VARCHAR(500),

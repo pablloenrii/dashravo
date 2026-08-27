@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
-import { text } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -27,6 +27,7 @@ export function Modal({
   size = 'md',
   closeButton = true,
 }: ModalProps) {
+  const { text, surface } = useThemeTokens();
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -64,7 +65,7 @@ export function Modal({
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0, 0, 0, 0.6)',
+          background: 'rgba(0, 0, 0, 0.5)',
           backdropFilter: 'blur(4px)',
           zIndex: 50,
           animation: 'fadeIn 200ms ease-out',
@@ -84,11 +85,11 @@ export function Modal({
           transform: 'translate(-50%, -50%)',
           width: `min(calc(100% - 32px), ${sizeMap[size]})`,
           maxHeight: '90vh',
-          background: 'rgba(11, 14, 25, 0.85)',
+          background: surface.elevated,
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06), 0 20px 40px rgba(0, 0, 0, 0.6)',
+          border: `1px solid ${surface.borderStrong}`,
+          boxShadow: `0 20px 40px rgba(0, 0, 0, 0.4)`,
           borderRadius: '12px',
           zIndex: 51,
           animation: 'slideUp 300ms ease-out',
@@ -105,7 +106,7 @@ export function Modal({
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '20px 24px',
-              borderBottom: '0.5px solid rgba(255,255,255,0.04)',
+              borderBottom: `1px solid ${surface.divider}`,
             }}
           >
             {title && (
@@ -160,7 +161,7 @@ export function Modal({
           <div
             style={{
               padding: '16px 24px',
-              borderTop: '0.5px solid rgba(255,255,255,0.04)',
+              borderTop: `1px solid ${surface.divider}`,
               display: 'flex',
               gap: '12px',
               justifyContent: 'flex-end',

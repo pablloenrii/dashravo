@@ -19,7 +19,7 @@ import { usePeriod, monthISO, monthLabelLong, toMonthKey } from '@/contexts/Peri
 import { computeCrmMetrics } from '@/utils/crmMetrics';
 import { fmtMoney } from '@/utils/format';
 import { useRevalidateStore } from '@/store/revalidate.store';
-import { chart, text, surface, semantic, soft, layout, type } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 /** Catálogo de métricas automáticas — o realizado vem do próprio sistema. */
 const METRICAS: { value: GoalMetric; label: string; unidade: GoalUnit; hint: string }[] = [
@@ -45,6 +45,7 @@ interface GoalForm {
 const EMPTY_FORM: GoalForm = { nome: '', meta: 0, realizado: 0, metrica: 'manual' };
 
 export default function GoalsPage() {
+  const { chart, text, surface, semantic, soft, layout, type } = useThemeTokens();
   const goals = useGoalsData();
   const contacts = useContactsData();
   const { effectiveMonth, isAllTime, label: periodLabel } = usePeriod();
@@ -141,6 +142,13 @@ export default function GoalsPage() {
   };
 
   const unidadeForm = METRICA_MAP[form.metrica]?.unidade ?? 'numero';
+
+  const lbl: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: text.muted, marginBottom: '6px' };
+  const fld: React.CSSProperties = {
+    width: '100%', padding: '10px 12px', borderRadius: '8px',
+    background: surface.input, border: `1px solid ${surface.borderStrong}`,
+    color: chart.light, fontSize: '13px', boxSizing: 'border-box',
+  };
 
   return (
     <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
@@ -300,10 +308,3 @@ export default function GoalsPage() {
     </div>
   );
 }
-
-const lbl: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: text.muted, marginBottom: '6px' };
-const fld: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', borderRadius: '8px',
-  background: surface.input, border: `1px solid ${surface.borderStrong}`,
-  color: chart.light, fontSize: '13px', boxSizing: 'border-box',
-};

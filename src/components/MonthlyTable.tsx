@@ -10,7 +10,7 @@ import {
   MonthlyMetricKey, MonthlyRow, summarize,
 } from '@/utils/monthlyAnalysis';
 import { MetricToggle } from '@/components/MetricToggle';
-import { text, surface } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 const ALL_METRICS = (Object.keys(MONTHLY_METRICS) as MonthlyMetricKey[]);
 
@@ -29,6 +29,7 @@ export function MonthlyTable({
   rows, selected = DEFAULT_SELECTED, onSelectedChange,
   highlightedMonth = null, onSelectMonth, loading = false,
 }: MonthlyTableProps) {
+  const { text, surface } = useThemeTokens();
   const keys = selected.filter((k) => k in MONTHLY_METRICS) as MonthlyMetricKey[];
   const defs = keys.map((k) => MONTHLY_METRICS[k]);
   const noData = !loading && rows.length === 0;

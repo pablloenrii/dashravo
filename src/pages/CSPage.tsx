@@ -15,7 +15,7 @@ import { useTicketsData, useAttendanceChartData, useSatisfactionData, useContact
 import { usePeriod } from '@/contexts/PeriodContext';
 import { parseTempoResposta } from '@/utils/tickets';
 import { useRevalidateStore } from '@/store/revalidate.store';
-import { chart, text, surface, layout, type } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 const PRIORIDADES = ['baixa', 'média', 'alta', 'crítica'];
 const genTicketId = () => `TK-${Date.now().toString(36).toUpperCase().slice(-6)}`;
@@ -28,6 +28,7 @@ interface TicketForm {
 const EMPTY_TICKET_FORM: TicketForm = { contatoId: '', assunto: '', prioridade: 'média' };
 
 export function CSPage() {
+  const { chart, text, surface, layout, type } = useThemeTokens();
   const [showWaitAlert, setShowWaitAlert] = useState(true);
   const [showNpsAlert, setShowNpsAlert] = useState(true);
 

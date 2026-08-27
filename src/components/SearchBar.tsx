@@ -1,11 +1,12 @@
 import { Search } from 'lucide-react';
-import { surface, text } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 interface SearchBarProps {
   onSearchClick: () => void;
 }
 
 export function SearchBar({ onSearchClick }: SearchBarProps) {
+  const { surface, text } = useThemeTokens();
   return (
     <button
       onClick={onSearchClick}

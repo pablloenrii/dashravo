@@ -1,6 +1,6 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
-import { chart, text, surface, semantic } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -13,48 +13,6 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode;
 }
 
-export const variantStyles: Record<ButtonVariant, string> = {
-  primary: `
-    background: ${chart.light};
-    color: ${surface.app};
-    border: 1px solid rgba(255,255,255, 0.5);
-    &:hover {
-      background: ${text.white};
-    }
-  `,
-  secondary: `
-    background: rgba(255,255,255, 0.08);
-    color: ${chart.light};
-    border: 1px solid rgba(255,255,255, 0.3);
-    &:hover {
-      background: rgba(255,255,255, 0.15);
-    }
-  `,
-  ghost: `
-    background: transparent;
-    color: ${text.secondary};
-    border: 1px solid rgba(255,255,255,0.1);
-    &:hover {
-      background: rgba(255,255,255,0.04);
-      color: ${text.highlight};
-    }
-  `,
-  danger: `
-    background: rgba(239, 68, 68, 0.12);
-    color: ${semantic.danger};
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    &:hover {
-      background: rgba(239, 68, 68, 0.2);
-    }
-  `,
-};
-
-export const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'padding: 6px 12px; font-size: 12px; border-radius: 6px;',
-  md: 'padding: 8px 16px; font-size: 13px; border-radius: 8px;',
-  lg: 'padding: 12px 24px; font-size: 14px; border-radius: 8px;',
-};
-
 export function Button({
   variant = 'primary',
   size = 'md',
@@ -65,6 +23,7 @@ export function Button({
   disabled = false,
   ...props
 }: ButtonProps) {
+  const { chart, text, surface, semantic } = useThemeTokens();
   const baseStyle: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',

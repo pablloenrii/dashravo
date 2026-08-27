@@ -27,7 +27,7 @@ import {
   computeCrmMetrics, computeFunnel, computeBySource,
 } from '@/utils/crmMetrics';
 import { useRevalidateStore } from '@/store/revalidate.store';
-import { chart, text, surface, semantic, layout, type } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 const ORIGENS = ['Indicação', 'Inbound', 'Outbound', 'Evento', 'Site', 'Outro'];
 
@@ -44,6 +44,7 @@ const EMPTY_FORM: ContactForm = { nome: '', empresa: '', email: '', telefone: ''
 export default function CRMPage() {
   const contacts = useContactsData();
   const { month, isAllTime, label: periodLabel } = usePeriod();
+  const { chart, text, surface, semantic, layout, type } = useThemeTokens();
 
   const [items, setItems] = useState<ContactData[]>([]);
   useEffect(() => { setItems(contacts.data); }, [contacts.data]);
@@ -230,6 +231,12 @@ export default function CRMPage() {
     })),
     [isAllTime, itemsFiltrados, m.ganhos, m.perdidos]
   );
+
+  const thStyle: React.CSSProperties = { padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: text.secondary };
+  const cardBtn: React.CSSProperties = { background: 'transparent', border: 'none', color: text.secondary, cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: text.muted, marginBottom: '6px' };
+  const fld: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: chart.light, fontSize: '13px' };
+  const tag: React.CSSProperties = { fontSize: '10px', fontWeight: 500, color: chart.line, background: surface.divider, padding: '2px 7px', borderRadius: '5px' };
 
   return (
     <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
@@ -617,6 +624,7 @@ export default function CRMPage() {
 }
 
 function Panel({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+  const { surface, text } = useThemeTokens();
   return (
     <div style={{ background: surface.card, border: `1px solid ${surface.border}`, borderRadius: '10px', padding: '14px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
@@ -629,6 +637,7 @@ function Panel({ title, hint, children }: { title: string; hint?: string; childr
 }
 
 function ViewBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
+  const { chart, surface } = useThemeTokens();
   return (
     <button onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer',
@@ -637,9 +646,3 @@ function ViewBtn({ active, onClick, icon, label }: { active: boolean; onClick: (
     }}>{icon}{label}</button>
   );
 }
-
-const thStyle: React.CSSProperties = { padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: text.secondary };
-const cardBtn: React.CSSProperties = { background: 'transparent', border: 'none', color: text.secondary, cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: '12px', fontWeight: 600, color: text.muted, marginBottom: '6px' };
-const fld: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: chart.light, fontSize: '13px' };
-const tag: React.CSSProperties = { fontSize: '10px', fontWeight: 500, color: chart.line, background: surface.divider, padding: '2px 7px', borderRadius: '5px' };

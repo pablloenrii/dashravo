@@ -1,5 +1,5 @@
 import React from 'react';
-import { text, surface, semantic } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -15,6 +15,7 @@ export function Input({
   success,
   ...props
 }: InputProps) {
+  const { text, surface, semantic } = useThemeTokens();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       {label && (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronUp, ChevronDown, Check, Minus } from 'lucide-react';
-import { chart, text, surface } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export interface TableColumn<T> {
   key: keyof T;
@@ -34,6 +34,7 @@ export function Table<T extends { id?: string | number }>({
   striped = true,
   hoverable = true,
 }: TableProps<T>) {
+  const { chart, text, surface } = useThemeTokens();
   const [sortConfig, setSortConfig] = useState<{
     key: keyof T;
     direction: 'asc' | 'desc';

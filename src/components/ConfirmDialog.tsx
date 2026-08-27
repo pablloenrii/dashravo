@@ -6,7 +6,7 @@
 import { Modal } from '@/components/Modal';
 import { Button } from '@/components/Button';
 import { AlertTriangle } from 'lucide-react';
-import { text, semantic } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -29,6 +29,7 @@ export function ConfirmDialog({
   cancelLabel = 'Cancelar',
   danger = false,
 }: ConfirmDialogProps) {
+  const { text, semantic } = useThemeTokens();
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm" closeButton={false}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>

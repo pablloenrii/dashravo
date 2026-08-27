@@ -6,7 +6,7 @@
  */
 
 import { ReactNode } from 'react';
-import { surface, text } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 interface ChartCardProps {
   title: string;
@@ -15,6 +15,7 @@ interface ChartCardProps {
 }
 
 export function ChartCard({ title, subtitle, children }: ChartCardProps) {
+  const { surface, text } = useThemeTokens();
   return (
     <div
       style={{

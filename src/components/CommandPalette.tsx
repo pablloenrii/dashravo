@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ChevronRight } from 'lucide-react';
-import { surface, text } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 interface CommandItem {
   id: string;
@@ -18,6 +18,7 @@ interface CommandPaletteProps {
 }
 
 export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
+  const { surface, text } = useThemeTokens();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);

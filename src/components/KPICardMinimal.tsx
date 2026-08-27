@@ -1,5 +1,5 @@
 import React from 'react';
-import { chart, surface } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 import { MetricCard } from '@/components/MetricCard';
 
 interface KPICardMinimalProps {
@@ -22,10 +22,12 @@ export function KPICardMinimal({
   value,
   unit = '',
   icon,
-  color = chart.light,
+  color,
   trend,
   loading = false,
 }: KPICardMinimalProps) {
+  const { chart, surface } = useThemeTokens();
+  const resolvedColor = color ?? chart.light;
   if (loading) {
     return (
       <div style={{
@@ -52,7 +54,7 @@ export function KPICardMinimal({
       value={String(value)}
       unit={unit}
       icon={icon}
-      accent={color}
+      accent={resolvedColor}
       sublabel={trend}
     />
   );

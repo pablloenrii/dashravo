@@ -7,9 +7,10 @@ import { useState, useRef, useEffect } from 'react';
 import { Calendar, ChevronDown, Check, BarChart3 } from 'lucide-react';
 import { usePeriod, recentMonths, monthLabelLong, currentMonthKey, MonthKey } from '@/contexts/PeriodContext';
 import { MonthDetailPanel } from '@/components/MonthDetailPanel';
-import { text, surface } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export function PeriodSelector({ compact = false }: { compact?: boolean }) {
+  const { text, surface } = useThemeTokens();
   const { month, setMonth, label } = usePeriod();
   const [open, setOpen] = useState(false);
   const [detailMonth, setDetailMonth] = useState<MonthKey | null>(null);
@@ -82,6 +83,7 @@ export function PeriodSelector({ compact = false }: { compact?: boolean }) {
 function Option({ label, hint, selected, onClick, onDetails }: {
   label: string; hint?: string; selected: boolean; onClick: () => void; onDetails?: () => void;
 }) {
+  const { text, surface } = useThemeTokens();
   return (
     <div
       style={{

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { chart, text, surface } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -11,6 +11,7 @@ interface MobileMenuProps {
 }
 
 export function MobileMenu({ isOpen, onClose, items, isActive }: MobileMenuProps) {
+  const { chart, text, surface } = useThemeTokens();
   // Close menu on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {

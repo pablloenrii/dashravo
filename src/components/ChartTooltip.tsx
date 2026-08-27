@@ -1,5 +1,5 @@
 
-import { text } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 interface ChartTooltipProps {
   active?: boolean;
@@ -13,6 +13,7 @@ interface ChartTooltipProps {
 }
 
 export function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
+  const { text } = useThemeTokens();
   if (!active || !payload || payload.length === 0) return null;
 
   return (

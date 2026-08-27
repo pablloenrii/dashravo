@@ -5,7 +5,7 @@
 
 import { ReactNode } from 'react';
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
-import { chart, text, surface, semantic } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export interface MetricCardProps {
   label: string;
@@ -27,14 +27,14 @@ export interface MetricCardProps {
   accent?: string;
 }
 
-const GOOD = chart.revenue;
-const BAD = semantic.danger;
-const NEUTRAL = text.tertiary;
-
 export function MetricCard({
   label, value, unit, icon, deltaPct, invertDelta = false,
   sublabel, progress, loading = false, onClick, valueColor, accent,
 }: MetricCardProps) {
+  const { chart, text, surface, semantic } = useThemeTokens();
+  const GOOD = chart.revenue;
+  const BAD = semantic.danger;
+  const NEUTRAL = text.tertiary;
   const hasDelta = deltaPct !== undefined && Number.isFinite(deltaPct);
   const flat = hasDelta && Math.abs(deltaPct as number) < 0.5;
   const positive = hasDelta && (deltaPct as number) > 0;

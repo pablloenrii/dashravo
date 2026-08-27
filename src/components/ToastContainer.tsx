@@ -5,14 +5,7 @@
 
 import { useToastStore, Toast } from '@/store/toast.store';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
-import { surface, text, semantic, chart } from '@/constants/theme';
-
-const icons: Record<Toast['type'], React.ReactNode> = {
-  success: <CheckCircle size={16} color={semantic.success} />,
-  error: <XCircle size={16} color={semantic.danger} />,
-  warning: <AlertTriangle size={16} color={chart.line} />,
-  info: <Info size={16} color={chart.light} />,
-};
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 const border: Record<Toast['type'], string> = {
   success: 'rgba(16, 185, 129, 0.3)',
@@ -22,6 +15,13 @@ const border: Record<Toast['type'], string> = {
 };
 
 export function ToastContainer() {
+  const { surface, text, semantic, chart } = useThemeTokens();
+  const icons: Record<Toast['type'], React.ReactNode> = {
+    success: <CheckCircle size={16} color={semantic.success} />,
+    error: <XCircle size={16} color={semantic.danger} />,
+    warning: <AlertTriangle size={16} color={chart.line} />,
+    info: <Info size={16} color={chart.light} />,
+  };
   const toasts = useToastStore((s) => s.toasts);
   const removeToast = useToastStore((s) => s.removeToast);
 

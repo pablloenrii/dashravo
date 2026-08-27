@@ -1,9 +1,10 @@
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import { surface } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export function ThemeToggle() {
   const { mode, toggleMode } = useTheme();
+  const { surface } = useThemeTokens();
 
   return (
     <button

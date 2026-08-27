@@ -25,11 +25,7 @@ import { MonthKey, monthLabelLong, prevMonthKey } from '@/contexts/PeriodContext
 import { computeCrmMetrics } from '@/utils/crmMetrics';
 import { monthSnapshot } from '@/utils/monthlyAnalysis';
 import { fmtMoney, fmtK, pctChange } from '@/utils/format';
-import { chart, type, text } from '@/constants/theme';
-
-const REVENUE = chart.revenue;
-const LINE = chart.line;
-const AXIS = chart.axis;
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export function MonthDetailPanel({ month, onClose }: {
   month: MonthKey | null;
@@ -40,6 +36,10 @@ export function MonthDetailPanel({ month, onClose }: {
 }
 
 function MonthDetailModal({ month, onClose }: { month: MonthKey; onClose: () => void }) {
+  const { chart } = useThemeTokens();
+  const REVENUE = chart.revenue;
+  const LINE = chart.line;
+  const AXIS = chart.axis;
   const finance = useFinanceChartData(month);
   const mrr = useMRRData(month);
   const churn = useChurnData(month);
@@ -183,6 +183,7 @@ function MonthDetailModal({ month, onClose }: { month: MonthKey; onClose: () => 
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
+  const { type, text } = useThemeTokens();
   return (
     <h3 style={{ ...type.sectionTitle, color: text.label, margin: '0 0 10px 0' }}>{children}</h3>
   );

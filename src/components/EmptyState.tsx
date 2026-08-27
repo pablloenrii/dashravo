@@ -4,7 +4,7 @@
  */
 
 import { Button } from '@/components/Button';
-import { text, surface } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 import { Inbox } from 'lucide-react';
 
 interface EmptyStateProps {
@@ -16,6 +16,7 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ icon, title, description, actionLabel, onAction }: EmptyStateProps) {
+  const { text, surface } = useThemeTokens();
   return (
     <div style={{
       display: 'flex',

@@ -1,5 +1,5 @@
 import { AlertCircle, RefreshCw } from 'lucide-react';
-import { text, semantic, soft } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export interface ErrorBoundaryVisualProps {
   error?: Error | string;
@@ -14,6 +14,7 @@ export function ErrorBoundaryVisual({
   title = 'Algo deu errado',
   description = 'Houve um erro ao carregar os dados. Tente novamente.',
 }: ErrorBoundaryVisualProps) {
+  const { text, semantic, soft } = useThemeTokens();
   return (
     <div
       style={{

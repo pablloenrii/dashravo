@@ -11,7 +11,7 @@ import { MobileMenu } from '@/components/MobileMenu';
 import { NotificationsPanel } from '@/components/NotificationsPanel';
 import { PeriodSelector } from '@/components/PeriodSelector';
 import { useNotifications } from '@/hooks/useNotifications';
-import { chart, text, surface, semantic } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 interface NavItem {
   path: string;
@@ -35,6 +35,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const notifRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const { items: notifications, loading: notifLoading } = useNotifications();
+  const { chart, text, surface, semantic } = useThemeTokens();
 
   // Fecha o painel de notificações ao clicar fora dele
   useEffect(() => {
@@ -89,7 +90,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <aside style={{
           width: sidebarOpen ? '16rem' : '5rem',
           background: surface.sidebar,
-          borderRight: '0.5px solid rgba(255,255,255,0.04)',
+          borderRight: `1px solid ${surface.border}`,
           display: isMobile ? 'none' : 'flex',
           flexDirection: 'column',
           position: 'fixed',
@@ -100,14 +101,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
           transition: 'width 0.3s'
         }}>
           {/* Logo */}
-          <div style={{ padding: '16px 12px', borderBottom: '0.5px solid rgba(255,255,255, 0.15)' }}>
+          <div style={{ padding: '16px 12px', borderBottom: `1px solid ${surface.divider}` }}>
             <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
               <div style={{
                 width: '34px', height: '34px', borderRadius: '9px',
-                background: surface.elevated, border: '0.5px solid rgba(255,255,255,0.1)',
+                background: surface.elevated, border: `1px solid ${surface.borderStrong}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: text.white, fontWeight: 700, fontSize: '17px',
-                boxShadow: '0 4px 16px rgba(255,255,255, 0.25)'
+                boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
               }}>R</div>
               {sidebarOpen && (
                 <div>
@@ -132,7 +133,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   borderRadius: '8px',
                   textDecoration: 'none',
                   color: isActive(item.path) ? chart.light : text.secondary,
-                  background: isActive(item.path) ? surface.hover : 'rgba(255,255,255,0.02)',
+                  background: isActive(item.path) ? surface.hover : 'transparent',
                   borderLeft: isActive(item.path) ? `2.5px solid ${chart.light}` : '2.5px solid transparent',
                   transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
                   fontSize: '13px',
@@ -146,7 +147,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </nav>
 
           {/* Footer */}
-          <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ padding: '12px', borderTop: `1px solid ${surface.divider}` }}>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               style={{
@@ -176,7 +177,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {/* Header */}
           <header style={{
             background: surface.sidebar,
-            borderBottom: '0.5px solid rgba(255,255,255,0.04)',
+            borderBottom: `1px solid ${surface.border}`,
             height: '64px',
             display: 'flex',
             alignItems: 'center',
@@ -215,9 +216,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <button
                   onClick={() => setNotifOpen((v) => !v)}
                   aria-label="Notificações"
-                  style={{ position: 'relative', padding: '8px 12px', color: text.secondary, background: surface.hover, border: '0.5px solid rgba(255,255,255, 0.15)', borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = chart.light; e.currentTarget.style.background = 'rgba(255,255,255, 0.15)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = text.secondary; e.currentTarget.style.background = surface.hover; }}
+                  style={{ position: 'relative', padding: '8px 12px', color: text.secondary, background: surface.hover, border: `1px solid ${surface.borderStrong}`, borderRadius: '6px', cursor: 'pointer', transition: 'all 300ms ease-out' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = chart.light; e.currentTarget.style.background = surface.hover; e.currentTarget.style.borderColor = surface.borderHover; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = text.secondary; e.currentTarget.style.background = surface.hover; e.currentTarget.style.borderColor = surface.borderStrong; }}
                 >
                   <Bell size={20} strokeWidth={1.5} />
                   {notifications.length > 0 && (
@@ -231,7 +232,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   <NotificationsPanel items={notifications} loading={notifLoading} onClose={() => setNotifOpen(false)} />
                 )}
               </div>
-              <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.04)' }}></div>
+              <div style={{ width: '1px', height: '24px', background: surface.divider }}></div>
               <ThemeToggle />
               <button
                 onClick={async () => {
@@ -241,14 +242,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 title="Sair"
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
-                  color: chart.light, background: 'rgba(255,255,255, 0.12)',
-                  border: '0.5px solid rgba(255,255,255, 0.2)', borderRadius: '6px',
+                  color: chart.light, background: surface.hover,
+                  border: `1px solid ${surface.borderStrong}`, borderRadius: '6px',
                   cursor: 'pointer', transition: 'all 300ms ease-out'
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = surface.hover; e.currentTarget.style.borderColor = surface.borderHover; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = surface.hover; e.currentTarget.style.borderColor = surface.borderStrong; }}
               >
                 <div style={{
                   width: '24px', height: '24px', borderRadius: '50%',
-                  background: surface.elevated, border: '0.5px solid rgba(255,255,255,0.1)',
+                  background: surface.elevated, border: `1px solid ${surface.borderStrong}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: text.white, fontSize: '11px', fontWeight: 'bold'
                 }}>P</div>

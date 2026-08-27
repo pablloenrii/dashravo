@@ -4,7 +4,7 @@
  */
 
 import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { chart, text } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 interface QueryErrorProps {
   message: string;
@@ -13,6 +13,7 @@ interface QueryErrorProps {
 
 /** Banner de erro por card/seção — âmbar, minimalista */
 export function QueryError({ message, onRetry }: QueryErrorProps) {
+  const { chart, text } = useThemeTokens();
   return (
     <div
       role="alert"

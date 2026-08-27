@@ -3,7 +3,7 @@
  * Usado na "Análise mês a mês" para ligar/desligar colunas.
  */
 
-import { text, surface } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export interface MetricToggleOption {
   key: string;
@@ -16,6 +16,7 @@ export function MetricToggle({ metrics, selected, onChange }: {
   selected: string[];
   onChange: (keys: string[]) => void;
 }) {
+  const { text, surface } = useThemeTokens();
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }} role="group" aria-label="Selecionar métricas">
       {metrics.map((m) => {

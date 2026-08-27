@@ -30,16 +30,17 @@ import { fmtK, fmtMoney, pctChange } from '@/utils/format';
 import {
   mergeMonthly, DEFAULT_SELECTED, MonthlyMetricKey, FinanceSlice,
 } from '@/utils/monthlyAnalysis';
-import { chart, type, layout, surface, text } from '@/constants/theme';
-
-const REVENUE = chart.revenue;
-const LINE = chart.line;
-const AXIS = chart.axis;
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 type Drill = { title: string; data: object[]; dataKey: string; color: string } | null;
 
 export default function Dashboard() {
   const { month, isAllTime, label: periodLabel, effectiveMonth, setMonth } = usePeriod();
+  const { chart, type, layout, surface, text } = useThemeTokens();
+
+  const REVENUE = chart.revenue;
+  const LINE = chart.line;
+  const AXIS = chart.axis;
 
   // Séries ancoradas no mês selecionado (ou no atual, quando "Todo o período")
   const mrr = useMRRData(month);
@@ -327,6 +328,7 @@ export default function Dashboard() {
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
+  const { type, text } = useThemeTokens();
   return (
     <h2 style={{ ...type.sectionTitle, color: text.label, margin: '0 0 10px 0' }}>{children}</h2>
   );
@@ -339,6 +341,7 @@ interface KpiDef {
 }
 
 function KPI({ kpi, first, loading, onOpen }: { kpi: KpiDef; first: boolean; loading: boolean; onOpen: () => void }) {
+  const { chart, text, surface } = useThemeTokens();
   const d = kpi.series && kpi.series.length >= 2 ? computeDelta(kpi.series) : null;
   const clickable = !!kpi.drill;
   return (
@@ -376,14 +379,16 @@ function computeDelta(series: number[]): { pct: number; dir: 'up' | 'down' } | n
   return { pct, dir: pct >= 0 ? 'up' : 'down' };
 }
 
-function Sparkline({ data, color = chart.seriesAlt }: { data: number[]; color?: string }) {
+function Sparkline({ data, color }: { data: number[]; color?: string }) {
+  const { chart } = useThemeTokens();
+  const strokeColor = color ?? chart.seriesAlt;
   if (data.length < 2) return null;
   const w = 62, h = 18;
   const min = Math.min(...data), max = Math.max(...data), range = max - min || 1;
   const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
   return (
     <svg width={w} height={h} style={{ display: 'block' }} aria-hidden="true">
-      <polyline points={pts} fill="none" stroke={color} strokeWidth={1.25} strokeLinejoin="round" strokeLinecap="round" />
+      <polyline points={pts} fill="none" stroke={strokeColor} strokeWidth={1.25} strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }

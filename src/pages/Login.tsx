@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { sb as supabase } from '@/services/supabase';
-import { chart, text, surface, semantic, soft } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export default function LoginPage() {
+  const { chart, text, surface, semantic, soft } = useThemeTokens();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');

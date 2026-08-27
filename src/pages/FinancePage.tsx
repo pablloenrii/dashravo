@@ -13,9 +13,10 @@ import { MetricCard } from '@/components/MetricCard';
 import { useFinanceChartData, useCashFlowData, useExpensesData, useReceitasRawData } from '@/hooks/usePagesQueries';
 import { usePeriod, prevMonthKey, monthLabel, toMonthKey } from '@/contexts/PeriodContext';
 import { fmtK, fmtMoney, pctChange } from '@/utils/format';
-import { chart, layout, text } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export default function FinancePage() {
+  const { chart, layout, text } = useThemeTokens();
   const { effectiveMonth, isAllTime, label: periodLabel, month } = usePeriod();
 
   const finance = useFinanceChartData(month);

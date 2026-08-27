@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { X, AlertCircle, CheckCircle, Info } from 'lucide-react';
-import { text, soft, semantic } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export interface AlertProps {
   type?: 'success' | 'error' | 'warning' | 'info';
@@ -12,33 +12,6 @@ export interface AlertProps {
   className?: string;
 }
 
-const typeStyles = {
-  success: {
-    bg: soft.success,
-    border: 'rgba(16, 185, 129, 0.3)',
-    color: semantic.success,
-    icon: CheckCircle,
-  },
-  error: {
-    bg: soft.danger,
-    border: 'rgba(239, 68, 68, 0.3)',
-    color: semantic.danger,
-    icon: AlertCircle,
-  },
-  warning: {
-    bg: soft.warning,
-    border: 'rgba(217, 119, 6, 0.35)',
-    color: semantic.warning,
-    icon: AlertCircle,
-  },
-  info: {
-    bg: 'rgba(255,255,255, 0.1)',
-    border: 'rgba(255,255,255, 0.3)',
-    color: text.strong,
-    icon: Info,
-  },
-};
-
 export function Alert({
   type = 'info',
   title,
@@ -48,6 +21,33 @@ export function Alert({
   closable = true,
   className,
 }: AlertProps) {
+  const { text, soft, semantic } = useThemeTokens();
+  const typeStyles = {
+    success: {
+      bg: soft.success,
+      border: 'rgba(16, 185, 129, 0.3)',
+      color: semantic.success,
+      icon: CheckCircle,
+    },
+    error: {
+      bg: soft.danger,
+      border: 'rgba(239, 68, 68, 0.3)',
+      color: semantic.danger,
+      icon: AlertCircle,
+    },
+    warning: {
+      bg: soft.warning,
+      border: 'rgba(217, 119, 6, 0.35)',
+      color: semantic.warning,
+      icon: AlertCircle,
+    },
+    info: {
+      bg: 'rgba(255,255,255, 0.1)',
+      border: 'rgba(255,255,255, 0.3)',
+      color: text.strong,
+      icon: Info,
+    },
+  };
   const [isVisible, setIsVisible] = useState(true);
   const styles = typeStyles[type];
   const IconComponent = styles.icon;

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { AlertTriangle, X } from 'lucide-react';
 import type { NotificationItem } from '@/hooks/useNotifications';
-import { chart, text, surface, semantic } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export function NotificationsPanel({
   items,
@@ -12,6 +12,7 @@ export function NotificationsPanel({
   loading: boolean;
   onClose: () => void;
 }) {
+  const { chart, text, surface, semantic } = useThemeTokens();
   return (
     <div
       style={{

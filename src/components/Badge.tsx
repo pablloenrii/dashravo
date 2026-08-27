@@ -1,5 +1,5 @@
 import React from 'react';
-import { text, soft, surface, semantic } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 
@@ -10,45 +10,45 @@ interface BadgeProps {
   style?: React.CSSProperties;
 }
 
-const variantStyles: Record<BadgeVariant, { bg: string; text: string; border: string }> = {
-  default: {
-    bg: surface.hover,
-    text: text.secondary,
-    border: 'rgba(255,255,255,0.2)',
-  },
-  primary: {
-    bg: 'rgba(255,255,255, 0.12)',
-    text: text.strong,
-    border: 'rgba(255,255,255, 0.3)',
-  },
-  success: {
-    bg: soft.success,
-    text: semantic.success,
-    border: 'rgba(16, 185, 129, 0.3)',
-  },
-  warning: {
-    bg: soft.warning,
-    text: semantic.warning,
-    border: 'rgba(217, 119, 6, 0.35)',
-  },
-  error: {
-    bg: soft.danger,
-    text: semantic.danger,
-    border: 'rgba(239, 68, 68, 0.3)',
-  },
-  info: {
-    bg: 'rgba(255,255,255, 0.12)',
-    text: text.strong,
-    border: 'rgba(255,255,255, 0.3)',
-  },
-};
-
 export function Badge({
   children,
   variant = 'default',
   className = '',
   style = {},
 }: BadgeProps) {
+  const { text, soft, surface, semantic } = useThemeTokens();
+  const variantStyles: Record<BadgeVariant, { bg: string; text: string; border: string }> = {
+    default: {
+      bg: surface.hover,
+      text: text.secondary,
+      border: 'rgba(255,255,255,0.2)',
+    },
+    primary: {
+      bg: 'rgba(255,255,255, 0.12)',
+      text: text.strong,
+      border: 'rgba(255,255,255, 0.3)',
+    },
+    success: {
+      bg: soft.success,
+      text: semantic.success,
+      border: 'rgba(16, 185, 129, 0.3)',
+    },
+    warning: {
+      bg: soft.warning,
+      text: semantic.warning,
+      border: 'rgba(217, 119, 6, 0.35)',
+    },
+    error: {
+      bg: soft.danger,
+      text: semantic.danger,
+      border: 'rgba(239, 68, 68, 0.3)',
+    },
+    info: {
+      bg: 'rgba(255,255,255, 0.12)',
+      text: text.strong,
+      border: 'rgba(255,255,255, 0.3)',
+    },
+  };
   const variantStyle = variantStyles[variant];
 
   return (

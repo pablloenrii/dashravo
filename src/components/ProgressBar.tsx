@@ -1,5 +1,5 @@
 
-import { chart, text, surface } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export interface ProgressBarProps {
   value: number;
@@ -14,10 +14,12 @@ export function ProgressBar({
   value,
   max = 100,
   label,
-  color = chart.light,
+  color,
   animated = true,
   showValue = true,
 }: ProgressBarProps) {
+  const { chart, text, surface } = useThemeTokens();
+  const resolvedColor = color ?? chart.light;
   const percentage = Math.min((value / max) * 100, 100);
 
   return (
@@ -54,10 +56,10 @@ export function ProgressBar({
           style={{
             width: `${percentage}%`,
             height: '100%',
-            background: `linear-gradient(90deg, ${color}, ${color}DD)`,
+            background: `linear-gradient(90deg, ${resolvedColor}, ${resolvedColor}DD)`,
             borderRadius: '4px',
             transition: animated ? 'width 800ms cubic-bezier(0.4, 0, 0.2, 1)' : 'width 300ms ease-out',
-            boxShadow: `0 0 16px ${color}40`,
+            boxShadow: `0 0 16px ${resolvedColor}40`,
             position: 'relative',
           }}
         >

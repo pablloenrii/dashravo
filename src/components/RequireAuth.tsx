@@ -7,9 +7,10 @@ import { useEffect, useState, ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import { sb as supabase } from '@/services/supabase';
-import { surface, text } from '@/constants/theme';
+import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export function RequireAuth({ children }: { children: ReactNode }) {
+  const { surface, text } = useThemeTokens();
   const [session, setSession] = useState<Session | null>(null);
   const [checking, setChecking] = useState(true);
 

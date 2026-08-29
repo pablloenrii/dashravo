@@ -33,7 +33,11 @@ export default defineConfig(({ mode }) => {
       // Em modo demo (sem VITE_POSTGREST_URL), assume mock=true por padrao,
       // a menos que VITE_USE_MOCK tenha sido setado explicitamente.
       'import.meta.env.VITE_USE_MOCK': JSON.stringify(env.VITE_USE_MOCK ?? (demoMode ? 'true' : 'false')),
-      'import.meta.env.VITE_DEMO_MODE': JSON.stringify(demoMode),
+      // demoMode e booleano; stringify precisa da forma texto ('true'/'false')
+      // para casar com a comparacao `=== 'true'` em services/auth.ts -- JSON.stringify
+      // direto no booleano gera o literal `true` sem aspas no bundle, o que quebra
+      // a comparacao de string silenciosamente (bug corrigido aqui).
+      'import.meta.env.VITE_DEMO_MODE': JSON.stringify(demoMode ? 'true' : 'false'),
     },
     resolve: {
       alias: {

@@ -1,394 +1,643 @@
 /**
- * RAVO OS — Dashboard
- * Minimalismo enterprise + período, comparação vs mês anterior, sparklines,
- * drill-down, "Receitas × Investimentos" e análise mês a mês com métricas
- * selecionáveis.
+ * RAVO OS — Dashboard Executivo (Software House)
+ *
+ * Hierarquia de leitura, de cima para baixo, seguindo a ordem em que um dono
+ * precisa das respostas:
+ *
+ *   1. RESULTADO      o mês fechou no azul? quanto tempo o caixa aguenta?
+ *   2. PREVISIBILIDADE quanto da receita é recorrente e quanto já está vendido?
+ *   3. ENTREGA        quais projetos estão comendo margem? o time cabe na demanda?
+ *   4. CARTEIRA       perder um cliente me quebra?
+ *   5. COMERCIAL      o funil repõe o que vai sair?
+ *
+ * Decisão de design: um sinal por bloco. Cada seção responde a UMA pergunta e
+ * destaca UM número; o resto é contexto de apoio. Grades de 12 KPIs iguais não
+ * priorizam nada e é isso que faz um dashboard virar enfeite.
  */
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
-  ComposedChart, BarChart, LineChart, AreaChart, PieChart,
-  Bar, Line, Area, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, CartesianGrid, Cell,
 } from 'recharts';
-import { ArrowUpRight, ArrowDownRight, Trophy, Target, Percent, Timer } from 'lucide-react';
-import { Modal } from '@/components/Modal';
+import {
+  TrendingUp, TrendingDown, AlertTriangle, Clock,
+  Wallet, Repeat, Layers, Users,
+} from 'lucide-react';
 import { ChartTooltip } from '@/components/ChartTooltip';
-import { ChartCard } from '@/components/ChartCard';
-import { QueryError, QueryLoading } from '@/components/QueryState';
-import { MetricCard } from '@/components/MetricCard';
-import { MonthlyTable } from '@/components/MonthlyTable';
-import { useMRRData, useChurnData, useFunnelData, useCustomerMetrics } from '@/hooks/useMetricsQueries';
+import { QueryError } from '@/components/QueryState';
 import {
-  useFinanceChartData, useContactsData, useContactsChartData,
-  useCashFlowData, useExpensesData,
-} from '@/hooks/usePagesQueries';
-import {
-  usePeriod, prevMonthKey, monthLabel, monthsEndingAt, MonthKey,
-} from '@/contexts/PeriodContext';
-import { computeCrmMetrics } from '@/utils/crmMetrics';
-import { fmtK, fmtMoney, pctChange } from '@/utils/format';
-import {
-  mergeMonthly, DEFAULT_SELECTED, MonthlyMetricKey, FinanceSlice,
-} from '@/utils/monthlyAnalysis';
+  useResumoExecutivo, useMixReceita, useReceitaMensal, useUtilizacao,
+  useMargemProjetos, useConcentracao, useBacklog, usePipeline,
+  useSaudeComercial, useCarteiraRecorrente,
+} from '@/hooks/useSoftwareHouseQueries';
+import { usePeriod, monthLabel, prevMonthKey } from '@/contexts/PeriodContext';
+import { fmtMoneyFull, fmtK, pctChange } from '@/utils/format';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
 
-type Drill = { title: string; data: object[]; dataKey: string; color: string } | null;
+/* ==========================================================================
+   Primitivos visuais locais
+   ========================================================================== */
 
-export default function Dashboard() {
-  const { month, isAllTime, label: periodLabel, effectiveMonth, setMonth } = usePeriod();
-  const { chart, type, layout, surface, text } = useThemeTokens();
-
-  const REVENUE = chart.revenue;
-  const LINE = chart.line;
-  const AXIS = chart.axis;
-
-  // Séries ancoradas no mês selecionado (ou no atual, quando "Todo o período")
-  const mrr = useMRRData(month);
-  const churn = useChurnData(month);
-  const funnel = useFunnelData();
-  const metrics = useCustomerMetrics(month);
-  const finance = useFinanceChartData(month);
-  const contacts = useContactsData();
-  const contactsChart = useContactsChartData(month);
-  const cashFlow = useCashFlowData(month);
-  const expenses = useExpensesData(month);
-
-  // Desempenho comercial do período selecionado (mesma fonte do CRM)
-  const cm = useMemo(() => computeCrmMetrics(contacts.data, month), [contacts.data, month]);
-  const cmPrev = useMemo(
-    () => computeCrmMetrics(contacts.data, month === null ? null : prevMonthKey(month)),
-    [contacts.data, month]
+/** Rótulo de seção — âncora de leitura entre blocos. */
+function SectionLabel({
+  icon: Icon, title, hint,
+}: { icon: typeof Wallet; title: string; hint: string }) {
+  const { text, surface } = useThemeTokens();
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'baseline', gap: '10px',
+      margin: '32px 0 14px', paddingBottom: '10px',
+      borderBottom: `1px solid ${surface.divider}`,
+    }}>
+      <Icon size={14} style={{ color: text.tertiary, alignSelf: 'center' }} />
+      <span style={{
+        fontSize: '11px', fontWeight: 650, letterSpacing: '0.06em',
+        textTransform: 'uppercase', color: text.secondary,
+      }}>{title}</span>
+      <span style={{ fontSize: '12px', color: text.faint }}>{hint}</span>
+    </div>
   );
-  const dc = (cur: number, prev: number) => (isAllTime ? undefined : pctChange(cur, prev));
-  const vsLabel = isAllTime ? 'acumulado' : `vs ${monthLabel(prevMonthKey(month as string))}`;
+}
 
-  const [period, setPeriod] = useState<'3m' | '6m'>('6m');
-  const [drill, setDrill] = useState<Drill>(null);
-  const [selMetrics, setSelMetrics] = useState<MonthlyMetricKey[]>(DEFAULT_SELECTED);
-  const n = period === '3m' ? 3 : 6;
-
-  const mrrS = mrr.data.slice(-n);
-  const churnS = churn.data.slice(-n);
-  const finS = finance.data.slice(-n);
-  const contactsS = contactsChart.data.slice(-n);
-
-  const currentMRR = mrr.data.length > 0 ? mrr.data[mrr.data.length - 1].mrr : 0;
-  const currentARR = mrr.data.length > 0 ? mrr.data[mrr.data.length - 1].arr : 0;
-  const currentChurn = churn.data.length > 0 ? churn.data[churn.data.length - 1].churn_rate : 0;
-  const currentNRR = churn.data.length > 0 ? churn.data[churn.data.length - 1].nrr : 0;
-  const activeCustomers = metrics.data['Active Customers'] ?? 0;
-  const ltv = metrics.data['LTV'] ?? 0;
-  const cac = metrics.data['CAC'] ?? 0;
-  const ltvCac = cac > 0 ? (ltv / cac).toFixed(1) : '—';
-
-  const kpis: KpiDef[] = [
-    { label: 'MRR', value: fmtK(currentMRR), unit: '/mês', series: mrrS.map((d) => d.mrr), drill: { title: 'MRR', data: mrrS, dataKey: 'mrr', color: LINE } },
-    { label: 'ARR', value: fmtK(currentARR), unit: '/ano', series: mrrS.map((d) => d.arr), drill: { title: 'ARR', data: mrrS, dataKey: 'arr', color: LINE } },
-    { label: 'Clientes ativos', value: String(activeCustomers.toFixed(0)), unit: '' },
-    { label: 'Churn', value: `${currentChurn.toFixed(1)}%`, unit: '', series: churnS.map((d) => d.churn_rate), drill: { title: 'Churn %', data: churnS, dataKey: 'churn_rate', color: LINE } },
-    { label: 'NRR', value: `${currentNRR.toFixed(0)}%`, unit: '', series: churnS.map((d) => d.nrr), drill: { title: 'NRR %', data: churnS, dataKey: 'nrr', color: LINE } },
-    { label: 'LTV / CAC', value: String(ltvCac), unit: '' },
-  ];
-
-  // --------------------------------------------------------------------------
-  // Análise do mês selecionado: Receita × Investimento (despesa)
-  // --------------------------------------------------------------------------
-  const selFin = finS[finS.length - 1];
-  const prevFin = finS[finS.length - 2];
-  const monthKPIs = useMemo(() => {
-    if (isAllTime) {
-      const receita = finS.reduce((s, m) => s + m.receita, 0);
-      const despesa = finS.reduce((s, m) => s + m.despesa, 0);
-      const lucro = receita - despesa;
-      return { receita, despesa, lucro, margem: receita > 0 ? (lucro / receita) * 100 : 0, deltaReceita: undefined, deltaDespesa: undefined, deltaLucro: undefined };
-    }
-    const receita = selFin?.receita ?? 0;
-    const despesa = selFin?.despesa ?? 0;
-    const lucro = selFin?.lucro ?? receita - despesa;
-    return {
-      receita, despesa, lucro, margem: receita > 0 ? (lucro / receita) * 100 : 0,
-      deltaReceita: prevFin ? pctChange(receita, prevFin.receita) : undefined,
-      deltaDespesa: prevFin ? pctChange(despesa, prevFin.despesa) : undefined,
-      deltaLucro: prevFin ? pctChange(lucro, prevFin.lucro) : undefined,
-    };
-  }, [finS, isAllTime, selFin, prevFin]);
-
-  const highlightedMonth: MonthKey | null = isAllTime ? null : month;
-  const finKeys = monthsEndingAt(effectiveMonth, finS.length);
-  const monthRows = useMemo(
-    () => mergeMonthly(finS as FinanceSlice[], mrrS, churnS, contactsS, finKeys),
-    [finS, mrrS, churnS, contactsS, finKeys]
-  );
-
-  const loading = mrr.loading || churn.loading || metrics.loading;
-  const highlightIndex = isAllTime ? -1 : finS.length - 1;
+/** Cartão de destaque: o número que carrega a seção. */
+function HeroStat({
+  label, value, sub, delta, tone = 'neutral',
+}: {
+  label: string; value: string; sub?: string;
+  delta?: number; tone?: 'positive' | 'negative' | 'warning' | 'neutral';
+}) {
+  const { text, surface, semantic } = useThemeTokens();
+  const toneColor = {
+    positive: semantic.success, negative: semantic.danger,
+    warning: semantic.warning, neutral: text.primary,
+  }[tone];
 
   return (
-    <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
-        <div>
-          <h1 style={{ ...type.pageTitle, color: text.primary, margin: '0 0 4px 0' }}>Dashboard</h1>
-          <p style={{ fontSize: '14px', color: text.secondary, margin: 0 }}>{periodLabel} · visão geral do negócio</p>
-        </div>
-        <div style={{ display: 'flex', background: surface.card, border: `1px solid ${surface.border}`, borderRadius: '8px', padding: '3px' }}>
-          {(['3m', '6m'] as const).map((pp) => (
-            <button key={pp} onClick={() => setPeriod(pp)} style={{
-              padding: '5px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 600,
-              background: period === pp ? surface.active : 'transparent', color: period === pp ? chart.light : text.tertiary,
-            }}>{pp === '3m' ? '3 meses' : '6 meses'}</button>
+    <div style={{
+      background: surface.card, border: `1px solid ${surface.border}`,
+      borderRadius: '12px', padding: '18px 20px',
+    }}>
+      <div style={{
+        fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em',
+        textTransform: 'uppercase', color: text.tertiary, marginBottom: '10px',
+      }}>{label}</div>
+
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+        <span style={{
+          fontSize: '28px', fontWeight: 660, letterSpacing: '-0.025em',
+          color: toneColor, lineHeight: 1,
+          fontVariantNumeric: 'tabular-nums',
+        }}>{value}</span>
+
+        {delta !== undefined && Number.isFinite(delta) && (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '2px',
+            fontSize: '12px', fontWeight: 600,
+            color: delta >= 0 ? semantic.success : semantic.danger,
+          }}>
+            {delta >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+            {Math.abs(delta).toFixed(1)}%
+          </span>
+        )}
+      </div>
+
+      {sub && (
+        <div style={{ fontSize: '12px', color: text.muted, marginTop: '8px' }}>{sub}</div>
+      )}
+    </div>
+  );
+}
+
+/** Barra de proporção horizontal — usada em mix e concentração. */
+function ProportionBar({
+  segments,
+}: { segments: { label: string; value: number; pct: number; color: string }[] }) {
+  const { text, surface } = useThemeTokens();
+  if (segments.length === 0) return null;
+
+  return (
+    <div>
+      <div style={{
+        display: 'flex', height: '10px', borderRadius: '5px',
+        overflow: 'hidden', background: surface.elevated, marginBottom: '14px',
+      }}>
+        {segments.map((s) => (
+          <div key={s.label} style={{ width: `${s.pct}%`, background: s.color }} title={s.label} />
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {segments.map((s) => (
+          <div key={s.label} style={{
+            display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px',
+          }}>
+            <span style={{
+              width: '8px', height: '8px', borderRadius: '2px',
+              background: s.color, flexShrink: 0,
+            }} />
+            <span style={{ color: text.secondary, flex: 1 }}>{s.label}</span>
+            <span style={{ color: text.primary, fontVariantNumeric: 'tabular-nums' }}>
+              {fmtMoneyFull(s.value)}
+            </span>
+            <span style={{
+              color: text.faint, width: '46px', textAlign: 'right',
+              fontVariantNumeric: 'tabular-nums',
+            }}>{s.pct.toFixed(1)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Painel neutro que abriga gráficos e tabelas. */
+function Panel({
+  title, hint, children, span = 1,
+}: { title: string; hint?: string; children: React.ReactNode; span?: number }) {
+  const { text, surface } = useThemeTokens();
+  return (
+    <div style={{
+      background: surface.card, border: `1px solid ${surface.border}`,
+      borderRadius: '12px', padding: '18px 20px',
+      gridColumn: `span ${span}`, minWidth: 0,
+    }}>
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ fontSize: '13px', fontWeight: 620, color: text.primary }}>{title}</div>
+        {hint && (
+          <div style={{ fontSize: '12px', color: text.faint, marginTop: '3px' }}>{hint}</div>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const grid2: React.CSSProperties = {
+  display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '12px',
+};
+
+/* ==========================================================================
+   Dashboard
+   ========================================================================== */
+
+export default function Dashboard() {
+  const { month, isAllTime, label: periodLabel } = usePeriod();
+  const { text, surface, semantic, chart, layout } = useThemeTokens();
+
+  const resumo     = useResumoExecutivo(month);
+  const mix        = useMixReceita(month);
+  const serie      = useReceitaMensal(month, 6);
+  const utilizacao = useUtilizacao(month);
+  const projetos   = useMargemProjetos(month);
+  const concentr   = useConcentracao(month);
+  const backlog    = useBacklog(month);
+  const pipeline   = usePipeline();
+  const comercial  = useSaudeComercial(month);
+  const carteira   = useCarteiraRecorrente(month, 6);
+
+  const erro = resumo.error ?? serie.error ?? mix.error;
+
+  /* --- Cores por stream: fixas, para o olho aprender a associação ---------- */
+  const STREAM = useMemo(() => ({
+    retainer: chart.palette[1],
+    projeto:  chart.palette[0],
+    hora:     chart.palette[2],
+    licenca:  chart.palette[3],
+  }), [chart.palette]);
+
+  const STREAM_LABEL: Record<string, string> = {
+    retainer: 'Retainer', projeto: 'Projeto', hora: 'Alocação/hora', licenca: 'Licença SaaS',
+  };
+
+  /* --- Deltas vs. mês anterior a partir da própria série ------------------- */
+  const deltaReceita = useMemo(() => {
+    if (serie.data.length < 2) return undefined;
+    const cur = serie.data[serie.data.length - 1];
+    const prev = serie.data[serie.data.length - 2];
+    return pctChange(cur.total, prev.total);
+  }, [serie.data]);
+
+  const recorrentePct = useMemo(() => {
+    const total = mix.data.reduce((s, m) => s + m.receita, 0);
+    if (total <= 0) return 0;
+    const rec = mix.data.filter((m) => m.recorrente).reduce((s, m) => s + m.receita, 0);
+    return (rec / total) * 100;
+  }, [mix.data]);
+
+  const mrrAtual = carteira.data.at(-1)?.mrr ?? 0;
+  const churnAtual = carteira.data.at(-1)?.churn_pct ?? 0;
+
+  /* --- Sinais de risco: o que o dono precisa ver sem procurar -------------- */
+  const projetosNoVermelho = projetos.data.filter((p) => p.margem_pct < 15);
+  const topCliente = concentr.data[0];
+  const sobrecarregados = utilizacao.data.filter((u) => u.utilizacao_pct > 95);
+  const ociosos = utilizacao.data.filter((u) => u.utilizacao_pct < 40 && u.capacidade > 0);
+
+  const pipelinePonderado = pipeline.data.reduce((s, p) => s + p.valor_ponderado, 0);
+
+  const alertas = useMemo(() => {
+    const out: { texto: string; nivel: 'alto' | 'medio' }[] = [];
+
+    if (topCliente && topCliente.participacao > 30) {
+      out.push({
+        nivel: topCliente.participacao > 40 ? 'alto' : 'medio',
+        texto: `${topCliente.cliente} concentra ${topCliente.participacao.toFixed(0)}% da receita do mês`,
+      });
+    }
+    if (projetosNoVermelho.length > 0) {
+      out.push({
+        nivel: projetosNoVermelho.some((p) => p.margem_pct < 0) ? 'alto' : 'medio',
+        texto: `${projetosNoVermelho.length} projeto(s) abaixo de 15% de margem`,
+      });
+    }
+    if (recorrentePct < 40 && mix.data.length > 0) {
+      out.push({
+        nivel: 'medio',
+        texto: `Só ${recorrentePct.toFixed(0)}% da receita é recorrente — o resto precisa ser vendido de novo`,
+      });
+    }
+    if (sobrecarregados.length > 0) {
+      out.push({
+        nivel: 'medio',
+        texto: `${sobrecarregados.map((u) => u.pessoa).join(', ')} acima de 95% de utilização`,
+      });
+    }
+    if (resumo.data.runway_meses !== null && resumo.data.runway_meses < 6) {
+      out.push({
+        nivel: 'alto',
+        texto: `Runway de ${resumo.data.runway_meses.toFixed(1)} meses`,
+      });
+    }
+    return out;
+  }, [topCliente, projetosNoVermelho, recorrentePct, mix.data.length, sobrecarregados, resumo.data.runway_meses]);
+
+  /* --- Estados de erro ----------------------------------------------------- */
+  if (erro) {
+    return (
+      <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
+        <h1 style={{ fontSize: '20px', fontWeight: 640, color: text.primary, margin: '0 0 16px' }}>
+          Dashboard
+        </h1>
+        <QueryError message={erro} onRetry={() => { resumo.refetch(); serie.refetch(); mix.refetch(); }} />
+      </div>
+    );
+  }
+
+  const carregando = resumo.loading && serie.loading;
+
+  return (
+    <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto', paddingBottom: '48px' }}>
+
+      {/* ---------------- Cabeçalho ---------------- */}
+      <div style={{ marginBottom: '4px' }}>
+        <h1 style={{
+          fontSize: '20px', fontWeight: 640, letterSpacing: '-0.015em',
+          color: text.primary, margin: '0 0 4px',
+        }}>Visão executiva</h1>
+        <p style={{ fontSize: '13px', color: text.muted, margin: 0 }}>
+          {isAllTime ? 'Todo o período' : periodLabel}
+          {!isAllTime && month && (
+            <span style={{ color: text.faint }}> · comparado a {monthLabel(prevMonthKey(month))}</span>
+          )}
+        </p>
+      </div>
+
+      {/* ---------------- Alertas ---------------- */}
+      {alertas.length > 0 && !carregando && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '18px 0 4px' }}>
+          {alertas.map((a) => (
+            <div key={a.texto} style={{
+              display: 'flex', alignItems: 'center', gap: '9px',
+              padding: '9px 13px', borderRadius: '9px', fontSize: '13px',
+              background: a.nivel === 'alto' ? 'rgba(239,68,68,0.07)' : 'rgba(217,119,6,0.07)',
+              border: `1px solid ${a.nivel === 'alto' ? semantic.danger : semantic.warning}33`,
+              color: text.secondary,
+            }}>
+              <AlertTriangle
+                size={13}
+                style={{ color: a.nivel === 'alto' ? semantic.danger : semantic.warning, flexShrink: 0 }}
+              />
+              {a.texto}
+            </div>
           ))}
         </div>
-      </div>
+      )}
 
-      {mrr.error && <QueryError message={mrr.error} onRetry={mrr.refetch} />}
-      {churn.error && <QueryError message={churn.error} onRetry={churn.refetch} />}
-      {metrics.error && <QueryError message={metrics.error} onRetry={metrics.refetch} />}
-      {finance.error && <QueryError message={finance.error} onRetry={finance.refetch} />}
-      {expenses.error && <QueryError message={expenses.error} onRetry={expenses.refetch} />}
-      {cashFlow.error && <QueryError message={cashFlow.error} onRetry={cashFlow.refetch} />}
+      {/* ═══════════ 1. RESULTADO ═══════════ */}
+      <SectionLabel icon={Wallet} title="Resultado" hint="o mês fechou no azul?" />
 
-      {/* Desempenho comercial do período */}
-      <div style={{ marginBottom: '16px' }}>
-        <SectionTitle>Comercial</SectionTitle>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px' }}>
-          <MetricCard label="Receita fechada" value={fmtMoney(cm.receitaGanha)} icon={<Trophy size={14} />}
-            deltaPct={dc(cm.receitaGanha, cmPrev.receitaGanha)} sublabel={vsLabel} loading={contacts.loading} />
-          <MetricCard label="Pipeline aberto" value={fmtMoney(cm.pipelineAberto)} icon={<Target size={14} />}
-            deltaPct={dc(cm.pipelineAberto, cmPrev.pipelineAberto)}
-            sublabel={`${cm.abertos.length} ${cm.abertos.length === 1 ? 'deal' : 'deals'}`} loading={contacts.loading} />
-          <MetricCard label="Win rate" value={`${cm.winRate}%`} icon={<Percent size={14} />}
-            deltaPct={dc(cm.winRate, cmPrev.winRate)}
-            sublabel={`${cm.ganhos.length}G / ${cm.perdidos.length}P`} loading={contacts.loading} />
-          <MetricCard label="Ciclo de venda" value={`${cm.cicloMedio}d`} icon={<Timer size={14} />}
-            deltaPct={dc(cm.cicloMedio, cmPrev.cicloMedio)} invertDelta
-            sublabel="lead → fechamento" loading={contacts.loading} />
-        </div>
-      </div>
-
-      <SectionTitle>Recorrência</SectionTitle>
-
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
-        border: `1px solid ${surface.border}`, borderRadius: '10px', overflow: 'hidden', marginBottom: '16px',
-      }}>
-        {kpis.map((k, i) => <KPI key={k.label} kpi={k} first={i === 0} loading={loading} onOpen={() => k.drill && setDrill(k.drill)} />)}
-      </div>
-
-      {/* Receitas × Investimentos */}
-      <div style={{ marginBottom: '16px' }}>
-        <SectionTitle>Receitas × Investimentos</SectionTitle>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '12px' }}>
-          <MetricCard label="Receita" value={fmtMoney(monthKPIs.receita)} icon={<ArrowUpRight size={14} />}
-            deltaPct={monthKPIs.deltaReceita} sublabel={isAllTime ? `${periodLabel}` : monthLabel(effectiveMonth)} loading={finance.loading} />
-          <MetricCard label="Investimento" value={fmtMoney(monthKPIs.despesa)} icon={<ArrowDownRight size={14} />}
-            deltaPct={monthKPIs.deltaDespesa} invertDelta sublabel="despesas do período" loading={finance.loading} />
-          <MetricCard label="Lucro" value={fmtMoney(monthKPIs.lucro)} icon={<ArrowUpRight size={14} />}
-            deltaPct={monthKPIs.deltaLucro} sublabel="receita − investimento" loading={finance.loading} />
-          <MetricCard label="Margem" value={`${monthKPIs.margem.toFixed(1)}%`} icon={<Percent size={14} />}
-            progress={monthKPIs.margem} sublabel="lucro / receita" loading={finance.loading} />
-        </div>
-
-        <ChartCard title="Receita, Investimento e Lucro" subtitle={periodLabel}>
-          {finance.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={260}>
-              <ComposedChart data={finS} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
-                <XAxis dataKey="mes" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
-                <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} tickFormatter={fmtK} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Bar dataKey="receita" name="Receita" radius={[3, 3, 0, 0]} barSize={18}>
-                  {finS.map((_, i) => (
-                    <Cell key={i} fill={i === highlightIndex ? REVENUE : `${REVENUE}59`} />
-                  ))}
-                </Bar>
-                <Bar dataKey="despesa" name="Investimento" fill={LINE} radius={[3, 3, 0, 0]} barSize={18} />
-                <Line type="monotone" dataKey="lucro" name="Lucro" stroke={chart.light} strokeWidth={1.75} dot={{ r: 2 }} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
-      </div>
-
-      {/* Análise mês a mês */}
-      <div style={{ marginBottom: '16px' }}>
-        <SectionTitle>Análise mês a mês</SectionTitle>
-        <p style={{ fontSize: '12px', color: text.tertiary, margin: '0 0 10px 0' }}>
-          Selecione as métricas e clique em uma linha para fixar o mês na análise acima.
-        </p>
-        <MonthlyTable
-          rows={monthRows}
-          selected={selMetrics}
-          onSelectedChange={setSelMetrics}
-          highlightedMonth={highlightedMonth}
-          onSelectMonth={setMonth}
-          loading={finance.loading || mrr.loading}
+      <div style={grid2}>
+        <HeroStat
+          label="Receita reconhecida"
+          value={fmtMoneyFull(resumo.data.receita)}
+          delta={deltaReceita}
+          sub={`Custo direto de entrega ${fmtMoneyFull(resumo.data.custo_direto)}`}
+        />
+        <HeroStat
+          label="Margem bruta"
+          value={`${resumo.data.margem_bruta_pct.toFixed(1)}%`}
+          tone={resumo.data.margem_bruta_pct >= 50 ? 'positive'
+               : resumo.data.margem_bruta_pct >= 30 ? 'warning' : 'negative'}
+          sub={`${fmtMoneyFull(resumo.data.margem_bruta)} depois das horas de entrega`}
+        />
+        <HeroStat
+          label="Resultado do mês"
+          value={fmtMoneyFull(resumo.data.resultado)}
+          tone={resumo.data.resultado >= 0 ? 'positive' : 'negative'}
+          sub={`Despesas operacionais ${fmtMoneyFull(resumo.data.despesas)}`}
+        />
+        <HeroStat
+          label="Runway"
+          value={resumo.data.runway_meses === null ? '—' : `${resumo.data.runway_meses.toFixed(1)} meses`}
+          tone={resumo.data.runway_meses === null ? 'neutral'
+               : resumo.data.runway_meses >= 12 ? 'positive'
+               : resumo.data.runway_meses >= 6 ? 'warning' : 'negative'}
+          sub="Caixa sobre a queima média de 3 meses"
         />
       </div>
 
-      {/* Gráficos de detalhe */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-        <ChartCard title="MRR">
-          {mrr.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={190}>
-              <LineChart data={mrrS} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
-                <XAxis dataKey="mes" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
-                <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} tickFormatter={fmtK} />
-                <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
-                <Line type="monotone" dataKey="mrr" stroke={LINE} dot={false} strokeWidth={1.75} name="MRR" />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
+      {/* ═══════════ 2. PREVISIBILIDADE ═══════════ */}
+      <SectionLabel
+        icon={Repeat}
+        title="Previsibilidade"
+        hint="quanto da receita se repete sozinha no mês que vem"
+      />
 
-        <ChartCard title="Churn">
-          {churn.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={190}>
-              <LineChart data={churnS} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
-                <XAxis dataKey="mes" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
-                <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
-                <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
-                <Line type="monotone" dataKey="churn_rate" stroke={LINE} dot={false} strokeWidth={1.75} name="Churn %" />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
-
-        <ChartCard title="Funil de vendas">
-          {funnel.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={190}>
-              <BarChart data={funnel.data} layout="vertical" margin={{ top: 4, right: 8, left: 8, bottom: 0 }}>
-                <XAxis type="number" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
-                <YAxis type="category" dataKey="estagio" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} width={84} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                <Bar dataKey="quantidade" fill={chart.seriesAlt} radius={[0, 2, 2, 0]} name="Contatos" barSize={12} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
-
-        <ChartCard title="Fluxo de caixa semanal">
-          {cashFlow.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={190}>
-              <BarChart data={cashFlow.data} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
-                <XAxis dataKey="semana" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
-                <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} tickFormatter={fmtK} />
-                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-                <Bar dataKey="entradas" name="Entradas" fill={REVENUE} radius={[2, 2, 0, 0]} barSize={12} />
-                <Bar dataKey="saidas" name="Saídas" fill={LINE} radius={[2, 2, 0, 0]} barSize={12} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
-
-        <ChartCard title="Novos vs ativos">
-          {contactsChart.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={190}>
-              <AreaChart data={contactsS} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
-                <XAxis dataKey="mes" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
-                <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
-                <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
-                <Area type="monotone" dataKey="novos" stroke={chart.palette[1]} fill="rgba(16,185,129,0.08)" strokeWidth={1.5} name="Novos" />
-                <Area type="monotone" dataKey="ativos" stroke={chart.palette[2]} fill="rgba(139,139,139,0.06)" strokeWidth={1.5} name="Ativos" />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
-
-        <ChartCard title="Despesas por categoria">
-          {expenses.loading ? <QueryLoading /> : (
-            <ResponsiveContainer width="100%" height={190}>
-              <PieChart>
-                <Pie data={expenses.data} cx="50%" cy="50%" innerRadius={45} outerRadius={85} paddingAngle={2} dataKey="value" nameKey="name">
-                  {expenses.data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip content={<ChartTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
+      <div style={grid2}>
+        <HeroStat
+          label="Receita recorrente"
+          value={`${recorrentePct.toFixed(0)}%`}
+          tone={recorrentePct >= 60 ? 'positive' : recorrentePct >= 40 ? 'warning' : 'negative'}
+          sub={`MRR de ${fmtMoneyFull(mrrAtual)} · churn ${churnAtual.toFixed(1)}%`}
+        />
+        <HeroStat
+          label="Backlog contratado"
+          value={fmtMoneyFull(backlog.data.backlog_total)}
+          sub={backlog.data.cobertura_meses === null
+            ? 'Receita vendida ainda não reconhecida'
+            : `${backlog.data.cobertura_meses.toFixed(1)} meses de operação já vendidos`}
+        />
       </div>
 
-      <Modal isOpen={drill !== null} onClose={() => setDrill(null)} title={drill?.title ?? ''} size="lg">
-        {drill && (
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={drill.data} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
-              <XAxis dataKey="mes" stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} />
-              <YAxis stroke={AXIS} tickLine={false} axisLine={false} style={{ fontSize: '11px' }} tickFormatter={fmtK} />
-              <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)' }} />
-              <Line type="monotone" dataKey={drill.dataKey} stroke={drill.color} dot={{ r: 2 }} strokeWidth={1.75} />
-            </LineChart>
+      <div style={{ ...grid2, marginTop: '12px' }}>
+        <Panel title="Composição da receita" hint="por tipo de contrato, no período">
+          <ProportionBar
+            segments={mix.data.map((m) => ({
+              label: STREAM_LABEL[m.tipo] ?? m.tipo,
+              value: m.receita,
+              pct: m.participacao,
+              color: STREAM[m.tipo] ?? chart.neutral,
+            }))}
+          />
+        </Panel>
+
+        <Panel title="Receita por stream" hint="últimos 6 meses">
+          <ResponsiveContainer width="100%" height={190}>
+            <AreaChart data={serie.data} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
+              <XAxis
+                dataKey="mes" tick={{ fontSize: 11, fill: chart.axisAlt }}
+                axisLine={false} tickLine={false}
+                tickFormatter={(v: string) => v.slice(5)}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: chart.axisAlt }}
+                axisLine={false} tickLine={false} tickFormatter={fmtK}
+              />
+              <Tooltip content={<ChartTooltip />} />
+              <Area type="monotone" dataKey="retainer" stackId="1" name="Retainer"
+                    stroke={STREAM.retainer} fill={STREAM.retainer} fillOpacity={0.5} />
+              <Area type="monotone" dataKey="projeto" stackId="1" name="Projeto"
+                    stroke={STREAM.projeto} fill={STREAM.projeto} fillOpacity={0.5} />
+              <Area type="monotone" dataKey="hora" stackId="1" name="Alocação"
+                    stroke={STREAM.hora} fill={STREAM.hora} fillOpacity={0.5} />
+              <Area type="monotone" dataKey="licenca" stackId="1" name="Licença"
+                    stroke={STREAM.licenca} fill={STREAM.licenca} fillOpacity={0.5} />
+            </AreaChart>
           </ResponsiveContainer>
+        </Panel>
+      </div>
+
+      {/* ═══════════ 3. ENTREGA ═══════════ */}
+      <SectionLabel
+        icon={Layers}
+        title="Entrega"
+        hint="onde a margem está sendo ganha ou perdida"
+      />
+
+      <Panel title="Margem por projeto" hint="ordenado da pior margem para a melhor">
+        {projetos.data.length === 0 ? (
+          <div style={{ fontSize: '13px', color: text.faint, padding: '18px 0' }}>
+            Nenhum projeto no período.
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '640px' }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${surface.divider}` }}>
+                  {['Projeto', 'Cliente', 'Receita', 'Custo', 'Margem', 'Horas', 'Escopo'].map((h, i) => (
+                    <th key={h} style={{
+                      textAlign: i < 2 ? 'left' : 'right', padding: '0 10px 9px',
+                      fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em',
+                      textTransform: 'uppercase', color: text.tertiary, whiteSpace: 'nowrap',
+                    }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {projetos.data.map((p) => {
+                  const corMargem = p.margem_pct < 0 ? semantic.danger
+                                  : p.margem_pct < 15 ? semantic.warning
+                                  : semantic.success;
+                  const estourou = (p.desvio_escopo_pct ?? 0) > 10;
+                  return (
+                    <tr key={`${p.projeto}-${p.cliente}`} style={{ borderBottom: `1px solid ${surface.divider}` }}>
+                      <td style={{ padding: '11px 10px', color: text.primary, fontWeight: 550 }}>
+                        {p.projeto}
+                      </td>
+                      <td style={{ padding: '11px 10px', color: text.muted }}>{p.cliente}</td>
+                      <td style={{ padding: '11px 10px', textAlign: 'right', color: text.secondary, fontVariantNumeric: 'tabular-nums' }}>
+                        {fmtMoneyFull(p.receita)}
+                      </td>
+                      <td style={{ padding: '11px 10px', textAlign: 'right', color: text.muted, fontVariantNumeric: 'tabular-nums' }}>
+                        {fmtMoneyFull(p.custo)}
+                      </td>
+                      <td style={{ padding: '11px 10px', textAlign: 'right', color: corMargem, fontWeight: 620, fontVariantNumeric: 'tabular-nums' }}>
+                        {p.margem_pct.toFixed(1)}%
+                      </td>
+                      <td style={{ padding: '11px 10px', textAlign: 'right', color: text.muted, fontVariantNumeric: 'tabular-nums' }}>
+                        {p.horas_reais.toFixed(0)}/{p.horas_estimadas.toFixed(0)}
+                      </td>
+                      <td style={{
+                        padding: '11px 10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums',
+                        color: estourou ? semantic.warning : text.faint,
+                        fontWeight: estourou ? 620 : 400,
+                      }}>
+                        {p.desvio_escopo_pct === null ? '—'
+                          : `${p.desvio_escopo_pct > 0 ? '+' : ''}${p.desvio_escopo_pct.toFixed(0)}%`}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
-      </Modal>
-    </div>
-  );
-}
+      </Panel>
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  const { type, text } = useThemeTokens();
-  return (
-    <h2 style={{ ...type.sectionTitle, color: text.label, margin: '0 0 10px 0' }}>{children}</h2>
-  );
-}
+      <div style={{ ...grid2, marginTop: '12px' }}>
+        <Panel title="Utilização faturável" hint="horas que viraram receita ÷ capacidade contratada">
+          {utilizacao.data.length === 0 ? (
+            <div style={{ fontSize: '13px', color: text.faint, padding: '18px 0' }}>
+              Sem apontamentos no período.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '13px' }}>
+              {utilizacao.data.map((u) => {
+                const cor = u.utilizacao_pct > 95 ? semantic.danger
+                          : u.utilizacao_pct >= 65 ? semantic.success
+                          : u.utilizacao_pct >= 40 ? semantic.warning
+                          : text.faint;
+                return (
+                  <div key={u.pessoa}>
+                    <div style={{
+                      display: 'flex', justifyContent: 'space-between',
+                      alignItems: 'baseline', marginBottom: '5px', fontSize: '13px',
+                    }}>
+                      <span style={{ color: text.secondary }}>
+                        {u.pessoa}
+                        <span style={{ color: text.faint, fontSize: '12px' }}> · {u.papel}</span>
+                      </span>
+                      <span style={{ color: cor, fontWeight: 620, fontVariantNumeric: 'tabular-nums' }}>
+                        {u.utilizacao_pct.toFixed(0)}%
+                      </span>
+                    </div>
+                    <div style={{ height: '5px', borderRadius: '3px', background: surface.elevated, overflow: 'hidden' }}>
+                      <div style={{
+                        width: `${Math.min(u.utilizacao_pct, 100)}%`, height: '100%',
+                        background: cor, borderRadius: '3px',
+                      }} />
+                    </div>
+                  </div>
+                );
+              })}
+              {ociosos.length > 0 && (
+                <div style={{ fontSize: '12px', color: text.faint, marginTop: '2px' }}>
+                  Capacidade ociosa: {ociosos.map((u) => u.pessoa).join(', ')}
+                </div>
+              )}
+            </div>
+          )}
+        </Panel>
 
-interface KpiDef {
-  label: string; value: string; unit: string;
-  series?: number[];
-  drill?: { title: string; data: object[]; dataKey: string; color: string };
-}
-
-function KPI({ kpi, first, loading, onOpen }: { kpi: KpiDef; first: boolean; loading: boolean; onOpen: () => void }) {
-  const { chart, text, surface } = useThemeTokens();
-  const d = kpi.series && kpi.series.length >= 2 ? computeDelta(kpi.series) : null;
-  const clickable = !!kpi.drill;
-  return (
-    <div
-      onClick={clickable ? onOpen : undefined}
-      style={{
-        padding: '14px 16px', background: surface.card,
-        borderLeft: first ? 'none' : `1px solid ${surface.divider}`,
-        cursor: clickable ? 'pointer' : 'default',
-      }}
-    >
-      <div style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.02em', color: text.tertiary, marginBottom: '8px' }}>{kpi.label}</div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-        <span style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.02em', color: chart.light }}>{loading ? '—' : kpi.value}</span>
-        {kpi.unit && <span style={{ fontSize: '12px', color: text.tertiary }}>{kpi.unit}</span>}
+        <Panel title="Pipeline ponderado" hint={`${fmtMoneyFull(pipelinePonderado)} esperados pelo funil`}>
+          {pipeline.data.length === 0 ? (
+            <div style={{ fontSize: '13px', color: text.faint, padding: '18px 0' }}>
+              Nenhuma oportunidade aberta.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={190}>
+              <BarChart data={pipeline.data} layout="vertical" margin={{ top: 0, right: 12, left: 22, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: chart.axisAlt }}
+                       axisLine={false} tickLine={false} tickFormatter={fmtK} />
+                <YAxis type="category" dataKey="estagio" width={86}
+                       tick={{ fontSize: 11, fill: chart.axisAlt }} axisLine={false} tickLine={false} />
+                <Tooltip content={<ChartTooltip />} />
+                <Bar dataKey="valor_ponderado" name="Ponderado" radius={[0, 4, 4, 0]}>
+                  {pipeline.data.map((_, i) => (
+                    <Cell key={i} fill={chart.palette[i % chart.palette.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </Panel>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px', minHeight: '20px' }}>
-        {d ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '2px', fontSize: '11px', color: chart.line }}>
-            {d.dir === 'up' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-            {Math.abs(d.pct)}%
-          </span>
-        ) : <span />}
-        {kpi.series && <Sparkline data={kpi.series} />}
+
+      {/* ═══════════ 4. CARTEIRA ═══════════ */}
+      <SectionLabel
+        icon={Users}
+        title="Carteira"
+        hint="risco de concentração e saúde da recorrência"
+      />
+
+      <div style={grid2}>
+        <Panel
+          title="Concentração de receita"
+          hint={topCliente
+            ? `Maior cliente responde por ${topCliente.participacao.toFixed(0)}% do mês`
+            : 'Sem receita no período'}
+        >
+          <ProportionBar
+            segments={concentr.data.slice(0, 6).map((c, i) => ({
+              label: c.cliente,
+              value: c.receita,
+              pct: c.participacao,
+              color: i === 0 && c.participacao > 30
+                ? semantic.warning
+                : chart.palette[i % chart.palette.length],
+            }))}
+          />
+        </Panel>
+
+        <Panel title="Saúde comercial" hint="oportunidades fechadas nos últimos 6 meses">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px' }}>
+            {[
+              { rotulo: 'Win rate', valor: `${comercial.data.win_rate.toFixed(0)}%`,
+                apoio: `${comercial.data.ganhos} ganhos · ${comercial.data.perdidos} perdidos` },
+              { rotulo: 'Ciclo de venda', valor: `${comercial.data.ciclo_dias.toFixed(0)} dias`,
+                apoio: 'Abertura até fechamento' },
+              { rotulo: 'Ticket médio', valor: fmtMoneyFull(comercial.data.ticket_medio),
+                apoio: 'Por negócio ganho' },
+              { rotulo: 'Pipeline aberto', valor: fmtMoneyFull(pipelinePonderado),
+                apoio: 'Ponderado pela probabilidade' },
+            ].map((m) => (
+              <div key={m.rotulo}>
+                <div style={{
+                  fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em',
+                  textTransform: 'uppercase', color: text.tertiary, marginBottom: '6px',
+                }}>{m.rotulo}</div>
+                <div style={{
+                  fontSize: '19px', fontWeight: 640, color: text.primary,
+                  fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em',
+                }}>{m.valor}</div>
+                <div style={{ fontSize: '12px', color: text.faint, marginTop: '3px' }}>{m.apoio}</div>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </div>
+
+      <div style={{ marginTop: '12px' }}>
+        <Panel title="Evolução da carteira recorrente" hint="MRR de retainers e licenças — projetos não entram aqui">
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={carteira.data} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
+              <XAxis dataKey="mes" tick={{ fontSize: 11, fill: chart.axisAlt }}
+                     axisLine={false} tickLine={false} tickFormatter={(v: string) => v.slice(5)} />
+              <YAxis tick={{ fontSize: 11, fill: chart.axisAlt }}
+                     axisLine={false} tickLine={false} tickFormatter={fmtK} />
+              <Tooltip content={<ChartTooltip />} />
+              <Area type="monotone" dataKey="mrr" name="MRR"
+                    stroke={chart.palette[1]} fill={chart.palette[1]} fillOpacity={0.16} strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </Panel>
+      </div>
+
+      {/* ---------------- Rodapé de contexto ---------------- */}
+      <div style={{
+        marginTop: '28px', paddingTop: '14px',
+        borderTop: `1px solid ${surface.divider}`,
+        fontSize: '12px', color: text.faint,
+        display: 'flex', alignItems: 'center', gap: '6px',
+      }}>
+        <Clock size={11} />
+        Margem bruta desconta as horas apontadas ao custo real de cada pessoa.
+        Receita recorrente considera apenas contratos de retainer e licença.
       </div>
     </div>
-  );
-}
-
-function computeDelta(series: number[]): { pct: number; dir: 'up' | 'down' } | null {
-  const last = series[series.length - 1];
-  const prev = series[series.length - 2];
-  if (prev === 0) return null;
-  const pct = Math.round(((last - prev) / Math.abs(prev)) * 1000) / 10;
-  return { pct, dir: pct >= 0 ? 'up' : 'down' };
-}
-
-function Sparkline({ data, color }: { data: number[]; color?: string }) {
-  const { chart } = useThemeTokens();
-  const strokeColor = color ?? chart.seriesAlt;
-  if (data.length < 2) return null;
-  const w = 62, h = 18;
-  const min = Math.min(...data), max = Math.max(...data), range = max - min || 1;
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
-  return (
-    <svg width={w} height={h} style={{ display: 'block' }} aria-hidden="true">
-      <polyline points={pts} fill="none" stroke={strokeColor} strokeWidth={1.25} strokeLinejoin="round" strokeLinecap="round" />
-    </svg>
   );
 }

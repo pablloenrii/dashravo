@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Bell, LogOut, Menu } from 'lucide-react';
-import { sb as supabase } from '@/services/supabase';
+import { signOut } from '@/services/auth';
 import { ToastContainer } from '@/components/ToastContainer';
 import { CommandPalette } from '@/components/CommandPalette';
 import { SearchBar } from '@/components/SearchBar';
@@ -236,7 +236,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               <ThemeToggle />
               <button
                 onClick={async () => {
-                  await supabase.auth.signOut();
+                  signOut();
                   window.location.href = '/login';
                 }}
                 title="Sair"

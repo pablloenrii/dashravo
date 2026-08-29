@@ -17,7 +17,6 @@ import { text } from './constants/theme';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const LoginPage = lazy(() => import('./pages/Login'));
-const SignupPage = lazy(() => import('./pages/Signup'));
 const CRMPage = lazy(() => import('./pages/CRMPage'));
 const FinancePage = lazy(() => import('./pages/FinancePage'));
 const GoalsPage = lazy(() => import('./pages/GoalsPage'));
@@ -52,7 +51,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Suspense fallback={<PageFallback />}><LoginPage /></Suspense>} />
-            <Route path="/signup" element={<Suspense fallback={<PageFallback />}><SignupPage /></Suspense>} />
             <Route path="/" element={<Protected><Dashboard /></Protected>} />
             <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
             <Route path="/crm" element={<Protected><CRMPage /></Protected>} />

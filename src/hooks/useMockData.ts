@@ -121,3 +121,77 @@ export const MOCK_CUSTOMER_METRICS: Record<string, number> = {
   'Active Customers': 245,
   'MRR Total': 72000,
 };
+
+/* ==========================================================================
+   Mocks das métricas de software house (rpcs_softwarehouse.sql)
+   Permitem navegar o Dashboard novo antes de o schema estar aplicado na VPS.
+   ========================================================================== */
+
+export const mockResumoExecutivo = {
+  receita: 87640, custo_direto: 31280, margem_bruta: 56360, margem_bruta_pct: 64.3,
+  despesas: 7990, resultado: 48370, resultado_pct: 55.2, runway_meses: 23.2,
+};
+
+export const mockMixReceita = [
+  { tipo: 'retainer' as const, receita: 27800, participacao: 31.7, recorrente: true },
+  { tipo: 'projeto'  as const, receita: 42250, participacao: 48.2, recorrente: false },
+  { tipo: 'hora'     as const, receita: 15600, participacao: 17.8, recorrente: false },
+  { tipo: 'licenca'  as const, receita: 1990,  participacao: 2.3,  recorrente: true },
+];
+
+export const mockReceitaMensal = [
+  { mes: '2026-03', retainer: 27800, projeto: 0,     hora: 0,     licenca: 1990, total: 29790, recorrente_pct: 100.0 },
+  { mes: '2026-04', retainer: 27800, projeto: 20400, hora: 0,     licenca: 1990, total: 50190, recorrente_pct: 59.4 },
+  { mes: '2026-05', retainer: 27800, projeto: 9250,  hora: 0,     licenca: 1990, total: 39040, recorrente_pct: 76.3 },
+  { mes: '2026-06', retainer: 27800, projeto: 42250, hora: 15600, licenca: 1990, total: 87640, recorrente_pct: 34.0 },
+  { mes: '2026-07', retainer: 25000, projeto: 12600, hora: 17550, licenca: 1990, total: 57140, recorrente_pct: 47.2 },
+  { mes: '2026-08', retainer: 25000, projeto: 0,     hora: 11700, licenca: 1990, total: 38690, recorrente_pct: 69.8 },
+];
+
+export const mockUtilizacao = [
+  { pessoa: 'Rafael Souza',    papel: 'Desenvolvedor Full', horas_faturaveis: 148, horas_totais: 162, capacidade: 177.1, utilizacao_pct: 83.6, realized_rate: 198.4 },
+  { pessoa: 'Douglas Costa',   papel: 'Gestor de Tráfego',  horas_faturaveis: 132, horas_totais: 148, capacidade: 177.1, utilizacao_pct: 74.5, realized_rate: 176.2 },
+  { pessoa: 'Marina Alves',    papel: 'Designer / UX',      horas_faturaveis: 96,  horas_totais: 130, capacidade: 177.1, utilizacao_pct: 54.2, realized_rate: 162.0 },
+  { pessoa: 'Pablo Henrique',  papel: 'Sócio / Estratégia', horas_faturaveis: 38,  horas_totais: 128, capacidade: 132.9, utilizacao_pct: 28.6, realized_rate: 310.5 },
+  { pessoa: 'Lynnda Ferreira', papel: 'SDR',                horas_faturaveis: 0,   horas_totais: 152, capacidade: 177.1, utilizacao_pct: 0,    realized_rate: 0 },
+];
+
+export const mockMargemProjetos = [
+  { projeto: 'Ponto Multi-obra — MVP',       cliente: 'Terra Azul Construções',  tipo: 'projeto' as const, status: 'em_andamento', receita: 40800, custo: 41687, margem: -887,  margem_pct: -2.2, horas_estimadas: 420, horas_reais: 593, desvio_escopo_pct: 41.2 },
+  { projeto: 'Portal do Paciente — Fase 1',  cliente: 'Hospital Reviva',         tipo: 'projeto' as const, status: 'em_andamento', receita: 25200, custo: 19125, margem: 6075,  margem_pct: 24.1, horas_estimadas: 260, horas_reais: 255, desvio_escopo_pct: -1.9 },
+  { projeto: 'Squad Terra Azul',             cliente: 'Terra Azul Construções',  tipo: 'hora'    as const, status: 'em_andamento', receita: 44850, custo: 13800, margem: 31050, margem_pct: 69.2, horas_estimadas: 160, horas_reais: 184, desvio_escopo_pct: 15.0 },
+  { projeto: 'Identidade Visual + 3 LPs',    cliente: 'Leonardo Peruci Imóveis', tipo: 'projeto' as const, status: 'entregue',     receita: 18500, custo: 7420,  margem: 11080, margem_pct: 59.9, horas_estimadas: 120, horas_reais: 112, desvio_escopo_pct: -6.7 },
+];
+
+export const mockConcentracao = [
+  { cliente: 'Terra Azul Construções',    receita: 33300, participacao: 38.0, acumulado: 38.0 },
+  { cliente: 'Hospital Reviva',           receita: 24600, participacao: 28.1, acumulado: 66.1 },
+  { cliente: 'Thiago Carvalho Advocacia', receita: 10490, participacao: 12.0, acumulado: 78.1 },
+  { cliente: 'Leonardo Peruci Imóveis',   receita: 9250,  participacao: 10.6, acumulado: 88.7 },
+  { cliente: 'Vilela Turismo',            receita: 4500,  participacao: 5.1,  acumulado: 93.8 },
+];
+
+export const mockBacklog = {
+  backlog_projetos: 44000, backlog_recorrente: 239880, backlog_total: 283880,
+  receita_media_3m: 55627.5, cobertura_meses: 5.1,
+};
+
+export const mockPipeline = [
+  { estagio: 'diagnostico',  quantidade: 1, valor_total: 95000, valor_ponderado: 23750 },
+  { estagio: 'negociacao',   quantidade: 2, valor_total: 11490, valor_ponderado: 8242 },
+  { estagio: 'qualificacao', quantidade: 1, valor_total: 42000, valor_ponderado: 6300 },
+  { estagio: 'proposta',     quantidade: 1, valor_total: 6800,  valor_ponderado: 3060 },
+];
+
+export const mockSaudeComercial = {
+  win_rate: 50.0, ciclo_dias: 35, ticket_medio: 40000, ganhos: 2, perdidos: 2,
+};
+
+export const mockCarteiraRecorrente = [
+  { mes: '2026-03', mrr: 29790, clientes: 4, churn_pct: 0,    nrr_pct: 100.0 },
+  { mes: '2026-04', mrr: 29790, clientes: 4, churn_pct: 0,    nrr_pct: 100.0 },
+  { mes: '2026-05', mrr: 29790, clientes: 4, churn_pct: 0,    nrr_pct: 100.0 },
+  { mes: '2026-06', mrr: 29790, clientes: 4, churn_pct: 0,    nrr_pct: 100.0 },
+  { mes: '2026-07', mrr: 26990, clientes: 3, churn_pct: 25.0, nrr_pct: 90.6 },
+  { mes: '2026-08', mrr: 26990, clientes: 3, churn_pct: 0,    nrr_pct: 100.0 },
+];

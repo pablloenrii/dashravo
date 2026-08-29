@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { sb as supabase } from '@/services/supabase';
+import { signIn } from '@/services/auth';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export default function LoginPage() {
@@ -16,8 +16,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      signIn(email, password);
       window.location.href = '/';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao fazer login');
@@ -99,9 +98,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: text.secondary }}>
-          Não tem conta? <a href="/signup" style={{ color: chart.light, fontWeight: 600, textDecoration: 'none' }}>Criar conta</a>
-        </p>
       </div>
     </div>
   );

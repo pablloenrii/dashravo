@@ -18,6 +18,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { QueryError, QueryLoading } from '@/components/QueryState';
 import { MetricCard } from '@/components/MetricCard';
 import { sb as supabase } from '@/services/supabase';
+import { getSession } from '@/services/auth';
 import { useContactsData, ContactData } from '@/hooks/usePagesQueries';
 import { usePeriod, prevMonthKey, monthLabel } from '@/contexts/PeriodContext';
 import { fmtMoney, pctChange } from '@/utils/format';
@@ -100,7 +101,8 @@ export default function CRMPage() {
 
   const integrateWonDeal = async (deal: { id: string; nome: string; email: string; empresa: string; telefone?: string; valor: number }) => {
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const localSession = getSession();
+      const userData = { user: localSession ? { id: localSession.email } : null };
       const userId = userData?.user?.id;
       if (!userId || !deal.email) return;
 

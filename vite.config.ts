@@ -10,12 +10,12 @@ import path from 'path';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
-  // Fail-fast: sem as credenciais do Supabase o app não deve compilar nem rodar.
-  // Isso evita deploy apontando para projeto errado (e credenciais em repositório).
-  if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY) {
+  // Fail-fast: sem a URL da API o app não deve compilar nem rodar.
+  // IMPORTANTE: usar `env` (loadEnv) e não `process.env` — o Vite não injeta
+  // variáveis do .env.local em process.env durante a resolução do config.
+  if (!env.VITE_POSTGREST_URL) {
     throw new Error(
-      'RAVO OS: VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY são obrigatórias. ' +
-        'Copie .env.example para .env.local e preencha com as credenciais do seu projeto Supabase.'
+      'RAVO OS: VITE_POSTGREST_URL é obrigatória. Configure no .env.local'
     );
   }
 

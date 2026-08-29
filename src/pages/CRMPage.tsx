@@ -7,7 +7,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Trash2, Edit2, LayoutGrid, List as ListIcon, GripVertical,
-  DollarSign, Target, Percent, Timer, AlertTriangle, Trophy, Search, X,
+  DollarSign, Target, Percent, AlertTriangle, Search, X,
   Inbox, Filter,
 } from 'lucide-react';
 import { Button } from '@/components/Button';
@@ -17,6 +17,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { QueryError, QueryLoading } from '@/components/QueryState';
 import { MetricCard } from '@/components/MetricCard';
+import { SectionLabel, HeroStat, Panel, heroGrid, panelGrid } from '@/components/SectionKit';
 import { sb as supabase } from '@/services/supabase';
 import { getSession } from '@/services/auth';
 import { useContactsData, ContactData } from '@/hooks/usePagesQueries';
@@ -226,6 +227,21 @@ export default function CRMPage() {
   const d = (cur: number, prev: number) => (isAllTime ? undefined : pctChange(cur, prev));
   const vsLabel = isAllTime ? undefined : `vs ${monthLabel(prevMonthKey(month as string))}`;
 
+  /* --- Sinais de risco do pipeline: o que precisa de atenção sem procurar --- */
+  const alertas = useMemo(() => {
+    const out: { texto: string; nivel: 'alto' | 'medio' }[] = [];
+    if (m.parados > 0) {
+      out.push({
+        nivel: m.parados >= 3 ? 'alto' : 'medio',
+        texto: `${m.parados} deal(s) sem contato há ${ROT_DAYS}+ dias — risco de esfriar`,
+      });
+    }
+    if (!isAllTime && m.novosLeadsCount === 0) {
+      out.push({ nivel: 'medio', texto: 'Nenhum lead novo entrou no funil neste período' });
+    }
+    return out;
+  }, [m.parados, m.novosLeadsCount, isAllTime]);
+
   const visiveis = useMemo(
     () => (isAllTime ? itemsFiltrados : itemsFiltrados.filter((c) => {
       if (isOpen(c.etapa)) return true;
@@ -263,76 +279,58 @@ export default function CRMPage() {
 
       {contacts.error && <QueryError message={contacts.error} onRetry={contacts.refetch} />}
 
-      {/* --- Barra de busca e filtros --- */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: '1 1 200px', minWidth: '180px' }}>
-          <Search size={14} color={text.dim} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
-          <input
-            type="text"
-            placeholder="Buscar por nome, email ou empresa…"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%', padding: '8px 10px 8px 30px', borderRadius: '8px',
-              background: surface.input, border: `1px solid ${surface.borderStrong}`,
-              color: text.bright, fontSize: '12px', outline: 'none',
-            }}
-          />
-          {searchTerm && (
-            <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: text.dim, cursor: 'pointer', padding: '2px', display: 'flex' }}>
-              <X size={13} />
-            </button>
-          )}
+      {/* ---------------- Alertas ---------------- */}
+      {alertas.length > 0 && !contacts.loading && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '0 0 16px' }}>
+          {alertas.map((a) => (
+            <div key={a.texto} style={{
+              display: 'flex', alignItems: 'center', gap: '9px',
+              padding: '9px 13px', borderRadius: '9px', fontSize: '13px',
+              background: a.nivel === 'alto' ? 'rgba(239,68,68,0.07)' : 'rgba(217,119,6,0.07)',
+              border: `1px solid ${a.nivel === 'alto' ? semantic.danger : semantic.warning}33`,
+              color: text.secondary,
+            }}>
+              <AlertTriangle
+                size={13}
+                style={{ color: a.nivel === 'alto' ? semantic.danger : semantic.warning, flexShrink: 0 }}
+              />
+              {a.texto}
+            </div>
+          ))}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Filter size={13} color={text.dim} />
-          <select
-            value={filterEtapa}
-            onChange={(e) => setFilterEtapa(e.target.value)}
-            style={{ padding: '7px 10px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: text.bright, fontSize: '12px' }}
-          >
-            <option value="">Todas as fases</option>
-            {STAGES.map((s) => <option key={s.key} value={s.key}>{s.key}</option>)}
-          </select>
-          <select
-            value={filterOrigem}
-            onChange={(e) => setFilterOrigem(e.target.value)}
-            style={{ padding: '7px 10px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: text.bright, fontSize: '12px' }}
-          >
-            <option value="">Todas as origens</option>
-            {ORIGENS.map((o) => <option key={o} value={o}>{o}</option>)}
-          </select>
-        </div>
+      )}
+
+      {/* ═══════════ PIPELINE ═══════════ */}
+      <SectionLabel icon={Target} title="Pipeline" hint="o funil cobre o que preciso fechar?" />
+
+      <div style={heroGrid}>
+        <HeroStat
+          label="Forecast ponderado" value={fmtMoney(m.forecast)}
+          delta={d(m.forecast, mPrev.forecast)}
+          sub={`${fmtMoney(m.pipelineAberto)} em aberto · ${m.abertos.length} ${m.abertos.length === 1 ? 'deal' : 'deals'}`}
+        />
+        <HeroStat
+          label="Receita fechada" value={fmtMoney(m.receitaGanha)} tone="positive"
+          delta={d(m.receitaGanha, mPrev.receitaGanha)} sub={vsLabel}
+        />
+        <HeroStat
+          label="Win rate" value={`${m.winRate}%`}
+          tone={m.winRate >= 40 ? 'positive' : m.winRate >= 20 ? 'warning' : 'negative'}
+          delta={d(m.winRate, mPrev.winRate)}
+          sub={`${m.ganhos.length} ganhos · ${m.perdidos.length} perdidos`}
+        />
+        <HeroStat
+          label="Ciclo de venda" value={`${m.cicloMedio}d`}
+          tone={m.cicloMedio <= 30 ? 'positive' : m.cicloMedio <= 60 ? 'warning' : 'negative'}
+          delta={d(m.cicloMedio, mPrev.cicloMedio)}
+          sub="lead → fechamento"
+        />
       </div>
 
-      {/* Métricas comerciais do período */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(165px, 1fr))', gap: '12px', marginBottom: '12px' }}>
-        <MetricCard
-          label="Receita fechada" value={fmtMoney(m.receitaGanha)} icon={<Trophy size={14} />}
-          deltaPct={d(m.receitaGanha, mPrev.receitaGanha)} sublabel={vsLabel} loading={contacts.loading}
-        />
-        <MetricCard
-          label="Pipeline aberto" value={fmtMoney(m.pipelineAberto)} icon={<DollarSign size={14} />}
-          deltaPct={d(m.pipelineAberto, mPrev.pipelineAberto)}
-          sublabel={`${m.abertos.length} ${m.abertos.length === 1 ? 'deal' : 'deals'}`} loading={contacts.loading}
-        />
-        <MetricCard
-          label="Forecast ponderado" value={fmtMoney(m.forecast)} icon={<Target size={14} />}
-          deltaPct={d(m.forecast, mPrev.forecast)} sublabel="por probabilidade" loading={contacts.loading}
-        />
-        <MetricCard
-          label="Win rate" value={`${m.winRate}%`} icon={<Percent size={14} />}
-          deltaPct={d(m.winRate, mPrev.winRate)}
-          sublabel={`${m.ganhos.length}G / ${m.perdidos.length}P`} loading={contacts.loading}
-        />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(165px, 1fr))', gap: '12px', marginTop: '12px', marginBottom: '24px' }}>
         <MetricCard
           label="Ticket médio" value={fmtMoney(m.ticketMedio)} icon={<DollarSign size={14} />}
           deltaPct={d(m.ticketMedio, mPrev.ticketMedio)} sublabel={vsLabel} loading={contacts.loading}
-        />
-        <MetricCard
-          label="Ciclo de venda" value={`${m.cicloMedio}d`} icon={<Timer size={14} />}
-          deltaPct={d(m.cicloMedio, mPrev.cicloMedio)} invertDelta
-          sublabel="lead → fechamento" loading={contacts.loading}
         />
         <MetricCard
           label="Novos leads" value={String(m.novosLeadsCount)} icon={<Plus size={14} />}
@@ -343,11 +341,18 @@ export default function CRMPage() {
           deltaPct={d(m.parados, mPrev.parados)} invertDelta
           sublabel={`sem contato há ${ROT_DAYS}d+`} loading={contacts.loading}
         />
+        <MetricCard
+          label="Pipeline aberto" value={fmtMoney(m.pipelineAberto)} icon={<Percent size={14} />}
+          deltaPct={d(m.pipelineAberto, mPrev.pipelineAberto)}
+          sublabel="valor bruto, sem ponderar" loading={contacts.loading}
+        />
       </div>
 
-      {/* Funil de conversão + desempenho por canal */}
+      {/* ═══════════ FUNIL & CANAIS ═══════════ */}
+      <SectionLabel icon={Filter} title="Funil & canais" hint="onde os leads travam e de onde vêm os melhores" />
+
       {!contacts.loading && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ ...panelGrid, marginBottom: '8px' }}>
           <Panel title="Conversão por etapa" hint={isAllTime ? 'todo o histórico' : 'leads do período'}>
             {funil[0]?.quantidade === 0 ? (
               <EmptyState icon={<Inbox size={24} color={text.dim} />} title="Nenhum lead no período" description="Adicione leads para ver o funil de conversão." />
@@ -404,6 +409,51 @@ export default function CRMPage() {
           </Panel>
         </div>
       )}
+
+      {/* ═══════════ DEALS ═══════════ */}
+      <SectionLabel icon={LayoutGrid} title="Deals" hint="arraste no board ou edite pela lista" />
+
+      {/* --- Barra de busca e filtros --- */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1 1 200px', minWidth: '180px' }}>
+          <Search size={14} color={text.dim} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+          <input
+            type="text"
+            placeholder="Buscar por nome, email ou empresa…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%', padding: '8px 10px 8px 30px', borderRadius: '8px',
+              background: surface.input, border: `1px solid ${surface.borderStrong}`,
+              color: text.bright, fontSize: '12px', outline: 'none',
+            }}
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', color: text.dim, cursor: 'pointer', padding: '2px', display: 'flex' }}>
+              <X size={13} />
+            </button>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Filter size={13} color={text.dim} />
+          <select
+            value={filterEtapa}
+            onChange={(e) => setFilterEtapa(e.target.value)}
+            style={{ padding: '7px 10px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: text.bright, fontSize: '12px' }}
+          >
+            <option value="">Todas as fases</option>
+            {STAGES.map((s) => <option key={s.key} value={s.key}>{s.key}</option>)}
+          </select>
+          <select
+            value={filterOrigem}
+            onChange={(e) => setFilterOrigem(e.target.value)}
+            style={{ padding: '7px 10px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: text.bright, fontSize: '12px' }}
+          >
+            <option value="">Todas as origens</option>
+            {ORIGENS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+      </div>
 
       {contacts.loading ? (
         <QueryLoading height={300} />
@@ -621,19 +671,6 @@ export default function CRMPage() {
         confirmLabel="Deletar"
         danger
       />
-    </div>
-  );
-}
-
-function Panel({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
-  const { surface, text } = useThemeTokens();
-  return (
-    <div style={{ background: surface.card, border: `1px solid ${surface.border}`, borderRadius: '10px', padding: '14px 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px', marginBottom: '12px' }}>
-        <h3 style={{ fontSize: '12.5px', fontWeight: 650, color: text.primary, margin: 0, letterSpacing: '-0.01em' }}>{title}</h3>
-        {hint && <span style={{ fontSize: '10.5px', color: text.label }}>{hint}</span>}
-      </div>
-      {children}
     </div>
   );
 }

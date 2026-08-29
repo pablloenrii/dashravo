@@ -24,9 +24,25 @@ export interface LocalSession {
   expiresAt: number;
 }
 
-/** Credenciais aceitas, vindas do .env.local. */
-const ALLOWED_EMAIL = import.meta.env.VITE_AUTH_EMAIL ?? '';
-const ALLOWED_PASSWORD = import.meta.env.VITE_AUTH_PASSWORD ?? '';
+/**
+ * Modo demo: quando VITE_POSTGREST_URL nao esta configurada no ambiente de
+ * build (ver vite.config.ts), o app roda com dados de exemplo. Nesse caso,
+ * sem VITE_AUTH_EMAIL/PASSWORD tambem configuradas, ninguem conseguiria
+ * logar -- entao caimos numa credencial demo fixa, exibida na propria tela
+ * de login (Login.tsx). NAO protege nada sensivel: e so a porta de entrada
+ * da demonstracao com dados fake.
+ *
+ * Assim que voce configurar VITE_POSTGREST_URL, VITE_AUTH_EMAIL e
+ * VITE_AUTH_PASSWORD reais no ambiente de build, esse fallback e ignorado
+ * e as credenciais reais passam a valer.
+ */
+export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+const DEMO_EMAIL = 'demo@ravo.company';
+const DEMO_PASSWORD = 'ravo-demo-2026';
+
+/** Credenciais aceitas, vindas do ambiente de build (ou demo, ver acima). */
+const ALLOWED_EMAIL = import.meta.env.VITE_AUTH_EMAIL || (DEMO_MODE ? DEMO_EMAIL : '');
+const ALLOWED_PASSWORD = import.meta.env.VITE_AUTH_PASSWORD || (DEMO_MODE ? DEMO_PASSWORD : '');
 
 /** Lê a sessão persistida, descartando-a se expirada ou corrompida. */
 export function getSession(): LocalSession | null {

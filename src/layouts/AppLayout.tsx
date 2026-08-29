@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Bell, LogOut, Menu } from 'lucide-react';
-import { signOut } from '@/services/auth';
+import { signOut, DEMO_MODE } from '@/services/auth';
 import { ToastContainer } from '@/components/ToastContainer';
 import { CommandPalette } from '@/components/CommandPalette';
 import { SearchBar } from '@/components/SearchBar';
@@ -113,7 +113,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
               {sidebarOpen && (
                 <div>
                   <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: chart.light }}>RAVO</h1>
-                  <p style={{ margin: 0, fontSize: '11px', color: text.dim, fontWeight: '500' }}>INTELLIGENCE</p>
+                  <p style={{ margin: 0, fontSize: '11px', color: text.dim, fontWeight: '500' }}>
+                    {DEMO_MODE ? 'DADOS DE EXEMPLO' : 'INTELLIGENCE'}
+                  </p>
                 </div>
               )}
             </Link>

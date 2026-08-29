@@ -10,21 +10,30 @@ import path from 'path';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
-  // Fail-fast: sem a URL da API o app não deve compilar nem rodar.
-  // IMPORTANTE: usar `env` (loadEnv) e não `process.env` — o Vite não injeta
-  // variáveis do .env.local em process.env durante a resolução do config.
-  if (!env.VITE_POSTGREST_URL) {
-    throw new Error(
-      'RAVO OS: VITE_POSTGREST_URL é obrigatória. Configure no .env.local'
+  // Sem VITE_POSTGREST_URL configurada (ex.: build na Vercel sem env vars
+  // ainda setadas), o build NAO falha mais: cai em modo demo com dados de
+  // exemplo, para o site sempre subir com algo visivel. src/services/supabase.ts
+  // ja tem o mesmo fallback de URL para o runtime -- aqui e so o aviso de build.
+  // Assim que as env vars reais forem configuradas na Vercel (ver
+  // database/APLICAR.md), o proximo deploy troca automaticamente para dados
+  // reais da VPS.
+  const demoMode = !env.VITE_POSTGREST_URL;
+  if (demoMode) {
+    console.warn(
+      'RAVO OS: VITE_POSTGREST_URL nao configurada -- build em MODO DEMO ' +
+      '(dados de exemplo, login demo). Configure as env vars na Vercel para dados reais.'
     );
   }
 
   return {
     plugins: [react()],
     define: {
-      // Constante em build: sem a flag, o código de mock é eliminado
-      // do bundle de produção (dead-code elimination do import dinâmico).
-      'import.meta.env.VITE_USE_MOCK': JSON.stringify(env.VITE_USE_MOCK ?? 'false'),
+      // Constante em build: sem a flag, o codigo de mock e eliminado
+      // do bundle de producao (dead-code elimination do import dinamico).
+      // Em modo demo (sem VITE_POSTGREST_URL), assume mock=true por padrao,
+      // a menos que VITE_USE_MOCK tenha sido setado explicitamente.
+      'import.meta.env.VITE_USE_MOCK': JSON.stringify(env.VITE_USE_MOCK ?? (demoMode ? 'true' : 'false')),
+      'import.meta.env.VITE_DEMO_MODE': JSON.stringify(demoMode),
     },
     resolve: {
       alias: {

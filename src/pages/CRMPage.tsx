@@ -242,12 +242,16 @@ export default function CRMPage() {
     return out;
   }, [m.parados, m.novosLeadsCount, isAllTime]);
 
+  // Board/lista seguem o mesmo recorte temporal das métricas: em um mês específico,
+  // "aberto" é o snapshot de quem já existia e ainda não tinha desfecho até o fim
+  // daquele mês (igual a `m.abertos`) — não "tudo que está aberto agora".
+  // Isso é o que faz trocar o mês no seletor realmente mudar o board, e não só os números.
   const visiveis = useMemo(
     () => (isAllTime ? itemsFiltrados : itemsFiltrados.filter((c) => {
-      if (isOpen(c.etapa)) return true;
+      if (m.abertos.some((a) => a.id === c.id)) return true;
       return m.ganhos.some((g) => g.id === c.id) || m.perdidos.some((p) => p.id === c.id);
     })),
-    [isAllTime, itemsFiltrados, m.ganhos, m.perdidos]
+    [isAllTime, itemsFiltrados, m.abertos, m.ganhos, m.perdidos]
   );
 
   const thStyle: React.CSSProperties = { padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: text.secondary };
@@ -411,7 +415,12 @@ export default function CRMPage() {
       )}
 
       {/* ═══════════ DEALS ═══════════ */}
-      <SectionLabel icon={LayoutGrid} title="Deals" hint="arraste no board ou edite pela lista" />
+      <SectionLabel
+        icon={LayoutGrid} title="Deals"
+        hint={isAllTime
+          ? 'todo o histórico · arraste no board ou edite pela lista'
+          : `snapshot de ${periodLabel} · arraste no board ou edite pela lista`}
+      />
 
       {/* --- Barra de busca e filtros --- */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'center' }}>

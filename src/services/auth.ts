@@ -16,6 +16,9 @@
 
 import { sb, setAuthToken } from './supabase';
 
+/** Selo "DADOS DE EXEMPLO" vs "INTELLIGENCE" na sidebar (ver AppLayout.tsx). */
+export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+
 const SESSION_KEY = 'ravo.session';
 const SESSION_TTL_MS = 1000 * 60 * 60 * 12; // 12h (deve bater com o `exp` emitido pelo RPC login)
 

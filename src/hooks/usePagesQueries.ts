@@ -242,9 +242,9 @@ export interface ExpenseData {
   fill: string;
 }
 
-export function useFinanceChartData(refMonth?: MonthKey | null): QueryResult<FinanceChartData[]> {
+export function useFinanceChartData(refMonth?: MonthKey | null, monthsBack = 6): QueryResult<FinanceChartData[]> {
   return useSupabaseQuery<FinanceChartData[]>({
-    queryFn: () => supabase.rpc('get_revenue_by_month', periodArgs({ months_back: 6 }, refMonth)),
+    queryFn: () => supabase.rpc('get_revenue_by_month', periodArgs({ months_back: monthsBack }, refMonth)),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
         mes: String(r.mes),
@@ -439,71 +439,13 @@ export function useSatisfactionData(refMonth?: MonthKey | null): QueryResult<Sat
 // ============================================================================
 // FINANCE — listagens brutas (para CRUD de lançamentos)
 // ============================================================================
-
-export interface ReceitaRaw {
-  id: string;
-  mes: string; // ISO date
-  receita: number;
-  despesa: number;
-  lucro: number;
-}
-
-export interface FluxoRaw {
-  id: string;
-  semana: string; // ISO date
-  entradas: number;
-  saidas: number;
-}
-
-export interface DespesaRaw {
-  id: string;
-  categoria: string;
-  valor: number;
-  mes: string; // ISO date
-}
-
-export function useReceitasRawData(): QueryResult<ReceitaRaw[]> {
-  return useSupabaseQuery<ReceitaRaw[]>({
-    queryFn: () => supabase.from('receitas').select('*').order('mes', { ascending: false }),
-    transform: (rows) =>
-      ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
-        id: String(r.id),
-        mes: String(r.mes),
-        receita: toNumber(r.receita),
-        despesa: toNumber(r.despesa),
-        lucro: toNumber(r.lucro),
-      })),
-    empty: [],
-    mockKey: 'MOCK_FINANCE_CHART',
-  });
-}
-
-export function useFluxoRawData(): QueryResult<FluxoRaw[]> {
-  return useSupabaseQuery<FluxoRaw[]>({
-    queryFn: () => supabase.from('fluxo_caixa').select('*').order('semana', { ascending: false }),
-    transform: (rows) =>
-      ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
-        id: String(r.id),
-        semana: String(r.semana),
-        entradas: toNumber(r.entradas),
-        saidas: toNumber(r.saidas),
-      })),
-    empty: [],
-    mockKey: 'MOCK_CASH_FLOW',
-  });
-}
-
-export function useDespesasRawData(): QueryResult<DespesaRaw[]> {
-  return useSupabaseQuery<DespesaRaw[]>({
-    queryFn: () => supabase.from('despesas').select('*').order('mes', { ascending: false }),
-    transform: (rows) =>
-      ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
-        id: String(r.id),
-        categoria: String(r.categoria),
-        valor: toNumber(r.valor),
-        mes: String(r.mes),
-      })),
-    empty: [],
-    mockKey: 'MOCK_EXPENSES',
-  });
-}
+//
+// useReceitasRawData/useFluxoRawData/useDespesasRawData foram removidos: eram
+// `supabase.from('receitas'/'despesas').select('*').order('mes', ...)`, mas
+// essas tabelas não têm coluna `mes` (têm `data_receita`/`data_despesa`) —
+// resíduo do schema anterior, quebrado desde o pivô para o schema de software
+// house. Só useReceitasRawData estava em uso (FinancePage.tsx, KPIs do topo);
+// foi substituído por uma segunda chamada a useFinanceChartData (RPC
+// get_revenue_by_month, já corrigida — ver migration_fix_finance_rpcs.sql),
+// que devolve exatamente {mes, receita, despesa, lucro} por mês, com
+// months_back configurável para cobrir "Todo o período".

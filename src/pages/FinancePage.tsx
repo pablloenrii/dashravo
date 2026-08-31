@@ -10,7 +10,7 @@ import { ChartTooltip } from '@/components/ChartTooltip';
 import { ChartCard } from '@/components/ChartCard';
 import { QueryError, QueryLoading } from '@/components/QueryState';
 import { MetricCard } from '@/components/MetricCard';
-import { useFinanceChartData, useCashFlowData, useExpensesData, useReceitasRawData } from '@/hooks/usePagesQueries';
+import { useFinanceChartData, useCashFlowData, useExpensesData } from '@/hooks/usePagesQueries';
 import { usePeriod, prevMonthKey, monthLabel, toMonthKey } from '@/contexts/PeriodContext';
 import { fmtK, fmtMoney, pctChange } from '@/utils/format';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
@@ -22,7 +22,12 @@ export default function FinancePage() {
   const finance = useFinanceChartData(month);
   const cashFlow = useCashFlowData(month);
   const expenses = useExpensesData(month);
-  const receitas = useReceitasRawData();
+  // Janela ampla (5 anos) pra cobrir "Todo o período" e a comparação mês
+  // anterior — mesma RPC do gráfico de 6 meses (get_revenue_by_month), só
+  // com months_back maior. Substitui a antiga useReceitasRawData, que
+  // fazia `receitas.select('*').order('mes')` direto na tabela — coluna
+  // que não existe (é `data_receita`); ver migration_fix_finance_rpcs.sql.
+  const receitas = useFinanceChartData(month, 60);
 
   // KPIs do mês selecionado (dados brutos preservam o mês/ano exato)
   const somaMes = useMemo(() => {

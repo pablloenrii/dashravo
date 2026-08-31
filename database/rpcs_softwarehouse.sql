@@ -55,14 +55,14 @@ BEGIN
   v_custo := public.fn_custo_direto(ref_month);
 
   SELECT COALESCE(SUM(d.valor), 0) INTO v_despesa
-  FROM public.despesas d
+  FROM public.despesas_operacionais d
   WHERE date_trunc('month', d.competencia) = date_trunc('month', ref_month);
 
   -- Burn médio dos últimos 3 meses: base mais estável que o mês corrente
   -- para projetar quanto tempo o caixa aguenta.
   SELECT COALESCE(AVG(total), 0) INTO v_burn FROM (
     SELECT date_trunc('month', d.competencia) AS m, SUM(d.valor) AS total
-    FROM public.despesas d
+    FROM public.despesas_operacionais d
     WHERE d.competencia >= (date_trunc('month', ref_month) - INTERVAL '3 months')
       AND d.competencia <  (date_trunc('month', ref_month) + INTERVAL '1 month')
     GROUP BY 1

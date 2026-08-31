@@ -1,11 +1,11 @@
 # Aplicar o modelo de software house
 
-Três arquivos, nesta ordem. Todos já testados contra PostgreSQL 16.
+Quatro arquivos, nesta ordem. Todos já testados contra PostgreSQL 16.
 
 ## 1. Enviar para a VPS
 
 ```powershell
-scp database/schema_softwarehouse.sql database/rpcs_softwarehouse.sql database/seed_softwarehouse.sql root@89.117.32.203:/tmp/
+scp database/schema_softwarehouse.sql database/rpcs_softwarehouse.sql database/seed_softwarehouse.sql database/migration_crm_bridge.sql root@89.117.32.203:/tmp/
 ```
 
 ## 2. Aplicar (na VPS)
@@ -13,12 +13,18 @@ scp database/schema_softwarehouse.sql database/rpcs_softwarehouse.sql database/s
 ```bash
 psql -U ravo_user -d ravo_db -h localhost -f /tmp/schema_softwarehouse.sql
 psql -U ravo_user -d ravo_db -h localhost -f /tmp/rpcs_softwarehouse.sql
-psql -U ravo_user -d ravo_db -h localhost -f /tmp/seed_softwarehouse.sql   # opcional: dados de demonstração
+psql -U ravo_user -d ravo_db -h localhost -f /tmp/seed_softwarehouse.sql        # opcional: dados de demonstração
+psql -U ravo_user -d ravo_db -h localhost -f /tmp/migration_crm_bridge.sql     # ponte CRM → contrato real
 ```
 
 Esperado: sequência de `CREATE TABLE` / `CREATE FUNCTION` e um `COMMIT` ao final de cada arquivo,
 sem nenhuma linha `ERROR`. Os `NOTICE: function ... does not exist, skipping` são normais
 na primeira aplicação — é o `DROP FUNCTION IF EXISTS` fazendo seu trabalho.
+
+`migration_crm_bridge.sql` precisa rodar **depois** de `schema_softwarehouse.sql` — ela adiciona
+as colunas `tipo_receita` e `contrato_id` em `contatos` (schema antigo, tabela do CRM) e a segunda
+referencia `contratos.id` (schema novo). É essa ponte que faz "Ganho" no CRM virar contrato de
+verdade, em vez de só gravar nas tabelas antigas que o Dashboard não lê.
 
 ## 3. Recarregar o schema no PostgREST
 
@@ -61,5 +67,17 @@ ufw deny 8080/tcp
 ## O schema antigo
 
 `schema.sql` e `seed.sql` são do modelo anterior (SaaS puro: contatos, subscriptions,
-tickets). As tabelas coexistem sem conflito — nenhum nome colide. Quando o CRM e as
-demais páginas migrarem para o modelo novo, elas podem ser removidas.
+tickets). As tabelas coexistem sem conflito — nenhum nome colide. As páginas Financeiro,
+Metas e CS ainda leem desse modelo antigo e por enquanto não recebem os contratos criados
+pelo CRM — só o Dashboard executivo (Resultado/Previsibilidade/Carteira) lê o que entra
+por `migration_crm_bridge.sql`. Quando essas páginas migrarem para o modelo novo, o schema
+antigo pode ser removido.
+
+## Limite conhecido: Pipeline ponderado e Saúde comercial do Dashboard
+
+O CRM roda sobre a tabela `contatos` (schema antigo). As RPCs `rpc_pipeline` e
+`rpc_saude_comercial` do Dashboard leem de `oportunidades` (schema novo) — uma tabela
+diferente, ainda não alimentada pelo CRM. Por isso esses dois painéis do Dashboard
+continuam mostrando os dados de exemplo do seed até essa unificação ser feita (fase 2,
+ainda não construída). Forecast, Receita fechada, Win rate e Ciclo de venda do próprio
+CRM já são calculados direto de `contatos` e estão corretos hoje.

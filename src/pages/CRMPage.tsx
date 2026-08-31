@@ -19,7 +19,6 @@ import { QueryError, QueryLoading } from '@/components/QueryState';
 import { MetricCard } from '@/components/MetricCard';
 import { SectionLabel, HeroStat, Panel, heroGrid, panelGrid } from '@/components/SectionKit';
 import { sb as supabase } from '@/services/supabase';
-import { getSession } from '@/services/auth';
 import { useContactsData, ContactData } from '@/hooks/usePagesQueries';
 import { usePeriod, prevMonthKey, monthLabel } from '@/contexts/PeriodContext';
 import { fmtMoney, pctChange } from '@/utils/format';
@@ -33,15 +32,27 @@ import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 const ORIGENS = ['Indicação', 'Inbound', 'Outbound', 'Evento', 'Site', 'Outro'];
 
+/** Tipo de receita do contrato criado ao marcar um deal como Ganho — mesmo
+ *  vocabulário de `contratos.tipo` no schema de software house. */
+const TIPO_RECEITA_OPTIONS: { value: string; label: string }[] = [
+  { value: 'retainer', label: 'Retainer mensal (recorrente)' },
+  { value: 'licenca', label: 'Licença de SaaS (recorrente)' },
+  { value: 'projeto', label: 'Projeto — escopo fechado' },
+  { value: 'hora', label: 'Hora / alocação' },
+];
+const PRECO_FIELD: Record<string, 'valor_mensal' | 'valor_total' | 'valor_hora'> = {
+  retainer: 'valor_mensal', licenca: 'valor_mensal', projeto: 'valor_total', hora: 'valor_hora',
+};
+
 const initials = (nome: string) =>
   nome.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 const fmtDate = (iso: string) => { const d = new Date(iso); return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`; };
 
 interface ContactForm {
   nome: string; empresa: string; email: string; telefone: string; valor: number; etapa: string;
-  origem: string; dataPrevista: string; motivo: string;
+  origem: string; dataPrevista: string; motivo: string; tipoReceita: string;
 }
-const EMPTY_FORM: ContactForm = { nome: '', empresa: '', email: '', telefone: '', valor: 0, etapa: 'Novo Lead', origem: '', dataPrevista: '', motivo: '' };
+const EMPTY_FORM: ContactForm = { nome: '', empresa: '', email: '', telefone: '', valor: 0, etapa: 'Novo Lead', origem: '', dataPrevista: '', motivo: '', tipoReceita: '' };
 
 export default function CRMPage() {
   const contacts = useContactsData();
@@ -92,7 +103,7 @@ export default function CRMPage() {
 
   const handleOpenModal = (c?: ContactData) => {
     if (c) {
-      setFormData({ nome: c.nome, empresa: c.empresa, email: c.email, telefone: c.telefone ?? '', valor: c.valor, etapa: c.etapa, origem: c.origem ?? '', dataPrevista: c.data_prevista ?? '', motivo: c.motivo ?? '' });
+      setFormData({ nome: c.nome, empresa: c.empresa, email: c.email, telefone: c.telefone ?? '', valor: c.valor, etapa: c.etapa, origem: c.origem ?? '', dataPrevista: c.data_prevista ?? '', motivo: c.motivo ?? '', tipoReceita: c.tipo_receita ?? '' });
       setEditingId(c.id);
     } else {
       setFormData(EMPTY_FORM); setEditingId(null);
@@ -100,64 +111,82 @@ export default function CRMPage() {
     setShowModal(true);
   };
 
-  const integrateWonDeal = async (deal: { id: string; nome: string; email: string; empresa: string; telefone?: string; valor: number }) => {
+  /**
+   * Cria/atualiza o contrato real no schema de software house quando um deal é
+   * marcado como Ganho — é essa ponte que faz o Dashboard executivo (Resultado,
+   * Previsibilidade, Carteira) refletir vendas fechadas no CRM. Sem `tipoReceita`
+   * não há como decidir o campo de preço certo (mensal/total/hora), então a
+   * integração é recusada com um aviso em vez de adivinhar.
+   */
+  const integrateWonDeal = async (deal: {
+    id: string; nome: string; empresa: string; origem?: string;
+    valor: number; tipoReceita?: string; contratoId?: number | null;
+  }) => {
     try {
-      const localSession = getSession();
-      const userData = { user: localSession ? { id: localSession.email } : null };
-      const userId = userData?.user?.id;
-      if (!userId || !deal.email) return;
+      if (!deal.tipoReceita) {
+        toastError('Lead marcado como Ganho, mas sem "Tipo de receita" — não integrado ao Dashboard. Edite o lead pra corrigir.');
+        return;
+      }
+      const precoField = PRECO_FIELD[deal.tipoReceita];
+      if (!precoField) return;
 
-      let customerId: string | undefined;
-      const { data: existingCustomer } = await supabase
-        .from('customers').select('id').eq('user_id', userId).eq('email', deal.email).maybeSingle();
+      let contratoId = deal.contratoId ?? null;
 
-      if (existingCustomer) {
-        customerId = existingCustomer.id;
+      if (contratoId) {
+        const { error } = await supabase.from('contratos')
+          .update({ [precoField]: deal.valor, tipo: deal.tipoReceita, status: 'ativo' })
+          .eq('id', contratoId);
+        if (error) { toastError(`Lead salvo, mas não atualizou o contrato: ${error.message}`); return; }
       } else {
-        const { data: createdCustomer, error: custError } = await supabase
-          .from('customers')
+        const clienteNome = (deal.empresa || deal.nome).trim();
+        let clienteId: number | undefined;
+        const { data: existingCliente } = await supabase
+          .from('clientes').select('id').ilike('nome', clienteNome).maybeSingle();
+
+        if (existingCliente) {
+          clienteId = existingCliente.id;
+        } else {
+          const { data: createdCliente, error: clienteError } = await supabase
+            .from('clientes')
+            .insert([{
+              nome: clienteNome, origem: deal.origem || null, status: 'ativo',
+              cliente_desde: new Date().toISOString().slice(0, 10),
+            }])
+            .select('id').single();
+          if (clienteError) { toastError(`Lead salvo, mas não integrou ao Dashboard: ${clienteError.message}`); return; }
+          clienteId = createdCliente?.id;
+        }
+        if (!clienteId) return;
+
+        const { data: createdContrato, error: contratoError } = await supabase
+          .from('contratos')
           .insert([{
-            name: deal.nome, email: deal.email, phone: deal.telefone || null,
-            company: deal.empresa || null, status: 'active', user_id: userId, source: 'crm',
+            cliente_id: clienteId, nome: deal.nome, tipo: deal.tipoReceita,
+            [precoField]: deal.valor, data_inicio: new Date().toISOString().slice(0, 10),
+            status: 'ativo',
           }])
           .select('id').single();
-        if (custError) { toastError(`Lead salvo, mas não integrou ao Dashboard: ${custError.message}`); return; }
-        customerId = createdCustomer?.id;
-      }
-      if (customerId) {
-        const { data: existingSub } = await supabase
-          .from('subscriptions').select('id').eq('customer_id', customerId).eq('status', 'active').maybeSingle();
+        if (contratoError) { toastError(`Lead salvo, mas não integrou ao Dashboard: ${contratoError.message}`); return; }
+        contratoId = createdContrato?.id ?? null;
 
-        const { error: subError } = existingSub
-          ? await supabase.from('subscriptions').update({ mrr: deal.valor }).eq('id', existingSub.id)
-          : await supabase.from('subscriptions').insert([{ customer_id: customerId, mrr: deal.valor, status: 'active' }]);
-        if (subError) toastError(`Lead salvo, mas não integrou ao Dashboard: ${subError.message}`);
+        const { error: linkError } = await supabase.from('contatos').update({ contrato_id: contratoId }).eq('id', deal.id);
+        if (linkError) { toastError(`Contrato criado, mas não vinculado ao lead: ${linkError.message}`); return; }
       }
 
-      const { data: contatoRow } = await supabase
-        .from('contatos').select('receita_integrada').eq('id', deal.id).maybeSingle();
-      const jaIntegrado = Number(contatoRow?.receita_integrada ?? 0);
-      const delta = deal.valor - jaIntegrado;
-      if (delta !== 0) {
-        const now = new Date();
-        const mesISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-        const { data: existingReceita } = await supabase
-          .from('receitas').select('id, receita, despesa').eq('user_id', userId).eq('mes', mesISO).maybeSingle();
+      // Reconhece a receita no mês corrente via fatura — sem isso, o contrato existe
+      // mas nada aparece em Resultado/Receita reconhecida no Dashboard.
+      const mesISO = `${new Date().toISOString().slice(0, 7)}-01`;
+      const { data: existingFatura } = await supabase
+        .from('faturas').select('id').eq('contrato_id', contratoId).eq('competencia', mesISO).maybeSingle();
 
-        const { error: receitaError } = existingReceita
-          ? await supabase.from('receitas').update({
-              receita: Number(existingReceita.receita) + delta,
-              lucro: Number(existingReceita.receita) + delta - Number(existingReceita.despesa),
-            }).eq('id', existingReceita.id)
-          : await supabase.from('receitas').insert([{ user_id: userId, mes: mesISO, receita: delta, despesa: 0, lucro: delta }]);
+      const { error: faturaError } = existingFatura
+        ? await supabase.from('faturas').update({ valor: deal.valor }).eq('id', existingFatura.id)
+        : await supabase.from('faturas').insert([{ contrato_id: contratoId, competencia: mesISO, valor: deal.valor, status: 'emitida' }]);
 
-        if (receitaError) {
-          toastError(`Lead salvo, mas não integrou ao Financeiro: ${receitaError.message}`);
-        } else {
-          await supabase.from('contatos').update({ receita_integrada: deal.valor }).eq('id', deal.id);
-          toastSuccess('Lead integrado ao Dashboard e Financeiro');
-        }
-      }
+      if (faturaError) { toastError(`Contrato criado, mas a fatura do mês não foi registrada: ${faturaError.message}`); return; }
+
+      toastSuccess('Lead integrado ao Dashboard — contrato e fatura criados');
+      contacts.refetch();
     } catch (err) {
       toastError(`Lead salvo, mas não integrou ao Dashboard: ${err instanceof Error ? err.message : 'erro desconhecido'}`);
     }
@@ -165,11 +194,16 @@ export default function CRMPage() {
 
   const handleSave = async () => {
     if (!formData.nome || !formData.email) { toastError('Nome e email são obrigatórios.'); return; }
+    if (formData.etapa === 'Ganho' && !formData.tipoReceita) {
+      toastError('Escolha o "Tipo de receita" para integrar esse lead ao Dashboard.');
+      return;
+    }
     setSaving(true);
     const payload = {
       nome: formData.nome, empresa: formData.empresa || null, email: formData.email,
       telefone: formData.telefone || null, valor: formData.valor, etapa: formData.etapa,
       origem: formData.origem || null, data_prevista: formData.dataPrevista || null, motivo: formData.motivo || null,
+      tipo_receita: formData.tipoReceita || null,
       updated_at: new Date().toISOString(),
     };
     const { data: saved, error } = editingId
@@ -181,7 +215,11 @@ export default function CRMPage() {
     toastSuccess(editingId ? 'Lead atualizado com sucesso' : 'Lead criado com sucesso');
     contacts.refetch();
     if (formData.etapa === 'Ganho' && saved?.id) {
-      await integrateWonDeal({ id: saved.id, ...formData });
+      const existente = editingId ? items.find((c) => c.id === editingId) : undefined;
+      await integrateWonDeal({
+        id: saved.id, nome: formData.nome, empresa: formData.empresa, origem: formData.origem,
+        valor: formData.valor, tipoReceita: formData.tipoReceita, contratoId: existente?.contrato_id ?? null,
+      });
     }
     useRevalidateStore.getState().invalidate();
   };
@@ -205,9 +243,29 @@ export default function CRMPage() {
     if (error) { setItems(prev); toastError(error.message); return; }
     toastSuccess(`Lead movido para ${etapa}`);
     if (etapa === 'Ganho') {
-      await integrateWonDeal(current);
+      await integrateWonDeal({
+        id: current.id, nome: current.nome, empresa: current.empresa, origem: current.origem,
+        valor: current.valor, tipoReceita: current.tipo_receita, contratoId: current.contrato_id ?? null,
+      });
     }
     useRevalidateStore.getState().invalidate();
+  };
+
+  /**
+   * Gate antes de mover pra Ganho: sem tipo de receita não dá pra criar o
+   * contrato certo. Em vez de mover silenciosamente sem integrar, abre a
+   * ficha do lead já em "Ganho" pedindo pra escolher o tipo primeiro —
+   * mesmo padrão de "campo obrigatório na troca de fase" do Pipedrive.
+   */
+  const attemptMoveTo = (id: string, etapa: string) => {
+    const current = items.find((c) => c.id === id);
+    if (etapa === 'Ganho' && current && current.etapa !== 'Ganho' && !current.tipo_receita) {
+      toastError('Escolha o "Tipo de receita" antes de marcar como Ganho — é o que integra esse deal ao Dashboard.');
+      handleOpenModal(current);
+      setFormData((f) => ({ ...f, etapa: 'Ganho' }));
+      return;
+    }
+    void moveTo(id, etapa);
   };
 
   const m = useMemo(() => computeCrmMetrics(items, month), [items, month]);
@@ -476,7 +534,7 @@ export default function CRMPage() {
                 key={stage.key}
                 onDragOver={(e) => { e.preventDefault(); setOverCol(stage.key); }}
                 onDragLeave={() => setOverCol((p) => (p === stage.key ? null : p))}
-                onDrop={() => { if (dragId) moveTo(dragId, stage.key); setDragId(null); setOverCol(null); }}
+                onDrop={() => { if (dragId) attemptMoveTo(dragId, stage.key); setDragId(null); setOverCol(null); }}
                 style={{
                   flex: '0 0 250px', minWidth: '250px',
                   background: overCol === stage.key ? surface.hover : surface.card,
@@ -633,6 +691,18 @@ export default function CRMPage() {
             <label style={lbl}>Data prevista de fechamento</label>
             <input type="date" style={fld} value={formData.dataPrevista} onChange={(e) => setFormData({ ...formData, dataPrevista: e.target.value })} />
           </div>
+          {formData.etapa === 'Ganho' && (
+            <div>
+              <label style={lbl}>Tipo de receita *</label>
+              <select style={fld} value={formData.tipoReceita} onChange={(e) => setFormData({ ...formData, tipoReceita: e.target.value })}>
+                <option value="">Selecione…</option>
+                {TIPO_RECEITA_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <div style={{ fontSize: '11px', color: text.faint, marginTop: '4px' }}>
+                Cria o contrato real no Dashboard — retainer/licença viram receita recorrente, projeto/hora entram como faturamento fechado.
+              </div>
+            </div>
+          )}
           {(formData.etapa === 'Ganho' || formData.etapa === 'Perdido') && (
             <div>
               <label style={lbl}>Motivo {formData.etapa === 'Ganho' ? 'do ganho' : 'da perda'}</label>
@@ -653,7 +723,7 @@ export default function CRMPage() {
             return (
               <button
                 key={s.key}
-                onClick={() => { if (moveFor) moveTo(moveFor.id, s.key); setMoveFor(null); }}
+                onClick={() => { if (moveFor) attemptMoveTo(moveFor.id, s.key); setMoveFor(null); }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '10px', padding: '12px',
                   borderRadius: '8px', cursor: 'pointer', textAlign: 'left',

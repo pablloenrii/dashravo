@@ -9,7 +9,7 @@
 BEGIN;
 
 TRUNCATE public.apontamentos, public.faturas, public.projetos, public.contratos,
-         public.oportunidades, public.despesas, public.clientes, public.pessoas
+         public.oportunidades, public.despesas_operacionais, public.clientes, public.pessoas
          RESTART IDENTITY CASCADE;
 
 -- ---------------------------------------------------------------------------
@@ -148,7 +148,7 @@ FROM generate_series(0, 55) g;
 -- ---------------------------------------------------------------------------
 -- Despesas
 -- ---------------------------------------------------------------------------
-INSERT INTO public.despesas (descricao, categoria, valor, competencia, recorrente)
+INSERT INTO public.despesas_operacionais (descricao, categoria, valor, competencia, recorrente)
 SELECT d.descricao, d.categoria, d.valor,
        (date_trunc('month', CURRENT_DATE) - (g || ' months')::INTERVAL)::DATE, TRUE
 FROM (VALUES

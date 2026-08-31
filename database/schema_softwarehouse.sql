@@ -138,9 +138,14 @@ CREATE INDEX IF NOT EXISTS idx_faturas_comp     ON public.faturas(competencia);
 CREATE INDEX IF NOT EXISTS idx_faturas_contrato ON public.faturas(contrato_id);
 
 -- ============================================================================
--- 7. DESPESAS — custo que não é hora de gente alocada
+-- 7. DESPESAS OPERACIONAIS — custo que não é hora de gente alocada
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS public.despesas (
+-- Nome `despesas_operacionais`, não `despesas`: o schema antigo (schema.sql,
+-- ainda em uso por Financeiro/Metas/CS) já tem uma tabela `despesas` própria
+-- (colunas diferentes: user_id, mes em vez de competencia). CREATE TABLE IF
+-- NOT EXISTS teria pulado a criação desta e deixado a antiga no lugar —
+-- quebrando todas as RPCs que esperam a coluna `competencia`.
+CREATE TABLE IF NOT EXISTS public.despesas_operacionais (
   id                BIGSERIAL PRIMARY KEY,
   descricao         TEXT NOT NULL,
   categoria         TEXT,                        -- infra, mídia, ferramentas...
@@ -150,7 +155,7 @@ CREATE TABLE IF NOT EXISTS public.despesas (
   criado_em         TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_despesas_comp ON public.despesas(competencia);
+CREATE INDEX IF NOT EXISTS idx_despesas_operacionais_comp ON public.despesas_operacionais(competencia);
 
 -- ============================================================================
 -- 8. OPORTUNIDADES — pipeline comercial

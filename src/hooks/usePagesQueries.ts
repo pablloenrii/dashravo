@@ -41,6 +41,11 @@ export interface ContactData {
   data_prevista?: string;
   created_at?: string;
   updated_at?: string;
+  /** Tipo de receita (retainer/projeto/hora/licenca) — usado ao marcar "Ganho" para
+   *  criar o contrato correspondente no schema de software house. */
+  tipo_receita?: string;
+  /** Id do contrato já criado no schema de software house, se este deal já foi ganho. */
+  contrato_id?: number | null;
 }
 
 export interface ContactChartData {
@@ -68,6 +73,8 @@ interface RawContact {
   data_prevista: string | null;
   created_at?: string;
   updated_at?: string;
+  tipo_receita?: string | null;
+  contrato_id?: number | string | null;
 }
 
 export function useContactsData(): QueryResult<ContactData[]> {
@@ -88,6 +95,8 @@ export function useContactsData(): QueryResult<ContactData[]> {
         data_prevista: r.data_prevista ?? undefined,
         created_at: r.created_at,
         updated_at: r.updated_at,
+        tipo_receita: r.tipo_receita ?? undefined,
+        contrato_id: r.contrato_id === null || r.contrato_id === undefined ? null : Number(r.contrato_id),
       })),
     empty: [],
     mockKey: 'MOCK_CONTATOS',

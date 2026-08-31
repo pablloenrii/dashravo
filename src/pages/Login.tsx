@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { signIn, DEMO_MODE } from '@/services/auth';
+import { signIn } from '@/services/auth';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 export default function LoginPage() {
@@ -16,7 +16,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      signIn(email, password);
+      await signIn(email, password);
       window.location.href = '/';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao fazer login');
@@ -59,17 +59,6 @@ export default function LoginPage() {
             <div style={{ fontSize: '12px', color: text.secondary }}>Central de Operações Estratégicas</div>
           </div>
         </div>
-
-        {DEMO_MODE && (
-          <div style={{
-            marginBottom: '16px', padding: '10px 12px', fontSize: '12px', color: text.secondary,
-            background: surface.elevated, border: `1px solid ${surface.borderStrong}`, borderRadius: '10px',
-            lineHeight: 1.5,
-          }}>
-            <strong style={{ color: text.primary }}>Modo demonstração</strong> — dados de exemplo, API real ainda não configurada.
-            <br />Login: <code style={{ color: chart.light }}>demo@ravo.company</code> · Senha: <code style={{ color: chart.light }}>ravo-demo-2026</code>
-          </div>
-        )}
 
         {error && (
           <div style={{

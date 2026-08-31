@@ -14,7 +14,9 @@ vi.mock('@/services/supabase', () => ({
       getSession: vi.fn(),
       onAuthStateChange: vi.fn(),
     },
+    rpc: vi.fn(),
   },
+  setAuthToken: vi.fn(),
 }));
 
 const mockedSb = {

@@ -1,48 +1,37 @@
 /**
- * RAVO OS — Sessão local (single-user)
+ * RAVO OS — Sessão multi-usuário
  *
- * O backend é PostgreSQL + PostgREST self-hosted, que NÃO expõe o GoTrue
- * (serviço de auth do Supabase Cloud). Portanto `supabase.auth.*` nunca
- * retorna sessão e travaria o app no /login permanentemente.
+ * Login validado no servidor: o email/senha são conferidos contra a tabela
+ * `usuarios` (hash bcrypt via pgcrypto) por um RPC (`login`) no próprio
+ * PostgREST, que devolve um JWT assinado com o mesmo `jwt-secret` do
+ * PostgREST — por isso o token já é aceito por todas as rotas existentes.
  *
- * Como o RAVO OS é operado por um único usuário (visão de dono), a sessão é
- * resolvida no cliente contra credenciais definidas em variáveis de ambiente.
+ * Nenhuma senha trafega ou fica guardada em texto puro no cliente: a senha
+ * digitada só é usada na chamada de login e descartada em seguida; o que
+ * fica salvo localmente é o JWT (curto prazo, expira em 12h).
  *
- * LIMITE DE SEGURANÇA — leia antes de expor publicamente:
- * Este gate impede acesso casual à interface, mas NÃO protege os dados: quem
- * souber a URL do PostgREST consulta a API diretamente. A proteção real dos
- * dados precisa vir de JWT no PostgREST + RLS no PostgreSQL. Enquanto isso não
- * existir, mantenha a porta 8080 restrita por firewall ao seu IP.
+ * Ver database/migration_usuarios.sql para a tabela/RPC, e como cadastrar,
+ * trocar senha ou desativar um usuário.
  */
 
+import { sb, setAuthToken } from './supabase';
+
 const SESSION_KEY = 'ravo.session';
-const SESSION_TTL_MS = 1000 * 60 * 60 * 12; // 12h
+const SESSION_TTL_MS = 1000 * 60 * 60 * 12; // 12h (deve bater com o `exp` emitido pelo RPC login)
 
 export interface LocalSession {
   email: string;
+  nome: string;
+  token: string;
   issuedAt: number;
   expiresAt: number;
 }
 
-/**
- * Modo demo: quando VITE_POSTGREST_URL nao esta configurada no ambiente de
- * build (ver vite.config.ts), o app roda com dados de exemplo. Nesse caso,
- * sem VITE_AUTH_EMAIL/PASSWORD tambem configuradas, ninguem conseguiria
- * logar -- entao caimos numa credencial demo fixa, exibida na propria tela
- * de login (Login.tsx). NAO protege nada sensivel: e so a porta de entrada
- * da demonstracao com dados fake.
- *
- * Assim que voce configurar VITE_POSTGREST_URL, VITE_AUTH_EMAIL e
- * VITE_AUTH_PASSWORD reais no ambiente de build, esse fallback e ignorado
- * e as credenciais reais passam a valer.
- */
-export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
-const DEMO_EMAIL = 'demo@ravo.company';
-const DEMO_PASSWORD = 'ravo-demo-2026';
-
-/** Credenciais aceitas, vindas do ambiente de build (ou demo, ver acima). */
-const ALLOWED_EMAIL = import.meta.env.VITE_AUTH_EMAIL || (DEMO_MODE ? DEMO_EMAIL : '');
-const ALLOWED_PASSWORD = import.meta.env.VITE_AUTH_PASSWORD || (DEMO_MODE ? DEMO_PASSWORD : '');
+interface LoginRpcResponse {
+  token: string;
+  email: string;
+  nome: string;
+}
 
 /** Lê a sessão persistida, descartando-a se expirada ou corrompida. */
 export function getSession(): LocalSession | null {
@@ -51,7 +40,11 @@ export function getSession(): LocalSession | null {
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as LocalSession;
-    if (typeof parsed?.expiresAt !== 'number' || Date.now() > parsed.expiresAt) {
+    if (
+      typeof parsed?.expiresAt !== 'number' ||
+      typeof parsed?.token !== 'string' ||
+      Date.now() > parsed.expiresAt
+    ) {
       localStorage.removeItem(SESSION_KEY);
       return null;
     }
@@ -63,31 +56,31 @@ export function getSession(): LocalSession | null {
 }
 
 /**
- * Valida credenciais e abre sessão.
+ * Valida credenciais no servidor (RPC `login`) e abre sessão.
  * Lança Error com mensagem exibível ao usuário quando falha.
  */
-export function signIn(email: string, password: string): LocalSession {
-  if (!ALLOWED_EMAIL || !ALLOWED_PASSWORD) {
-    throw new Error(
-      'Credenciais não configuradas. Defina VITE_AUTH_EMAIL e VITE_AUTH_PASSWORD no .env.local.'
-    );
-  }
+export async function signIn(email: string, password: string): Promise<LocalSession> {
+  const { data, error } = await sb.rpc('login', {
+    email: email.trim().toLowerCase(),
+    senha: password,
+  });
 
-  const emailOk = email.trim().toLowerCase() === ALLOWED_EMAIL.trim().toLowerCase();
-  const passwordOk = password === ALLOWED_PASSWORD;
-
-  if (!emailOk || !passwordOk) {
+  if (error || !data) {
     throw new Error('Email ou senha incorretos.');
   }
 
+  const result = data as LoginRpcResponse;
   const now = Date.now();
   const session: LocalSession = {
-    email: ALLOWED_EMAIL,
+    email: result.email,
+    nome: result.nome,
+    token: result.token,
     issuedAt: now,
     expiresAt: now + SESSION_TTL_MS,
   };
 
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  setAuthToken(session.token);
   notify(session);
   return session;
 }
@@ -95,6 +88,7 @@ export function signIn(email: string, password: string): LocalSession {
 /** Encerra a sessão. */
 export function signOut(): void {
   localStorage.removeItem(SESSION_KEY);
+  setAuthToken(null);
   notify(null);
 }
 
@@ -113,9 +107,12 @@ function notify(session: LocalSession | null) {
 export function onSessionChange(fn: Listener): () => void {
   listeners.add(fn);
 
-  // Sincroniza logout/login feitos em outra aba.
+  // Sincroniza logout/login feitos em outra aba (inclusive o header Authorization).
   const onStorage = (e: StorageEvent) => {
-    if (e.key === SESSION_KEY) fn(getSession());
+    if (e.key !== SESSION_KEY) return;
+    const session = getSession();
+    setAuthToken(session?.token ?? null);
+    fn(session);
   };
   window.addEventListener('storage', onStorage);
 
@@ -124,3 +121,7 @@ export function onSessionChange(fn: Listener): () => void {
     window.removeEventListener('storage', onStorage);
   };
 }
+
+// Ao carregar o módulo (refresh de página com sessão válida), religa o token
+// no cliente PostgREST antes de qualquer query disparar.
+setAuthToken(getSession()?.token ?? null);

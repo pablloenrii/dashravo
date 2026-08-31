@@ -8,7 +8,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Trash2, Edit2, LayoutGrid, List as ListIcon, GripVertical,
   DollarSign, Target, Percent, AlertTriangle, Search, X,
-  Inbox, Filter,
+  Inbox, Filter, CheckSquare, Bookmark, ChevronDown, Save,
 } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { Modal } from '@/components/Modal';
@@ -18,8 +18,9 @@ import { EmptyState } from '@/components/EmptyState';
 import { QueryError, QueryLoading } from '@/components/QueryState';
 import { MetricCard } from '@/components/MetricCard';
 import { SectionLabel, HeroStat, Panel, heroGrid, panelGrid } from '@/components/SectionKit';
+import { LeadDrawer } from '@/components/LeadDrawer';
 import { sb as supabase } from '@/services/supabase';
-import { useContactsData, ContactData } from '@/hooks/usePagesQueries';
+import { useContactsData, ContactData, useFollowUpsData, NextFollowUp } from '@/hooks/usePagesQueries';
 import { usePeriod, prevMonthKey, monthLabel } from '@/contexts/PeriodContext';
 import { fmtMoney, pctChange } from '@/utils/format';
 import { toastSuccess, toastError } from '@/utils/toast';
@@ -31,6 +32,32 @@ import { useRevalidateStore } from '@/store/revalidate.store';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 const ORIGENS = ['Indicação', 'Inbound', 'Outbound', 'Evento', 'Site', 'Outro'];
+
+/** Views salvas do CRM — combinações de busca/filtros nomeadas, persistidas
+ *  localmente (app single-user, não precisa de tabela no banco). */
+const SAVED_VIEWS_KEY = 'ravo_crm_saved_views_v1';
+interface SavedView { id: string; nome: string; searchTerm: string; filterEtapa: string; filterOrigem: string }
+function loadSavedViews(): SavedView[] {
+  try {
+    const raw = localStorage.getItem(SAVED_VIEWS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
+}
+function persistSavedViews(views: SavedView[]) {
+  try { localStorage.setItem(SAVED_VIEWS_KEY, JSON.stringify(views)); } catch { /* localStorage indisponível — ignora */ }
+}
+
+/** Rótulo curto do follow-up mais próximo de um lead: "atrasado", "hoje" ou "em Nd". */
+function followUpLabel(dataPrevista: string): { texto: string; atrasado: boolean } {
+  const hoje = new Date(new Date().toDateString());
+  const alvo = new Date(`${dataPrevista}T00:00:00`);
+  const dias = Math.round((alvo.getTime() - hoje.getTime()) / 86400000);
+  if (dias < 0) return { texto: `atrasado ${Math.abs(dias)}d`, atrasado: true };
+  if (dias === 0) return { texto: 'hoje', atrasado: false };
+  return { texto: `em ${dias}d`, atrasado: false };
+}
 
 /** Tipo de receita do contrato criado ao marcar um deal como Ganho — mesmo
  *  vocabulário de `contratos.tipo` no schema de software house. */
@@ -56,16 +83,33 @@ const EMPTY_FORM: ContactForm = { nome: '', empresa: '', email: '', telefone: ''
 
 export default function CRMPage() {
   const contacts = useContactsData();
+  const followUps = useFollowUpsData();
   const { month, isAllTime, label: periodLabel } = usePeriod();
   const { chart, text, surface, semantic, layout, type } = useThemeTokens();
 
   const [items, setItems] = useState<ContactData[]>([]);
   useEffect(() => { setItems(contacts.data); }, [contacts.data]);
 
+  const followUpMap = useMemo(() => {
+    const map = new Map<string, NextFollowUp>();
+    for (const f of followUps.data) map.set(f.contato_id, f);
+    return map;
+  }, [followUps.data]);
+
   const [view, setView] = useState<'board' | 'list'>('board');
   const [dragId, setDragId] = useState<string | null>(null);
   const [overCol, setOverCol] = useState<string | null>(null);
   const [moveFor, setMoveFor] = useState<ContactData | null>(null);
+
+  // --- Ficha do lead (drawer) ---
+  const [openContact, setOpenContact] = useState<ContactData | null>(null);
+  // Mantém a ficha aberta em sincronia com `items` (ex.: depois de editar pelo modal).
+  useEffect(() => {
+    if (!openContact) return;
+    const fresh = items.find((c) => c.id === openContact.id);
+    if (!fresh) { setOpenContact(null); return; }
+    if (fresh !== openContact) setOpenContact(fresh);
+  }, [items, openContact]);
 
   const isTouch = useMemo(
     () => typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0),
@@ -76,6 +120,34 @@ export default function CRMPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEtapa, setFilterEtapa] = useState('');
   const [filterOrigem, setFilterOrigem] = useState('');
+
+  // --- Views salvas (localStorage) ---
+  const [savedViews, setSavedViews] = useState<SavedView[]>([]);
+  useEffect(() => { setSavedViews(loadSavedViews()); }, []);
+  const [showViewsMenu, setShowViewsMenu] = useState(false);
+  const [showSaveViewModal, setShowSaveViewModal] = useState(false);
+  const [newViewName, setNewViewName] = useState('');
+  const hasActiveFilters = Boolean(searchTerm || filterEtapa || filterOrigem);
+
+  const applyView = (v: SavedView) => {
+    setSearchTerm(v.searchTerm); setFilterEtapa(v.filterEtapa); setFilterOrigem(v.filterOrigem);
+    setShowViewsMenu(false);
+  };
+  const saveCurrentView = () => {
+    if (!newViewName.trim()) { toastError('Dê um nome para a view.'); return; }
+    const view: SavedView = {
+      id: crypto.randomUUID(), nome: newViewName.trim(),
+      searchTerm, filterEtapa, filterOrigem,
+    };
+    const next = [...savedViews, view];
+    setSavedViews(next); persistSavedViews(next);
+    setShowSaveViewModal(false); setNewViewName('');
+    toastSuccess('View salva');
+  };
+  const deleteView = (id: string) => {
+    const next = savedViews.filter((v) => v.id !== id);
+    setSavedViews(next); persistSavedViews(next);
+  };
 
   const itemsFiltrados = useMemo(() => {
     let result = items;
@@ -230,6 +302,7 @@ export default function CRMPage() {
     const { error } = await supabase.from('contatos').delete().eq('id', id);
     if (error) { setItems(prev); toastError(error.message); return; }
     toastSuccess('Lead removido');
+    setOpenContact((cur) => (cur?.id === id ? null : cur));
     useRevalidateStore.getState().invalidate();
   };
 
@@ -520,6 +593,56 @@ export default function CRMPage() {
             {ORIGENS.map((o) => <option key={o} value={o}>{o}</option>)}
           </select>
         </div>
+
+        {/* --- Views salvas --- */}
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowViewsMenu((v) => !v)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 10px', borderRadius: '8px',
+              background: surface.input, border: `1px solid ${surface.borderStrong}`, color: text.bright,
+              fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+            }}
+          >
+            <Bookmark size={13} /> Views {savedViews.length > 0 && <span style={{ color: text.dim }}>({savedViews.length})</span>} <ChevronDown size={12} />
+          </button>
+          {showViewsMenu && (
+            <>
+              <div onClick={() => setShowViewsMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 41, minWidth: '220px',
+                background: surface.elevated, border: `1px solid ${surface.borderStrong}`, borderRadius: '10px',
+                boxShadow: '0 12px 28px rgba(0,0,0,0.35)', padding: '6px', display: 'flex', flexDirection: 'column', gap: '2px',
+              }}>
+                {savedViews.length === 0 ? (
+                  <div style={{ fontSize: '12px', color: text.dim, padding: '10px 8px' }}>Nenhuma view salva ainda.</div>
+                ) : savedViews.map((v) => (
+                  <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <button
+                      onClick={() => applyView(v)}
+                      style={{ flex: 1, textAlign: 'left', padding: '8px 8px', borderRadius: '7px', background: 'transparent', border: 'none', color: text.bright, fontSize: '12.5px', cursor: 'pointer' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = surface.hover)}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      {v.nome}
+                    </button>
+                    <button onClick={() => deleteView(v.id)} aria-label={`Remover view ${v.nome}`} style={{ background: 'transparent', border: 'none', color: text.dim, cursor: 'pointer', padding: '4px', display: 'flex' }}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+                <div style={{ borderTop: `1px solid ${surface.divider}`, marginTop: '4px', paddingTop: '4px' }}>
+                  <button
+                    onClick={() => { if (!hasActiveFilters) { toastError('Ajuste a busca ou os filtros antes de salvar uma view.'); return; } setShowViewsMenu(false); setShowSaveViewModal(true); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', textAlign: 'left', padding: '8px 8px', borderRadius: '7px', background: 'transparent', border: 'none', color: chart.line, fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    <Save size={13} /> Salvar filtros atuais…
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {contacts.loading ? (
@@ -554,15 +677,17 @@ export default function CRMPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minHeight: '80px' }}>
                   {cards.map((c) => {
                     const rot = isOpen(c.etapa) && daysSince(c.updated_at) >= ROT_DAYS;
+                    const fu = followUpMap.get(c.id);
                     return (
                       <div
                         key={c.id}
                         draggable
                         onDragStart={() => setDragId(c.id)}
                         onDragEnd={() => { setDragId(null); setOverCol(null); }}
+                        onClick={() => setOpenContact(c)}
                         style={{
                           background: surface.elevated, border: `1px solid ${rot ? 'rgba(239,68,68,0.35)' : surface.borderStrong}`,
-                          borderRadius: '10px', padding: '10px', cursor: 'grab',
+                          borderRadius: '10px', padding: '10px', cursor: 'pointer',
                           opacity: dragId === c.id ? 0.5 : 1,
                         }}
                       >
@@ -581,15 +706,28 @@ export default function CRMPage() {
                             {rot && <span title={`Parado há ${daysSince(c.updated_at)} dias`} style={{ display: 'flex', color: semantic.danger }}><AlertTriangle size={13} /></span>}
                             <span style={{ fontSize: '10px', color: text.dim }}>{daysSince(c.updated_at)}d</span>
                             {isTouch && (
-                              <button onClick={() => setMoveFor(c)} style={cardBtn} aria-label={`Mover ${c.nome}`} title="Mover para outra fase"><GripVertical size={13} /></button>
+                              <button onClick={(e) => { e.stopPropagation(); setMoveFor(c); }} style={cardBtn} aria-label={`Mover ${c.nome}`} title="Mover para outra fase"><GripVertical size={13} /></button>
                             )}
-                            <button onClick={() => handleOpenModal(c)} style={cardBtn} aria-label={`Editar ${c.nome}`}><Edit2 size={13} /></button>
-                            <button onClick={() => setConfirmDelete(c)} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={13} /></button>
+                            <button onClick={(e) => { e.stopPropagation(); handleOpenModal(c); }} style={cardBtn} aria-label={`Editar ${c.nome}`}><Edit2 size={13} /></button>
+                            <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(c); }} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={13} /></button>
                           </div>
                         </div>
-                        {(c.origem || (isOpen(c.etapa) && c.data_prevista) || (!isOpen(c.etapa) && c.motivo)) && (
+                        {(c.origem || fu || (isOpen(c.etapa) && c.data_prevista) || (!isOpen(c.etapa) && c.motivo)) && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
                             {c.origem && <span style={tag}>{c.origem}</span>}
+                            {fu && (() => {
+                              const { texto, atrasado } = followUpLabel(fu.data_prevista);
+                              return (
+                                <span style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', fontWeight: 600,
+                                  color: atrasado ? semantic.danger : chart.line,
+                                  background: atrasado ? 'rgba(239,68,68,0.1)' : surface.divider,
+                                  padding: '2px 7px', borderRadius: '5px',
+                                }}>
+                                  <CheckSquare size={10} /> {texto}
+                                </span>
+                              );
+                            })()}
                             {isOpen(c.etapa) && c.data_prevista && <span style={{ fontSize: '10px', color: text.tertiary }}>fecha {fmtDate(c.data_prevista)}</span>}
                             {!isOpen(c.etapa) && c.motivo && <span style={{ fontSize: '10px', color: text.tertiary }}>{c.motivo}</span>}
                           </div>
@@ -629,13 +767,17 @@ export default function CRMPage() {
                     <th style={thStyle}>Empresa</th>
                     <th style={{ ...thStyle, textAlign: 'center' }}>Valor</th>
                     <th style={{ ...thStyle, textAlign: 'center' }}>Fase</th>
+                    <th style={{ ...thStyle, textAlign: 'center' }}>Follow-up</th>
                     <th style={{ ...thStyle, textAlign: 'center' }}>Dias</th>
                     <th style={{ ...thStyle, textAlign: 'center' }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {visiveis.map((c) => (
-                    <tr key={c.id} style={{ borderBottom: `1px solid ${surface.divider}` }}
+                  {visiveis.map((c) => {
+                    const fu = followUpMap.get(c.id);
+                    return (
+                    <tr key={c.id} style={{ borderBottom: `1px solid ${surface.divider}`, cursor: 'pointer' }}
+                      onClick={() => setOpenContact(c)}
                       onMouseEnter={(e) => (e.currentTarget.style.background = surface.input)}
                       onMouseLeave={(e) => (e.currentTarget.style.background = '')}>
                       <td style={{ padding: '12px 16px', fontSize: '13px', color: text.bright, fontWeight: 500 }}>
@@ -649,15 +791,24 @@ export default function CRMPage() {
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                         <span style={{ fontSize: '11px', fontWeight: 600, color: STAGE_MAP[c.etapa]?.color ?? text.secondary, background: `${STAGE_MAP[c.etapa]?.color ?? text.secondary}1f`, padding: '3px 10px', borderRadius: '999px' }}>{c.etapa}</span>
                       </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                        {fu ? (() => {
+                          const { texto, atrasado } = followUpLabel(fu.data_prevista);
+                          return (
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: atrasado ? semantic.danger : text.secondary }}>{texto}</span>
+                          );
+                        })() : <span style={{ fontSize: '11px', color: text.dim }}>—</span>}
+                      </td>
                       <td style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', color: daysSince(c.updated_at) >= ROT_DAYS && isOpen(c.etapa) ? semantic.danger : text.secondary }}>{daysSince(c.updated_at)}d</td>
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                          <button onClick={() => handleOpenModal(c)} style={cardBtn} aria-label={`Editar ${c.nome}`}><Edit2 size={16} /></button>
-                          <button onClick={() => setConfirmDelete(c)} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={16} /></button>
+                          <button onClick={(e) => { e.stopPropagation(); handleOpenModal(c); }} style={cardBtn} aria-label={`Editar ${c.nome}`}><Edit2 size={16} /></button>
+                          <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(c); }} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={16} /></button>
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -750,6 +901,40 @@ export default function CRMPage() {
         confirmLabel="Deletar"
         danger
       />
+
+      <Modal isOpen={showSaveViewModal} onClose={() => setShowSaveViewModal(false)} title="Salvar view" size="sm">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <Input
+            label="Nome da view"
+            placeholder="Ex: Negociação — Inbound"
+            value={newViewName}
+            onChange={(e) => setNewViewName(e.target.value)}
+          />
+          <div style={{ fontSize: '11px', color: text.faint }}>
+            Salva a busca e os filtros atuais (
+            {searchTerm && `busca "${searchTerm}"`}
+            {searchTerm && (filterEtapa || filterOrigem) && ' · '}
+            {filterEtapa && `fase ${filterEtapa}`}
+            {filterEtapa && filterOrigem && ' · '}
+            {filterOrigem && `origem ${filterOrigem}`}
+            ).
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Button variant="ghost" onClick={() => setShowSaveViewModal(false)}>Cancelar</Button>
+            <Button onClick={saveCurrentView}>Salvar</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {openContact && (
+        <LeadDrawer
+          contact={openContact}
+          onClose={() => setOpenContact(null)}
+          onEdit={(c) => { setOpenContact(null); handleOpenModal(c); }}
+          onDelete={(c) => setConfirmDelete(c)}
+          onActivityChange={() => followUps.refetch()}
+        />
+      )}
     </div>
   );
 }

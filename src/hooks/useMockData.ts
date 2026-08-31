@@ -15,6 +15,17 @@ export const MOCK_CONTATOS = [
   { id: '4', nome: 'Ana Oliveira', empresa: 'CloudSys', email: 'ana@example.com', telefone: '31 97654-3210', etapa: 'Qualificado', valor: 56000, created_at: '2026-07-07' },
 ];
 
+export const MOCK_ATIVIDADES = [
+  { id: '1', contato_id: '1', tipo: 'nota', descricao: 'Primeiro contato feito por telefone, cliente demonstrou interesse.', data_prevista: null, concluida: true, concluida_em: '2026-07-10', criado_em: '2026-07-10' },
+  { id: '2', contato_id: '1', tipo: 'tarefa', descricao: 'Enviar proposta comercial', data_prevista: '2026-07-15', concluida: false, concluida_em: null, criado_em: '2026-07-11' },
+  { id: '3', contato_id: '2', tipo: 'reuniao', descricao: 'Reunião de diagnóstico agendada', data_prevista: '2026-07-14', concluida: false, concluida_em: null, criado_em: '2026-07-09' },
+];
+
+export const MOCK_FOLLOWUPS = [
+  { contato_id: '1', data_prevista: '2026-07-15' },
+  { contato_id: '2', data_prevista: '2026-07-14' },
+];
+
 export const MOCK_CONTACTS_CHART = [
   { mes: 'Fev', novos: 8, ativos: 23 },
   { mes: 'Mar', novos: 12, ativos: 35 },

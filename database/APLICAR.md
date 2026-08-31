@@ -81,3 +81,43 @@ diferente, ainda não alimentada pelo CRM. Por isso esses dois painéis do Dashb
 continuam mostrando os dados de exemplo do seed até essa unificação ser feita (fase 2,
 ainda não construída). Forecast, Receita fechada, Win rate e Ciclo de venda do próprio
 CRM já são calculados direto de `contatos` e estão corretos hoje.
+
+---
+
+## Aplicar `migration_atividades.sql` (CRM nível Pipedrive — ficha do lead)
+
+Cria a tabela `atividades` (timeline/follow-up por lead), usada pela ficha lateral do
+lead no CRM (nota, ligação, e-mail, reunião, tarefa — com data prevista e badge de
+follow-up nos cards). Validada localmente contra uma réplica exata da `contatos` atual
+da VPS antes de ser aplicada aqui.
+
+### 1. Enviar para a VPS
+
+```powershell
+scp database/migration_atividades.sql root@89.117.32.203:/tmp/
+```
+
+### 2. Aplicar (na VPS)
+
+```bash
+psql -U ravo_user -d ravo_db -h localhost -f /tmp/migration_atividades.sql
+```
+
+Esperado: `BEGIN`, `CREATE TABLE`, dois `CREATE INDEX`, `ALTER TABLE` e `COMMIT`, sem
+nenhuma linha `ERROR`.
+
+### 3. Recarregar o schema no PostgREST
+
+```bash
+systemctl restart postgrest
+curl -s http://127.0.0.1:3001/atividades?limit=1 -H "Authorization: Bearer SEU_JWT"
+```
+
+Esperado: `[]` (tabela vazia, mas acessível).
+
+### 4. Rodar o frontend
+
+Nenhuma variável de ambiente nova é necessária — a ficha do lead usa o mesmo
+`VITE_POSTGREST_URL`/`VITE_POSTGREST_KEY` já configurado. Basta abrir qualquer lead
+no CRM (clique no card ou na linha da lista) para ver a ficha lateral com o formulário
+de atividade e a linha do tempo.

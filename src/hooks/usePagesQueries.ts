@@ -103,6 +103,95 @@ export function useContactsData(): QueryResult<ContactData[]> {
   });
 }
 
+// ----------------------------------------------------------------------------
+// ATIVIDADES — timeline e follow-up da ficha do lead (CRM nível Pipedrive)
+// ----------------------------------------------------------------------------
+
+export type ActivityType = 'nota' | 'ligacao' | 'email' | 'reuniao' | 'tarefa';
+
+export interface ActivityData {
+  id: string;
+  contato_id: string;
+  tipo: ActivityType;
+  descricao: string;
+  data_prevista?: string;
+  concluida: boolean;
+  concluida_em?: string;
+  criado_em: string;
+}
+
+interface RawActivity {
+  id: string | number;
+  contato_id: string | number;
+  tipo: ActivityType;
+  descricao: string;
+  data_prevista: string | null;
+  concluida: boolean;
+  concluida_em: string | null;
+  criado_em: string;
+}
+
+export function transformActivity(r: RawActivity): ActivityData {
+  return {
+    id: String(r.id),
+    contato_id: String(r.contato_id),
+    tipo: r.tipo,
+    descricao: r.descricao,
+    data_prevista: r.data_prevista ?? undefined,
+    concluida: r.concluida,
+    concluida_em: r.concluida_em ?? undefined,
+    criado_em: r.criado_em,
+  };
+}
+
+/** Timeline completa de um lead — usada pela ficha do lead (drawer). */
+export async function fetchLeadActivities(contatoId: string): Promise<{ data: ActivityData[]; error: string | null }> {
+  const { data, error } = await supabase
+    .from('atividades')
+    .select('*')
+    .eq('contato_id', contatoId)
+    .order('criado_em', { ascending: false });
+  if (error) return { data: [], error: error.message };
+  return { data: ((data as RawActivity[]) ?? []).map(transformActivity), error: null };
+}
+
+/** Próximo follow-up pendente por lead, numa query só (sem N+1) — alimenta o
+ *  badge "atrasado / hoje / em Nd" nos cards do board e nas linhas da lista. */
+export interface NextFollowUp {
+  contato_id: string;
+  data_prevista: string;
+}
+
+interface RawFollowUp {
+  contato_id: string | number;
+  data_prevista: string;
+}
+
+export function useFollowUpsData(): QueryResult<NextFollowUp[]> {
+  return useSupabaseQuery<NextFollowUp[]>({
+    queryFn: () =>
+      supabase
+        .from('atividades')
+        .select('contato_id, data_prevista')
+        .eq('concluida', false)
+        .not('data_prevista', 'is', null)
+        .order('data_prevista', { ascending: true }),
+    transform: (rows) => {
+      const seen = new Set<string>();
+      const out: NextFollowUp[] = [];
+      for (const r of (rows as RawFollowUp[]) ?? []) {
+        const id = String(r.contato_id);
+        if (seen.has(id)) continue; // já ordenado por data_prevista asc: a 1ª ocorrência é a mais próxima
+        seen.add(id);
+        out.push({ contato_id: id, data_prevista: r.data_prevista });
+      }
+      return out;
+    },
+    empty: [],
+    mockKey: 'MOCK_FOLLOWUPS',
+  });
+}
+
 export function useContactsChartData(refMonth?: MonthKey | null): QueryResult<ContactChartData[]> {
   return useSupabaseQuery<ContactChartData[]>({
     queryFn: () => supabase.rpc('get_contacts_by_month', periodArgs({ months_back: 6 }, refMonth)),

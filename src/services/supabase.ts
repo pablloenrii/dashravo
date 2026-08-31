@@ -9,10 +9,14 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * URL da sua VPS PostgREST
- * Em desenvolvimento: http://89.117.32.203:8080
- * Em produção: https://seu-dominio.com (com SSL)
+ *
+ * Padrão: https://crm.ravocompany.com.br (Nginx com TLS na frente do PostgREST).
+ * Importante que seja HTTPS — o app roda publicado em HTTPS (Vercel), e o
+ * navegador bloqueia silenciosamente qualquer chamada HTTP feita a partir de
+ * uma página HTTPS ("mixed content"), o que aparecia como "Failed to fetch"
+ * em toda escrita (criar/editar/mover/deletar lead).
  */
-const POSTGREST_URL = import.meta.env.VITE_POSTGREST_URL || 'http://89.117.32.203:8080';
+const POSTGREST_URL = import.meta.env.VITE_POSTGREST_URL || 'https://crm.ravocompany.com.br';
 
 /**
  * Chave anônima (não é validada pelo PostgREST, só precisa existir)
@@ -53,5 +57,5 @@ if (import.meta.env.DEV) {
 
 // Verificar se as variáveis estão definidas
 if (!POSTGREST_URL) {
-  console.warn('⚠️  VITE_POSTGREST_URL não definida! Usando padrão: http://89.117.32.203:8080');
+  console.warn('⚠️  VITE_POSTGREST_URL não definida! Usando padrão: https://crm.ravocompany.com.br');
 }

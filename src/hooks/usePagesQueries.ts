@@ -333,15 +333,19 @@ export function useGoalProgressData(refMonth?: MonthKey | null): QueryResult<Goa
 
 export function useGoalsData(): QueryResult<GoalData[]> {
   return useSupabaseQuery<GoalData[]>({
+    // A tabela `metas` real usa titulo/valor_alvo/valor_atual/data_criacao
+    // (não nome/meta/realizado/created_at — resíduo do schema anterior). As
+    // colunas metrica/unidade/mes foram adicionadas via
+    // migration_fix_metas.sql — não existiam na tabela original.
     queryFn: () =>
-      supabase.from('metas').select('*').order('created_at', { ascending: false }),
+      supabase.from('metas').select('*').order('data_criacao', { ascending: false }),
     transform: (rows) =>
       ((rows as Record<string, unknown>[]) ?? []).map((r) => {
-        const meta = toNumber(r.meta);
-        const realizado = toNumber(r.realizado);
+        const meta = toNumber(r.valor_alvo);
+        const realizado = toNumber(r.valor_atual);
         return {
           id: String(r.id),
-          nome: String(r.nome),
+          nome: String(r.titulo),
           meta,
           realizado,
           percentual: meta > 0 ? Math.round((realizado / meta) * 100) : 0,

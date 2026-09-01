@@ -111,14 +111,17 @@ export default function GoalsPage() {
     setSaving(true); setMutationError(null);
 
     const unidade = METRICA_MAP[form.metrica]?.unidade ?? 'numero';
+    // Nomes reais da tabela `metas`: titulo/valor_alvo/valor_atual/
+    // data_atualizacao (não nome/meta/realizado/updated_at) — ver
+    // migration_fix_metas.sql.
     const payload = {
-      nome: form.nome.trim(),
-      meta: form.meta,
-      realizado: form.metrica === 'manual' ? form.realizado : 0,
+      titulo: form.nome.trim(),
+      valor_alvo: form.meta,
+      valor_atual: form.metrica === 'manual' ? form.realizado : 0,
       metrica: form.metrica,
       unidade,
       mes: monthISO(effectiveMonth),
-      updated_at: new Date().toISOString(),
+      data_atualizacao: new Date().toISOString(),
     };
 
     const { error } = editingId

@@ -18,7 +18,6 @@ import { useRevalidateStore } from '@/store/revalidate.store';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
 
 const PRIORIDADES = ['baixa', 'média', 'alta', 'crítica'];
-const genTicketId = () => `TK-${Date.now().toString(36).toUpperCase().slice(-6)}`;
 
 interface TicketForm {
   contatoId: string;
@@ -50,7 +49,10 @@ export function CSPage() {
     if (!contato || !ticketForm.assunto) { setTicketError('Selecione um cliente e informe o assunto.'); return; }
     setSavingTicket(true); setTicketError(null);
     const { error } = await supabase.from('tickets').insert([{
-      ticketid: genTicketId(),
+      // `titulo` é NOT NULL na tabela real — grava o mesmo texto de
+      // `assunto` (ver migration_fix_tickets.sql). `ticketid`/`resolved_at`
+      // não existem na tabela real; `id` é gerado pelo banco (bigint).
+      titulo: ticketForm.assunto,
       contato_id: contato.id,
       cliente: contato.nome,
       assunto: ticketForm.assunto,
@@ -67,7 +69,9 @@ export function CSPage() {
 
   const handleResolveTicket = async (id: string) => {
     setTicketError(null);
-    const { error } = await supabase.from('tickets').update({ status: 'resolvido', resolved_at: new Date().toISOString() }).eq('id', id);
+    // `resolved_at` não existe na tabela real — a coluna certa é
+    // `data_fechamento` (ver migration_fix_tickets.sql / schema real).
+    const { error } = await supabase.from('tickets').update({ status: 'resolvido', data_fechamento: new Date().toISOString() }).eq('id', id);
     if (error) { setTicketError(error.message); return; }
     refetchTickets();
     useRevalidateStore.getState().invalidate();

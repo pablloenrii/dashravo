@@ -388,24 +388,43 @@ export interface SatisfactionData {
   satisfacao: number;
 }
 
+/** "2h 15m" a partir dos minutos decorridos — usado no tempo_resposta calculado. */
+function fmtDuracao(minutos: number): string {
+  const h = Math.floor(minutos / 60);
+  const m = Math.round(minutos % 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
 export function useTicketsData(): QueryResult<TicketData[]> {
   return useSupabaseQuery<TicketData[]>({
+    // A tabela `tickets` real usa data_criacao (não created_at — resíduo do
+    // schema anterior). contato_id/cliente/assunto foram adicionados via
+    // migration_fix_tickets.sql — não existiam na tabela original.
     queryFn: () =>
       supabase
         .from('tickets')
         .select('*')
         .eq('status', 'aberto')
-        .order('created_at', { ascending: false }),
+        .order('data_criacao', { ascending: false }),
     transform: (rows) =>
-      ((rows as Record<string, unknown>[]) ?? []).map((r) => ({
-        id: String(r.id),
-        cliente: String(r.cliente ?? ''),
-        assunto: String(r.assunto ?? ''),
-        prioridade: String(r.prioridade ?? ''),
-        status: String(r.status ?? ''),
-        tempo_resposta: r.tempo_resposta ? String(r.tempo_resposta) : undefined,
-        contato_id: r.contato_id ? String(r.contato_id) : undefined,
-      })),
+      ((rows as Record<string, unknown>[]) ?? []).map((r) => {
+        // tempo_resposta não é uma coluna — é o tempo real decorrido desde
+        // a abertura (data_criacao até agora, ou até data_fechamento se já
+        // resolvido). Mais confiável que um campo de texto solto.
+        const criado = r.data_criacao ? new Date(String(r.data_criacao)) : null;
+        const fim = r.data_fechamento ? new Date(String(r.data_fechamento)) : new Date();
+        const minutos = criado ? Math.max(0, (fim.getTime() - criado.getTime()) / 60000) : 0;
+        return {
+          id: String(r.id),
+          cliente: String(r.cliente ?? ''),
+          assunto: String(r.assunto ?? r.titulo ?? ''),
+          prioridade: String(r.prioridade ?? ''),
+          status: String(r.status ?? ''),
+          tempo_resposta: criado ? fmtDuracao(minutos) : undefined,
+          contato_id: r.contato_id ? String(r.contato_id) : undefined,
+        };
+      }),
     empty: [],
     mockKey: 'MOCK_TICKETS',
   });

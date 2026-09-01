@@ -339,6 +339,8 @@ $function$;
 --    importado em nenhuma página) — corrigida por consistência/futuro, mas
 --    não é uma correção de bug ativo.
 -- ------------------------------------------------------------------------
+DROP FUNCTION IF EXISTS public.get_sales_funnel();
+
 CREATE OR REPLACE FUNCTION public.get_sales_funnel()
 RETURNS TABLE(estagio text, quantidade numeric, conversao numeric)
 LANGUAGE plpgsql

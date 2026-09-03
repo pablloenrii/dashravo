@@ -22,7 +22,7 @@ import { LeadDrawer } from '@/components/LeadDrawer';
 import { sb as supabase } from '@/services/supabase';
 import { useContactsData, ContactData, useFollowUpsData, NextFollowUp } from '@/hooks/usePagesQueries';
 import { usePeriod, prevMonthKey, monthLabel } from '@/contexts/PeriodContext';
-import { fmtMoney, pctChange } from '@/utils/format';
+import { fmtMoneyCents, pctChange } from '@/utils/format';
 import { toastSuccess, toastError } from '@/utils/toast';
 import {
   STAGES, STAGE_MAP, isOpen, daysSince, ROT_DAYS,
@@ -115,6 +115,10 @@ export default function CRMPage() {
     () => typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0),
     []
   );
+  // Tela estreita (celular): board vira uma coluna só com seletor de fase,
+  // em vez de 7 colunas fixas de 250px forçando scroll horizontal constante.
+  const isNarrow = useMemo(() => typeof window !== 'undefined' && window.innerWidth < 640, []);
+  const [mobileStage, setMobileStage] = useState<string>(STAGES[0].key);
 
   // --- Busca e filtros ---
   const [searchTerm, setSearchTerm] = useState('');
@@ -391,6 +395,114 @@ export default function CRMPage() {
   const fld: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: '8px', background: surface.input, border: `1px solid ${surface.borderStrong}`, color: chart.light, fontSize: '13px' };
   const tag: React.CSSProperties = { fontSize: '10px', fontWeight: 500, color: chart.line, background: surface.divider, padding: '2px 7px', borderRadius: '5px' };
 
+  /**
+   * Uma coluna do board. Extraída pra ser reaproveitada tanto no layout
+   * desktop (7 colunas lado a lado) quanto no mobile (1 coluna + seletor de
+   * fase acima) — mesma lógica de drag-and-drop e mesmo card nos dois.
+   *
+   * Card enxuto: editar/deletar saíram daqui — o clique no card já abre a
+   * ficha do lead (drawer), que tem os dois botões. Menos ação competindo
+   * por espaço num card de ~250px, e menos risco de toque errado no
+   * celular. "Mover" fica sempre visível (não só em touch) — dá um jeito de
+   * trocar de fase sem depender de acertar o drag-and-drop, inclusive no
+   * desktop (acessibilidade: hoje não existe alternativa de teclado pro
+   * drag-and-drop puro).
+   */
+  function renderColumn(stage: (typeof STAGES)[number], fullWidth: boolean) {
+    const cards = visiveis.filter((c) => c.etapa === stage.key);
+    const total = cards.reduce((s, c) => s + c.valor, 0);
+    return (
+      <div
+        key={stage.key}
+        onDragOver={(e) => { e.preventDefault(); setOverCol(stage.key); }}
+        onDragLeave={() => setOverCol((p) => (p === stage.key ? null : p))}
+        onDrop={() => { if (dragId) attemptMoveTo(dragId, stage.key); setDragId(null); setOverCol(null); }}
+        style={{
+          flex: fullWidth ? '1 1 auto' : '0 0 250px', minWidth: fullWidth ? 0 : '250px',
+          background: overCol === stage.key ? surface.hover : surface.card,
+          border: `1px solid ${overCol === stage.key ? 'rgba(255,255,255,0.4)' : surface.borderStrong}`,
+          borderRadius: '12px', padding: '10px', transition: 'background 150ms, border-color 150ms',
+        }}
+      >
+        {!fullWidth && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', padding: '2px 4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: stage.color }} />
+              <span style={{ fontSize: '13px', fontWeight: 700, color: text.bright }}>{stage.key}</span>
+              <span style={{ fontSize: '11px', color: text.dim }}>{cards.length}</span>
+            </div>
+          </div>
+        )}
+        <div style={{ fontSize: '11px', color: text.secondary, padding: '0 4px 8px 4px', fontWeight: 600 }}>{fmtMoneyCents(total)}</div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minHeight: '80px' }}>
+          {cards.map((c) => {
+            const rot = isOpen(c.etapa) && daysSince(c.updated_at) >= ROT_DAYS;
+            const fu = followUpMap.get(c.id);
+            return (
+              <div
+                key={c.id}
+                draggable
+                onDragStart={() => setDragId(c.id)}
+                onDragEnd={() => { setDragId(null); setOverCol(null); }}
+                onClick={() => setOpenContact(c)}
+                style={{
+                  background: surface.elevated, border: `1px solid ${rot ? 'rgba(239,68,68,0.35)' : surface.borderStrong}`,
+                  borderRadius: '10px', padding: '10px', cursor: 'pointer',
+                  opacity: dragId === c.id ? 0.5 : 1,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: surface.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center', color: text.white, fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
+                    {initials(c.nome)}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: text.bright, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nome}</div>
+                    <div style={{ fontSize: '11px', color: text.secondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.empresa || '—'}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: c.etapa === 'Ganho' ? chart.revenue : chart.light }}>{fmtMoneyCents(c.valor)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {rot && <span title={`Parado há ${daysSince(c.updated_at)} dias`} style={{ display: 'flex', color: semantic.danger }}><AlertTriangle size={13} /></span>}
+                    <span style={{ fontSize: '10px', color: text.dim }} title="Dias desde a última movimentação">{daysSince(c.updated_at)}d</span>
+                    <button onClick={(e) => { e.stopPropagation(); setMoveFor(c); }} style={cardBtn} aria-label={`Mover ${c.nome}`} title="Mover para outra fase"><GripVertical size={13} /></button>
+                  </div>
+                </div>
+                {(c.origem || fu || (isOpen(c.etapa) && c.data_prevista) || (!isOpen(c.etapa) && c.motivo)) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                    {c.origem && <span style={tag}>{c.origem}</span>}
+                    {fu && (() => {
+                      const { texto, atrasado } = followUpLabel(fu.data_prevista);
+                      return (
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', fontWeight: 600,
+                          color: atrasado ? semantic.danger : chart.line,
+                          background: atrasado ? 'rgba(239,68,68,0.1)' : surface.divider,
+                          padding: '2px 7px', borderRadius: '5px',
+                        }}>
+                          <CheckSquare size={10} /> {texto}
+                        </span>
+                      );
+                    })()}
+                    {isOpen(c.etapa) && c.data_prevista && <span style={{ fontSize: '10px', color: text.tertiary }}>fecha {fmtDate(c.data_prevista)}</span>}
+                    {!isOpen(c.etapa) && c.motivo && <span style={{ fontSize: '10px', color: text.tertiary }}>{c.motivo}</span>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {cards.length === 0 && (
+            <EmptyState
+              icon={<Inbox size={18} color={text.dim} />}
+              title={isTouch ? 'Toque para mover' : 'Arraste um lead aqui'}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: layout.pageMaxWidth, margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
@@ -440,12 +552,12 @@ export default function CRMPage() {
 
       <div style={heroGrid}>
         <HeroStat
-          label="Forecast ponderado" value={fmtMoney(m.forecast)}
+          label="Forecast ponderado" value={fmtMoneyCents(m.forecast)}
           delta={d(m.forecast, mPrev.forecast)}
-          sub={`${fmtMoney(m.pipelineAberto)} em aberto · ${m.abertos.length} ${m.abertos.length === 1 ? 'deal' : 'deals'}`}
+          sub={`${fmtMoneyCents(m.pipelineAberto)} em aberto · ${m.abertos.length} ${m.abertos.length === 1 ? 'deal' : 'deals'}`}
         />
         <HeroStat
-          label="Receita fechada" value={fmtMoney(m.receitaGanha)} tone="positive"
+          label="Receita fechada" value={fmtMoneyCents(m.receitaGanha)} tone="positive"
           delta={d(m.receitaGanha, mPrev.receitaGanha)} sub={vsLabel}
         />
         <HeroStat
@@ -464,7 +576,7 @@ export default function CRMPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(165px, 1fr))', gap: '12px', marginTop: '12px', marginBottom: '24px' }}>
         <MetricCard
-          label="Ticket médio" value={fmtMoney(m.ticketMedio)} icon={<DollarSign size={14} />}
+          label="Ticket médio" value={fmtMoneyCents(m.ticketMedio)} icon={<DollarSign size={14} />}
           deltaPct={d(m.ticketMedio, mPrev.ticketMedio)} sublabel={vsLabel} loading={contacts.loading}
         />
         <MetricCard
@@ -477,7 +589,7 @@ export default function CRMPage() {
           sublabel={`sem contato há ${ROT_DAYS}d+`} loading={contacts.loading}
         />
         <MetricCard
-          label="Pipeline aberto" value={fmtMoney(m.pipelineAberto)} icon={<Percent size={14} />}
+          label="Pipeline aberto" value={fmtMoneyCents(m.pipelineAberto)} icon={<Percent size={14} />}
           deltaPct={d(m.pipelineAberto, mPrev.pipelineAberto)}
           sublabel="valor bruto, sem ponderar" loading={contacts.loading}
         />
@@ -536,7 +648,7 @@ export default function CRMPage() {
                     <span style={{ color: chart.light, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.origem}</span>
                     <span style={{ textAlign: 'right', color: text.secondary }}>{r.leads}</span>
                     <span style={{ textAlign: 'right', color: r.winRate >= 50 ? chart.revenue : text.secondary, fontWeight: 600 }}>{r.winRate}%</span>
-                    <span style={{ textAlign: 'right', color: r.receita > 0 ? chart.revenue : text.label, fontWeight: 600 }}>{fmtMoney(r.receita)}</span>
+                    <span style={{ textAlign: 'right', color: r.receita > 0 ? chart.revenue : text.label, fontWeight: 600 }}>{fmtMoneyCents(r.receita)}</span>
                   </div>
                 ))}
               </div>
@@ -648,104 +760,40 @@ export default function CRMPage() {
       {contacts.loading ? (
         <QueryLoading height={300} />
       ) : view === 'board' ? (
-        <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '12px' }}>
-          {STAGES.map((stage) => {
-            const cards = visiveis.filter((c) => c.etapa === stage.key);
-            const total = cards.reduce((s, c) => s + c.valor, 0);
-            return (
-              <div
-                key={stage.key}
-                onDragOver={(e) => { e.preventDefault(); setOverCol(stage.key); }}
-                onDragLeave={() => setOverCol((p) => (p === stage.key ? null : p))}
-                onDrop={() => { if (dragId) attemptMoveTo(dragId, stage.key); setDragId(null); setOverCol(null); }}
-                style={{
-                  flex: '0 0 250px', minWidth: '250px',
-                  background: overCol === stage.key ? surface.hover : surface.card,
-                  border: `1px solid ${overCol === stage.key ? 'rgba(255,255,255,0.4)' : surface.borderStrong}`,
-                  borderRadius: '12px', padding: '10px', transition: 'background 150ms, border-color 150ms',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', padding: '2px 4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: stage.color }} />
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: text.bright }}>{stage.key}</span>
-                    <span style={{ fontSize: '11px', color: text.dim }}>{cards.length}</span>
-                  </div>
-                </div>
-                <div style={{ fontSize: '11px', color: text.secondary, padding: '0 4px 8px 4px', fontWeight: 600 }}>{fmtMoney(total)}</div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minHeight: '80px' }}>
-                  {cards.map((c) => {
-                    const rot = isOpen(c.etapa) && daysSince(c.updated_at) >= ROT_DAYS;
-                    const fu = followUpMap.get(c.id);
-                    return (
-                      <div
-                        key={c.id}
-                        draggable
-                        onDragStart={() => setDragId(c.id)}
-                        onDragEnd={() => { setDragId(null); setOverCol(null); }}
-                        onClick={() => setOpenContact(c)}
-                        style={{
-                          background: surface.elevated, border: `1px solid ${rot ? 'rgba(239,68,68,0.35)' : surface.borderStrong}`,
-                          borderRadius: '10px', padding: '10px', cursor: 'pointer',
-                          opacity: dragId === c.id ? 0.5 : 1,
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                          <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: surface.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center', color: text.white, fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
-                            {initials(c.nome)}
-                          </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: '13px', fontWeight: 600, color: text.bright, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nome}</div>
-                            <div style={{ fontSize: '11px', color: text.secondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.empresa || '—'}</div>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontSize: '13px', fontWeight: 700, color: c.etapa === 'Ganho' ? chart.revenue : chart.light }}>{fmtMoney(c.valor)}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            {rot && <span title={`Parado há ${daysSince(c.updated_at)} dias`} style={{ display: 'flex', color: semantic.danger }}><AlertTriangle size={13} /></span>}
-                            <span style={{ fontSize: '10px', color: text.dim }}>{daysSince(c.updated_at)}d</span>
-                            {isTouch && (
-                              <button onClick={(e) => { e.stopPropagation(); setMoveFor(c); }} style={cardBtn} aria-label={`Mover ${c.nome}`} title="Mover para outra fase"><GripVertical size={13} /></button>
-                            )}
-                            <button onClick={(e) => { e.stopPropagation(); handleOpenModal(c); }} style={cardBtn} aria-label={`Editar ${c.nome}`}><Edit2 size={13} /></button>
-                            <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(c); }} style={cardBtn} aria-label={`Deletar ${c.nome}`}><Trash2 size={13} /></button>
-                          </div>
-                        </div>
-                        {(c.origem || fu || (isOpen(c.etapa) && c.data_prevista) || (!isOpen(c.etapa) && c.motivo)) && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
-                            {c.origem && <span style={tag}>{c.origem}</span>}
-                            {fu && (() => {
-                              const { texto, atrasado } = followUpLabel(fu.data_prevista);
-                              return (
-                                <span style={{
-                                  display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', fontWeight: 600,
-                                  color: atrasado ? semantic.danger : chart.line,
-                                  background: atrasado ? 'rgba(239,68,68,0.1)' : surface.divider,
-                                  padding: '2px 7px', borderRadius: '5px',
-                                }}>
-                                  <CheckSquare size={10} /> {texto}
-                                </span>
-                              );
-                            })()}
-                            {isOpen(c.etapa) && c.data_prevista && <span style={{ fontSize: '10px', color: text.tertiary }}>fecha {fmtDate(c.data_prevista)}</span>}
-                            {!isOpen(c.etapa) && c.motivo && <span style={{ fontSize: '10px', color: text.tertiary }}>{c.motivo}</span>}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                  {cards.length === 0 && (
-                    <EmptyState
-                      icon={<Inbox size={18} color={text.dim} />}
-                      title={isTouch ? 'Toque para mover' : 'Arraste um lead aqui'}
-                    />
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        isNarrow ? (
+          <div>
+            {/* Seletor de fase — substitui as 7 colunas lado a lado, que em
+                tela estreita viravam um scroll horizontal só de título de
+                coluna, sem dar pra comparar fases de verdade. */}
+            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '10px', marginBottom: '2px' }}>
+              {STAGES.map((stage) => {
+                const count = visiveis.filter((c) => c.etapa === stage.key).length;
+                const active = mobileStage === stage.key;
+                return (
+                  <button
+                    key={stage.key}
+                    onClick={() => setMobileStage(stage.key)}
+                    style={{
+                      flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '6px',
+                      padding: '7px 12px', borderRadius: '999px', cursor: 'pointer', whiteSpace: 'nowrap',
+                      background: active ? surface.active : surface.card,
+                      border: `1px solid ${active ? surface.borderHover : surface.borderStrong}`,
+                      color: active ? text.bright : text.secondary, fontSize: '12px', fontWeight: 600,
+                    }}
+                  >
+                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: stage.color }} />
+                    {stage.key} <span style={{ color: text.dim, fontWeight: 500 }}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {renderColumn(STAGES.find((s) => s.key === mobileStage) ?? STAGES[0], true)}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '12px' }}>
+            {STAGES.map((stage) => renderColumn(stage, false))}
+          </div>
+        )
       ) : (
         <div style={{ background: surface.card, border: `1px solid ${surface.borderStrong}`, borderRadius: '12px', overflow: 'hidden' }}>
           {visiveis.length === 0 ? (
@@ -787,7 +835,7 @@ export default function CRMPage() {
                         </div>
                       </td>
                       <td style={{ padding: '12px 16px', fontSize: '13px', color: text.secondaryAlt }}>{c.empresa || '—'}</td>
-                      <td style={{ padding: '12px 16px', fontSize: '13px', color: c.etapa === 'Ganho' ? chart.revenue : chart.light, fontWeight: 600, textAlign: 'center' }}>{fmtMoney(c.valor)}</td>
+                      <td style={{ padding: '12px 16px', fontSize: '13px', color: c.etapa === 'Ganho' ? chart.revenue : chart.light, fontWeight: 600, textAlign: 'center' }}>{fmtMoneyCents(c.valor)}</td>
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                         <span style={{ fontSize: '11px', fontWeight: 600, color: STAGE_MAP[c.etapa]?.color ?? text.secondary, background: `${STAGE_MAP[c.etapa]?.color ?? text.secondary}1f`, padding: '3px 10px', borderRadius: '999px' }}>{c.etapa}</span>
                       </td>

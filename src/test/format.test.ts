@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { fmtK, fmtMoney, fmtMoneyFull, pctChange } from '@/utils/format';
+import { fmtK, fmtMoney, fmtMoneyFull, fmtMoneyCents, pctChange } from '@/utils/format';
 
 describe('fmtK', () => {
   it('retorna o número inteiro abaixo de milhar', () => {
@@ -53,6 +53,14 @@ describe('fmtMoneyFull', () => {
     // toLocaleString pt-BR usa espaço não separável entre R$ e o número
     expect(fmtMoneyFull(1_250_000).replace(/\u00A0/g, ' ')).toBe('R$ 1.250.000');
     expect(fmtMoneyFull(720).replace(/\u00A0/g, ' ')).toBe('R$ 720');
+  });
+});
+
+describe('fmtMoneyCents', () => {
+  it('formata moeda completa com centavos (pt-BR)', () => {
+    expect(fmtMoneyCents(11000).replace(/\u00A0/g, ' ')).toBe('R$ 11.000,00');
+    expect(fmtMoneyCents(1_250_000.5).replace(/\u00A0/g, ' ')).toBe('R$ 1.250.000,50');
+    expect(fmtMoneyCents(0).replace(/\u00A0/g, ' ')).toBe('R$ 0,00');
   });
 });
 

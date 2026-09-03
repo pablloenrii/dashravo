@@ -29,6 +29,17 @@ export function fmtMoneyFull(v: number): string {
   });
 }
 
+/** Moeda completa com centavos (R$ 11.000,00) — usado no CRM, onde o valor do
+ *  deal não pode ficar ambíguo ("11K" pode ser R$ 10.500 ou R$ 11.499). */
+export function fmtMoneyCents(v: number): string {
+  return v.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 /** Variação percentual entre dois valores. undefined quando a base é 0. */
 export function pctChange(current: number, previous: number): number | undefined {
   if (!Number.isFinite(current) || !Number.isFinite(previous) || previous === 0) return undefined;

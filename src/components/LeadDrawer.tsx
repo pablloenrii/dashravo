@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
-import { fmtMoneyFull } from '@/utils/format';
+import { fmtMoneyCents } from '@/utils/format';
 import { toastError, toastSuccess } from '@/utils/toast';
 import {
   ContactData, ActivityData, ActivityType,
@@ -185,7 +185,7 @@ export function LeadDrawer({ contact, onClose, onEdit, onDelete, onActivityChang
                   {contact.etapa}
                 </span>
                 <span style={{ fontSize: '13px', fontWeight: 700, color: contact.etapa === 'Ganho' ? chart.revenue : chart.light }}>
-                  {fmtMoneyFull(contact.valor)}
+                  {fmtMoneyCents(contact.valor)}
                 </span>
               </div>
             </div>

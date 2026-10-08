@@ -77,9 +77,9 @@ const fmtDate = (iso: string) => { const d = new Date(iso); return `${String(d.g
 
 interface ContactForm {
   nome: string; empresa: string; email: string; telefone: string; valor: number; etapa: string;
-  origem: string; dataPrevista: string; motivo: string; tipoReceita: string;
+  origem: string; dataPrevista: string; motivo: string; tipoReceita: string; observacoes: string;
 }
-const EMPTY_FORM: ContactForm = { nome: '', empresa: '', email: '', telefone: '', valor: 0, etapa: 'Novo Lead', origem: '', dataPrevista: '', motivo: '', tipoReceita: '' };
+const EMPTY_FORM: ContactForm = { nome: '', empresa: '', email: '', telefone: '', valor: 0, etapa: 'Novo Lead', origem: '', dataPrevista: '', motivo: '', tipoReceita: '', observacoes: '' };
 
 export default function CRMPage() {
   const contacts = useContactsData();
@@ -179,7 +179,7 @@ export default function CRMPage() {
 
   const handleOpenModal = (c?: ContactData) => {
     if (c) {
-      setFormData({ nome: c.nome, empresa: c.empresa, email: c.email, telefone: c.telefone ?? '', valor: c.valor, etapa: c.etapa, origem: c.origem ?? '', dataPrevista: c.data_prevista ?? '', motivo: c.motivo ?? '', tipoReceita: c.tipo_receita ?? '' });
+      setFormData({ nome: c.nome, empresa: c.empresa, email: c.email, telefone: c.telefone ?? '', valor: c.valor, etapa: c.etapa, origem: c.origem ?? '', dataPrevista: c.data_prevista ?? '', motivo: c.motivo ?? '', tipoReceita: c.tipo_receita ?? '', observacoes: c.observacoes ?? '' });
       setEditingId(c.id);
     } else {
       setFormData(EMPTY_FORM); setEditingId(null);
@@ -269,14 +269,18 @@ export default function CRMPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.nome || !formData.email) { toastError('Nome e email são obrigatórios.'); return; }
+    // Lead de Meta Ads costuma chegar só com empresa + telefone: basta ter empresa OU nome do contato.
+    const empresa = formData.empresa.trim();
+    const nomeContato = formData.nome.trim() || empresa;
+    if (!nomeContato) { toastError('Informe a empresa ou o nome do contato.'); return; }
     if (formData.etapa === 'Ganho' && !formData.tipoReceita) {
       toastError('Escolha o "Tipo de receita" para integrar esse lead ao Dashboard.');
       return;
     }
     setSaving(true);
     const payload = {
-      nome: formData.nome, empresa: formData.empresa || null, email: formData.email,
+      nome: nomeContato, empresa: empresa || null, email: formData.email.trim() || null,
+      observacoes: formData.observacoes.trim() || null,
       telefone: formData.telefone || null, valor: formData.valor, etapa: formData.etapa,
       origem: formData.origem || null, data_prevista: formData.dataPrevista || null, motivo: formData.motivo || null,
       tipo_receita: formData.tipoReceita || null,
@@ -293,7 +297,7 @@ export default function CRMPage() {
     if (formData.etapa === 'Ganho' && saved?.id) {
       const existente = editingId ? items.find((c) => c.id === editingId) : undefined;
       await integrateWonDeal({
-        id: saved.id, nome: formData.nome, empresa: formData.empresa, origem: formData.origem,
+        id: saved.id, nome: nomeContato, empresa, origem: formData.origem,
         valor: formData.valor, tipoReceita: formData.tipoReceita, contratoId: existente?.contrato_id ?? null,
       });
     }
@@ -454,11 +458,11 @@ export default function CRMPage() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                   <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: surface.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center', color: text.white, fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
-                    {initials(c.nome)}
+                    {initials(c.empresa || c.nome)}
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: text.bright, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.nome}</div>
-                    <div style={{ fontSize: '11px', color: text.secondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.empresa || '—'}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: text.bright, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.empresa || c.nome}</div>
+                    <div style={{ fontSize: '11px', color: text.secondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.empresa && c.nome !== c.empresa ? c.nome : '—'}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -830,11 +834,11 @@ export default function CRMPage() {
                       onMouseLeave={(e) => (e.currentTarget.style.background = '')}>
                       <td style={{ padding: '12px 16px', fontSize: '13px', color: text.bright, fontWeight: 500 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: surface.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center', color: text.white, fontSize: '11px', fontWeight: 700 }}>{initials(c.nome)}</div>
-                          {c.nome}
+                          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: surface.avatar, display: 'flex', alignItems: 'center', justifyContent: 'center', color: text.white, fontSize: '11px', fontWeight: 700 }}>{initials(c.empresa || c.nome)}</div>
+                          {c.empresa || c.nome}
                         </div>
                       </td>
-                      <td style={{ padding: '12px 16px', fontSize: '13px', color: text.secondaryAlt }}>{c.empresa || '—'}</td>
+                      <td style={{ padding: '12px 16px', fontSize: '13px', color: text.secondaryAlt }}>{c.empresa && c.nome !== c.empresa ? c.nome : '—'}</td>
                       <td style={{ padding: '12px 16px', fontSize: '13px', color: c.etapa === 'Ganho' ? chart.revenue : chart.light, fontWeight: 600, textAlign: 'center' }}>{fmtMoneyCents(c.valor)}</td>
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                         <span style={{ fontSize: '11px', fontWeight: 600, color: STAGE_MAP[c.etapa]?.color ?? text.secondary, background: `${STAGE_MAP[c.etapa]?.color ?? text.secondary}1f`, padding: '3px 10px', borderRadius: '999px' }}>{c.etapa}</span>
@@ -866,9 +870,10 @@ export default function CRMPage() {
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingId ? 'Editar Lead' : 'Novo Lead'} size="md">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Input label="Nome *" placeholder="João Silva" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} />
-          <Input label="Email *" type="email" placeholder="joao@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-          <Input label="Empresa" placeholder="Tech Corp" value={formData.empresa} onChange={(e) => setFormData({ ...formData, empresa: e.target.value })} />
+          <Input label="Empresa" placeholder="Silva & Associados Advocacia" value={formData.empresa} onChange={(e) => setFormData({ ...formData, empresa: e.target.value })} />
+          <Input label="Nome do contato" placeholder="João Silva" value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} />
+          <div style={{ fontSize: '11px', color: text.faint, marginTop: '-8px' }}>Preencha a empresa, o nome do contato ou os dois.</div>
+          <Input label="Email" type="email" placeholder="joao@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
           <Input label="Telefone" placeholder="11 98765-4321" value={formData.telefone} onChange={(e) => setFormData({ ...formData, telefone: e.target.value })} />
           <Input label="Valor (R$)" type="number" placeholder="50000" value={formData.valor} onChange={(e) => setFormData({ ...formData, valor: Number(e.target.value) })} />
           <div>
@@ -908,6 +913,15 @@ export default function CRMPage() {
               <input style={fld} placeholder="Ex: preço, indicação, concorrente…" value={formData.motivo} onChange={(e) => setFormData({ ...formData, motivo: e.target.value })} />
             </div>
           )}
+          <div>
+            <label style={lbl}>Observações</label>
+            <textarea
+              style={{ ...fld, minHeight: '84px', resize: 'vertical', fontFamily: 'inherit' }}
+              placeholder="Contexto da conversa, objeções, o que combinaram…"
+              value={formData.observacoes}
+              onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+            />
+          </div>
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
             <Button variant="ghost" onClick={() => setShowModal(false)}>Cancelar</Button>
             <Button onClick={handleSave} disabled={saving}>{saving ? 'Salvando…' : 'Salvar'}</Button>
@@ -981,6 +995,7 @@ export default function CRMPage() {
           onEdit={(c) => { setOpenContact(null); handleOpenModal(c); }}
           onDelete={(c) => setConfirmDelete(c)}
           onActivityChange={() => followUps.refetch()}
+          onNotesSaved={() => contacts.refetch()}
         />
       )}
     </div>

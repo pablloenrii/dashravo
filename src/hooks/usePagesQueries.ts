@@ -46,6 +46,8 @@ export interface ContactData {
   tipo_receita?: string;
   /** Id do contrato já criado no schema de software house, se este deal já foi ganho. */
   contrato_id?: number | null;
+  /** Anotações livres sobre o lead (coluna contatos.observacoes). */
+  observacoes?: string;
 }
 
 export interface ContactChartData {
@@ -75,6 +77,7 @@ interface RawContact {
   updated_at?: string;
   tipo_receita?: string | null;
   contrato_id?: number | string | null;
+  observacoes?: string | null;
 }
 
 export function useContactsData(): QueryResult<ContactData[]> {
@@ -97,6 +100,7 @@ export function useContactsData(): QueryResult<ContactData[]> {
         updated_at: r.updated_at,
         tipo_receita: r.tipo_receita ?? undefined,
         contrato_id: r.contrato_id === null || r.contrato_id === undefined ? null : Number(r.contrato_id),
+        observacoes: r.observacoes ?? '',
       })),
     empty: [],
     mockKey: 'MOCK_CONTATOS',

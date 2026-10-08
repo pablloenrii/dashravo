@@ -206,3 +206,9 @@ export const mockCarteiraRecorrente = [
   { mes: '2026-07', mrr: 26990, clientes: 3, churn_pct: 25.0, nrr_pct: 90.6 },
   { mes: '2026-08', mrr: 26990, clientes: 3, churn_pct: 0,    nrr_pct: 100.0 },
 ];
+
+// Insights (modo demo): sem dados de exemplo — a tela mostra os estados vazios.
+export const mockInsightsMrr: never[] = [];
+export const mockInsightsCancelados: never[] = [];
+export const mockFaturasMes: never[] = [];
+export const mockContratosLista: never[] = [];

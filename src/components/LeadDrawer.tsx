@@ -49,9 +49,11 @@ interface LeadDrawerProps {
    *  isso pra revalidar o badge de follow-up dos cards sem esperar o usuário
    *  fechar o drawer. */
   onActivityChange?: () => void;
+  /** Chamado depois de salvar as observações, para a lista recarregar o lead. */
+  onNotesSaved?: () => void;
 }
 
-export function LeadDrawer({ contact, onClose, onEdit, onDelete, onActivityChange }: LeadDrawerProps) {
+export function LeadDrawer({ contact, onClose, onEdit, onDelete, onActivityChange, onNotesSaved }: LeadDrawerProps) {
   const { text, surface, semantic, chart } = useThemeTokens();
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -64,6 +66,15 @@ export function LeadDrawer({ contact, onClose, onEdit, onDelete, onActivityChang
   const [saving, setSaving] = useState(false);
 
   const isOpen = contact !== null;
+
+  // Observações: edição direta na ficha, salva ao sair do campo.
+  const [obs, setObs] = useState('');
+  const [obsSalva, setObsSalva] = useState('');
+  useEffect(() => {
+    const v = contact?.observacoes ?? '';
+    setObs(v);
+    setObsSalva(v);
+  }, [contact?.id, contact?.observacoes]);
 
   useEffect(() => {
     if (!contact) return;
@@ -102,6 +113,16 @@ export function LeadDrawer({ contact, onClose, onEdit, onDelete, onActivityChang
   if (!contact) return null;
 
   const stage = STAGE_MAP[contact.etapa];
+
+  const salvarObservacoes = async () => {
+    const novo = obs.trim();
+    if (novo === obsSalva.trim()) return;
+    const { error } = await supabase.from('contatos').update({ observacoes: novo || null }).eq('id', contact.id);
+    if (error) { toastError(`Não foi possível salvar as observações: ${error.message}`); return; }
+    setObsSalva(novo);
+    toastSuccess('Observações salvas');
+    onNotesSaved?.();
+  };
 
   const handleAddActivity = async () => {
     if (!novaDescricao.trim()) { toastError('Descreva a atividade antes de salvar.'); return; }
@@ -178,8 +199,11 @@ export function LeadDrawer({ contact, onClose, onEdit, onDelete, onActivityChang
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
             <div style={{ minWidth: 0 }}>
               <h2 style={{ fontSize: '18px', fontWeight: 700, color: text.highlight, margin: '0 0 4px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {contact.nome}
+                {contact.empresa || contact.nome}
               </h2>
+              {contact.empresa && contact.nome && contact.nome !== contact.empresa && (
+                <div style={{ fontSize: '12.5px', color: text.secondary, margin: '0 0 6px 0' }}>{contact.nome}</div>
+              )}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '11px', fontWeight: 600, color: stage?.color ?? text.secondary, background: `${stage?.color ?? text.secondary}1f`, padding: '3px 9px', borderRadius: '999px' }}>
                   {contact.etapa}
@@ -204,8 +228,9 @@ export function LeadDrawer({ contact, onClose, onEdit, onDelete, onActivityChang
         <div style={{ flex: 1, overflowY: 'auto', padding: '18px 20px' }}>
           {/* Dados de contato */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '22px' }}>
-            <InfoRow icon={<Mail size={14} />} value={contact.email} />
+            {contact.email && <InfoRow icon={<Mail size={14} />} value={contact.email} />}
             {contact.telefone && <InfoRow icon={<Phone size={14} />} value={contact.telefone} />}
+            {contact.empresa && contact.nome && contact.nome !== contact.empresa && <InfoRow icon={<Users size={14} />} value={`Contato: ${contact.nome}`} />}
             {contact.empresa && <InfoRow icon={<Building2 size={14} />} value={contact.empresa} />}
             {contact.data_prevista && <InfoRow icon={<Calendar size={14} />} value={`Fechamento previsto: ${fmtDateFull(contact.data_prevista)}`} />}
             <InfoRow icon={<Clock size={14} />} value={`${daysSince(contact.updated_at)} dias nesta fase`} />
@@ -216,6 +241,26 @@ export function LeadDrawer({ contact, onClose, onEdit, onDelete, onActivityChang
                 tone={new Date(`${proximaPendente.data_prevista}T00:00:00`) < new Date(new Date().toDateString()) ? 'danger' : undefined}
               />
             )}
+          </div>
+
+          {/* Observações */}
+          <div style={{ marginBottom: '22px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: text.muted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+              Observações
+            </div>
+            <textarea
+              value={obs}
+              onChange={(e) => setObs(e.target.value)}
+              onBlur={salvarObservacoes}
+              placeholder="Contexto da conversa, objeções, o que combinaram… (salva ao sair do campo)"
+              rows={4}
+              aria-label="Observações do lead"
+              style={{
+                width: '100%', padding: '9px 11px', borderRadius: '8px', resize: 'vertical',
+                background: surface.input, border: `1px solid ${surface.borderStrong}`,
+                color: text.bright, fontSize: '13px', fontFamily: 'inherit',
+              }}
+            />
           </div>
 
           {/* Nova atividade */}

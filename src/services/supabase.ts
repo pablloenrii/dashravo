@@ -40,6 +40,21 @@ function buildClient(token: string | null) {
     },
     // Configuração de requisições
     global: {
+      // O supabase-js envia `Authorization: Bearer <POSTGREST_KEY>` quando não há
+      // sessão. O PostgREST tenta validar qualquer Bearer como JWT e responde
+      // 401 (PGRST301, "Expected 3 parts") para uma chave que não é JWT — o que
+      // quebrava o próprio login. Sem token, removemos o cabeçalho e a chamada
+      // segue como anônima (role ravo_anon, que só pode chamar `login`).
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+        if (!token) {
+          const headers = new Headers(init?.headers);
+          if (headers.get('Authorization') === `Bearer ${POSTGREST_KEY}`) {
+            headers.delete('Authorization');
+          }
+          return fetch(input, { ...init, headers });
+        }
+        return fetch(input, init);
+      },
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

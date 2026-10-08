@@ -87,14 +87,17 @@ fi
 # ---------------------------------------------------------------- 5. API
 say "Subindo o PostgREST"
 docker compose up -d postgrest
+code=000
 for i in $(seq 1 30); do
   code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:3001/rpc/login \
          -H 'Content-Type: application/json' -d '{"email":"x@x.x","senha":"x"}' || true)
-  [ "$code" != "000" ] && break; sleep 2
+  case "$code" in 000|502|503) sleep 2 ;; *) break ;; esac   # 503 = API ainda subindo / sem banco
 done
-# 401/400 = a API respondeu e rejeitou credencial falsa (esperado). 000 = fora do ar.
-[ "$code" != "000" ] || { docker compose logs --tail 30 postgrest; die "PostgREST não respondeu"; }
-echo "   API respondendo (login falso -> HTTP $code, esperado)"
+case "$code" in
+  000|502|503) docker compose logs --tail 40 postgrest; die "PostgREST não ficou pronto (HTTP $code). Veja o log acima." ;;
+esac
+# 401/403 = a API chegou ao banco e rejeitou a credencial falsa (esperado)
+echo "   API respondendo e conectada ao banco (login falso -> HTTP $code, esperado 401/403)"
 
 # ---------------------------------------------------------------- 6. nginx + TLS
 say "Configurando Nginx para $DOMAIN"

@@ -144,7 +144,7 @@ psql -U ravo_user -d ravo_db -h localhost -f /tmp/migration_usuarios.sql
 
 Esperado: `CREATE EXTENSION`, `CREATE TABLE`, três `CREATE FUNCTION`, dois `REVOKE`, `GRANT`,
 `INSERT 0 1` e `COMMIT`, sem `ERROR`. O `INSERT` já cria seu usuário (`pablocnhenrique@gmail.com`)
-com a senha atual (`RavoOS2026`) — só que agora em hash, e trocável sem redeploy.
+com a senha atual (`<sua-senha>`) — só que agora em hash, e trocável sem redeploy.
 
 ### 3. Cadastrar o 2º usuário
 
@@ -161,7 +161,7 @@ INSERT INTO usuarios (email, nome, senha_hash, role) VALUES
 systemctl restart postgrest
 curl -s -X POST http://127.0.0.1:3001/rpc/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"pablocnhenrique@gmail.com","senha":"RavoOS2026"}'
+  -d '{"email":"pablocnhenrique@gmail.com","senha":"<sua-senha>"}'
 ```
 
 Esperado: um JSON com `token`, `email` e `nome`. Se vier `{"code":"PGRST202", ...Could not find

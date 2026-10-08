@@ -1,0 +1,40 @@
+# RAVO CRM — backend (Postgres + PostgREST). Nada é exposto à internet:
+# o PostgREST só escuta em 127.0.0.1:3001 e o Nginx faz o TLS na frente.
+name: ravo-crm
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ravo-crm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ravo_admin
+      POSTGRES_PASSWORD: ${DB_PW}
+      POSTGRES_DB: ravo_db
+    volumes:
+      - ravo_crm_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ravo_admin -d ravo_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  postgrest:
+    image: postgrest/postgrest:v12.2.3
+    container_name: ravo-crm-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${AUTH_PW}@db:5432/ravo_db
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: ravo_anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_SERVER_PORT: "3000"
+      PGRST_OPENAPI_MODE: disabled
+      PGRST_DB_MAX_ROWS: "5000"
+
+volumes:
+  ravo_crm_pgdata:

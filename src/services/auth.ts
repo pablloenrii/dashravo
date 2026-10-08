@@ -63,13 +63,24 @@ export function getSession(): LocalSession | null {
  * Lança Error com mensagem exibível ao usuário quando falha.
  */
 export async function signIn(email: string, password: string): Promise<LocalSession> {
-  const { data, error } = await sb.rpc('login', {
-    email: email.trim().toLowerCase(),
-    senha: password,
-  });
+  let data: unknown;
+  let error: { code?: string; message?: string } | null;
+  try {
+    ({ data, error } = await sb.rpc('login', {
+      email: email.trim().toLowerCase(),
+      senha: password,
+    }));
+  } catch {
+    // fetch rejeitado: servidor fora do ar, DNS, TLS ou CORS bloqueado.
+    throw new Error('Não foi possível falar com o servidor. Tente novamente em instantes.');
+  }
 
-  if (error || !data) {
-    throw new Error('Email ou senha incorretos.');
+  if (error) {
+    throw new Error(loginErrorMessage(error));
+  }
+  if (!data || typeof (data as LoginRpcResponse).token !== 'string') {
+    // Resposta 200 que não é o JSON do login (ex.: a API apontando para o próprio frontend).
+    throw new Error('O servidor de login respondeu de forma inesperada. Avise o suporte.');
   }
 
   const result = data as LoginRpcResponse;
@@ -86,6 +97,29 @@ export async function signIn(email: string, password: string): Promise<LocalSess
   setAuthToken(session.token);
   notify(session);
   return session;
+}
+
+/**
+ * Traduz o erro do PostgREST em mensagem para o usuário, sem mascarar falhas de
+ * infraestrutura como "senha errada". 28P01 é o SQLSTATE que a função login()
+ * levanta para credencial inválida (PostgREST devolve 403/401).
+ */
+function loginErrorMessage(error: { code?: string; message?: string }): string {
+  const code = error.code ?? '';
+  const msg = (error.message ?? '').toLowerCase();
+  if (code === '28P01' || msg.includes('email ou senha incorretos')) {
+    return 'Email ou senha incorretos.';
+  }
+  if (code === 'PGRST202' || msg.includes('could not find the function')) {
+    return 'O serviço de login não está instalado no servidor. Avise o suporte.';
+  }
+  if (msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('load failed')) {
+    return 'Não foi possível falar com o servidor. Tente novamente em instantes.';
+  }
+  if (msg.includes('too many') || code === '429') {
+    return 'Muitas tentativas. Aguarde um minuto e tente de novo.';
+  }
+  return 'Não foi possível entrar agora. Tente novamente ou avise o suporte.';
 }
 
 /** Encerra a sessão. */

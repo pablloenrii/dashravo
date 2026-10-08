@@ -65,7 +65,7 @@ SECURITY DEFINER
 AS $$
 DECLARE
   u             usuarios%ROWTYPE;
-  v_jwt_secret  text := 'q8JASc1Xa1pcUQEy0OkRNYHEqoE6vpu5csVBFe1tTgrQB03W73qQrSD6HcfkhW-O';
+  v_jwt_secret  text := current_setting('app.jwt_secret_removido', true); -- LEGADO: use ravo-backend/sql/90_auth.sql
   v_token       text;
 BEGIN
   SELECT * INTO u
@@ -98,11 +98,11 @@ GRANT EXECUTE ON FUNCTION login(text, text) TO ravo_user;
 
 -- -----------------------------------------------------------------------------
 -- Usuário inicial: migra a credencial atual do Pablo (mesma senha de hoje) para
--- a tabela, em hash. A senha continua sendo "RavoOS2026" até você trocá-la
+-- a tabela, em hash. A senha inicial é um placeholder; defina a sua
 -- (agora dá pra trocar com um simples UPDATE, sem precisar redeploy).
 -- -----------------------------------------------------------------------------
 INSERT INTO usuarios (email, nome, senha_hash, role) VALUES
-  ('pablocnhenrique@gmail.com', 'Pablo', crypt('RavoOS2026', gen_salt('bf')), 'ravo_user')
+  ('pablocnhenrique@gmail.com', 'Pablo', crypt('TROQUE_ESTA_SENHA', gen_salt('bf')), 'ravo_user')
 ON CONFLICT (email) DO NOTHING;
 
 COMMIT;

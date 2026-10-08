@@ -10,13 +10,15 @@ import { createClient } from '@supabase/supabase-js';
 /**
  * URL da sua VPS PostgREST
  *
- * Padrão: https://crm.ravocompany.com.br (Nginx com TLS na frente do PostgREST).
+ * Padrão: https://api-crm.ravocompany.com.br (Nginx com TLS na frente do PostgREST).
+ * Atenção: crm.ravocompany.com.br é o endereço do FRONTEND (Vercel), não da API —
+ * apontar a API para ele faz o app chamar a si mesmo e o login falhar.
  * Importante que seja HTTPS — o app roda publicado em HTTPS (Vercel), e o
  * navegador bloqueia silenciosamente qualquer chamada HTTP feita a partir de
  * uma página HTTPS ("mixed content"), o que aparecia como "Failed to fetch"
  * em toda escrita (criar/editar/mover/deletar lead).
  */
-const POSTGREST_URL = import.meta.env.VITE_POSTGREST_URL || 'https://crm.ravocompany.com.br';
+const POSTGREST_URL = import.meta.env.VITE_POSTGREST_URL || 'https://api-crm.ravocompany.com.br';
 
 /**
  * Chave anônima (não é validada pelo PostgREST, só precisa existir)
@@ -75,5 +77,5 @@ if (import.meta.env.DEV) {
 
 // Verificar se as variáveis estão definidas
 if (!POSTGREST_URL) {
-  console.warn('⚠️  VITE_POSTGREST_URL não definida! Usando padrão: https://crm.ravocompany.com.br');
+  console.warn('⚠️  VITE_POSTGREST_URL não definida! Usando padrão: https://api-crm.ravocompany.com.br');
 }

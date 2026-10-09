@@ -16,6 +16,7 @@
  */
 
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid, Cell,
@@ -30,8 +31,9 @@ import { SectionLabel, HeroStat, ProportionBar, Panel, panelGrid } from '@/compo
 import {
   useResumoExecutivo, useMixReceita, useReceitaMensal, useUtilizacao,
   useMargemProjetos, useConcentracao, useBacklog, usePipeline,
-  useSaudeComercial, useCarteiraRecorrente,
+  useSaudeComercial,
 } from '@/hooks/useSoftwareHouseQueries';
+import { useInsightsMrr } from '@/hooks/useInsightsQueries';
 import { usePeriod, monthLabel, prevMonthKey } from '@/contexts/PeriodContext';
 import { fmtMoneyFull, fmtK, pctChange } from '@/utils/format';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
@@ -43,7 +45,7 @@ const grid2 = panelGrid;
    ========================================================================== */
 
 export default function Dashboard() {
-  const { month, isAllTime, label: periodLabel } = usePeriod();
+  const { month, effectiveMonth, isAllTime, label: periodLabel } = usePeriod();
   const { text, surface, semantic, chart, layout } = useThemeTokens();
 
   const resumo     = useResumoExecutivo(month);
@@ -55,7 +57,9 @@ export default function Dashboard() {
   const backlog    = useBacklog(month);
   const pipeline   = usePipeline();
   const comercial  = useSaudeComercial(month);
-  const carteira   = useCarteiraRecorrente(month, 6);
+  // MRR/churn vêm do painel de Insights (contratos vigentes no fim do mês), a mesma fonte da
+  // página /insights — assim Dashboard e Insights nunca mostram números diferentes.
+  const insights   = useInsightsMrr(effectiveMonth, 6);
 
   const erro = resumo.error ?? serie.error ?? mix.error;
 
@@ -86,8 +90,9 @@ export default function Dashboard() {
     return (rec / total) * 100;
   }, [mix.data]);
 
-  const mrrAtual = carteira.data.at(-1)?.mrr ?? 0;
-  const churnAtual = carteira.data.at(-1)?.churn_pct ?? 0;
+  const carteira = insights.data;
+  const mrrAtual = carteira.at(-1)?.mrr ?? 0;
+  const churnAtual = carteira.at(-1)?.logo_churn_pct ?? null;
 
   /* --- Sinais de risco: o que o dono precisa ver sem procurar -------------- */
   const projetosNoVermelho = projetos.data.filter((p) => p.margem_pct < 15);
@@ -230,7 +235,7 @@ export default function Dashboard() {
           label="Receita recorrente"
           value={`${recorrentePct.toFixed(0)}%`}
           tone={recorrentePct >= 60 ? 'positive' : recorrentePct >= 40 ? 'warning' : 'negative'}
-          sub={`MRR de ${fmtMoneyFull(mrrAtual)} · churn ${churnAtual.toFixed(1)}%`}
+          sub={`MRR de ${fmtMoneyFull(mrrAtual)} · churn ${churnAtual === null ? '—' : `${churnAtual.toFixed(1)}%`}`}
         />
         <HeroStat
           label="Backlog contratado"
@@ -475,8 +480,13 @@ export default function Dashboard() {
 
       <div style={{ marginTop: '12px' }}>
         <Panel title="Evolução da carteira recorrente" hint="MRR de retainers e licenças — projetos não entram aqui">
+          <div style={{ marginTop: '-8px', marginBottom: '10px', fontSize: '12px' }}>
+            <Link to="/insights" style={{ color: text.secondary, textDecoration: 'underline' }}>
+              Ver ARR, churn, NRR, LTV, CAC e cancelados em Insights →
+            </Link>
+          </div>
           <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={carteira.data} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
+            <AreaChart data={carteira} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
               <XAxis dataKey="mes" tick={{ fontSize: 11, fill: chart.axisAlt }}
                      axisLine={false} tickLine={false} tickFormatter={(v: string) => v.slice(5)} />

@@ -22,6 +22,7 @@ const navItems: NavItem[] = [
   { path: '/dashboard', label: 'Dashboard' },
   { path: '/crm', label: 'CRM' },
   { path: '/insights', label: 'Insights' },
+  { path: '/dre', label: 'DRE' },
   { path: '/cs', label: 'Customer Success' },
   { path: '/finance', label: 'Financeiro' },
   { path: '/goals', label: 'Metas' },

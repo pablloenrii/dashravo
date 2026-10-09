@@ -212,3 +212,8 @@ export const mockInsightsMrr: never[] = [];
 export const mockInsightsCancelados: never[] = [];
 export const mockFaturasMes: never[] = [];
 export const mockContratosLista: never[] = [];
+
+// DRE (modo demo): sem dados de exemplo.
+export const mockDre: never[] = [];
+export const mockDespesasMes: never[] = [];
+export const mockAliquotaSimples = 6;

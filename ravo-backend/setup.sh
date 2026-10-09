@@ -55,7 +55,7 @@ PSQL=(docker compose exec -T db psql -U ravo_admin -d ravo_db -v ON_ERROR_STOP=1
 say "Aplicando schema e migrations"
 "${PSQL[@]}" -v "auth_pw=$AUTH_PW" < sql/00_roles.sql
 for f in 01_base_schema 10_schema_softwarehouse 11_rpcs_softwarehouse 12_crm_bridge 13_atividades \
-         14_fix_finance_rpcs 15_fix_finance_rpcs_v2 16_fix_remaining_rpcs 17_fix_metas 18_fix_tickets; do
+         14_fix_finance_rpcs 15_fix_finance_rpcs_v2 16_fix_remaining_rpcs 17_fix_metas 18_fix_tickets 19_insights; do
   echo "   $f"; "${PSQL[@]}" < "sql/$f.sql" >/dev/null
 done
 "${PSQL[@]}" -v "jwt_secret=$JWT_SECRET" < sql/90_auth.sql

@@ -23,6 +23,7 @@ const GoalsPage = lazy(() => import('./pages/GoalsPage'));
 const CSPage = lazy(() => import('./pages/CSPage'));
 const InsightsPage = lazy(() => import('./pages/InsightsPage'));
 const DREPage = lazy(() => import('./pages/DREPage'));
+const AreasPage = lazy(() => import('./pages/AreasPage'));
 
 function PageFallback() {
   return (
@@ -53,7 +54,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Suspense fallback={<PageFallback />}><LoginPage /></Suspense>} />
-            <Route path="/" element={<Protected><Dashboard /></Protected>} />
+            <Route path="/" element={<RequireAuth><Suspense fallback={<PageFallback />}><AreasPage /></Suspense></RequireAuth>} />
             <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
             <Route path="/crm" element={<Protected><CRMPage /></Protected>} />
             <Route path="/insights" element={<Protected><InsightsPage /></Protected>} />

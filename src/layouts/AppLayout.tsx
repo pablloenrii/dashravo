@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Bell, LogOut, Menu } from 'lucide-react';
+import { Bell, LogOut, Menu, LayoutGrid } from 'lucide-react';
 import { signOut, DEMO_MODE } from '@/services/auth';
 import { ToastContainer } from '@/components/ToastContainer';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -12,21 +12,7 @@ import { NotificationsPanel } from '@/components/NotificationsPanel';
 import { PeriodSelector } from '@/components/PeriodSelector';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
-
-interface NavItem {
-  path: string;
-  label: string;
-}
-
-const navItems: NavItem[] = [
-  { path: '/dashboard', label: 'Dashboard' },
-  { path: '/crm', label: 'CRM' },
-  { path: '/insights', label: 'Insights' },
-  { path: '/dre', label: 'DRE' },
-  { path: '/cs', label: 'Customer Success' },
-  { path: '/finance', label: 'Financeiro' },
-  { path: '/goals', label: 'Metas' },
-];
+import { NAV_GROUPS, findNav, groupHome } from '@/config/navigation';
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -63,8 +49,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
-  const currentLabel = navItems.find((i) => isActive(i.path))?.label ?? 'Dashboard';
+  const isActive = (path: string) => path !== '/' && location.pathname.startsWith(path);
+  // A sidebar mostra só as telas da área atual; para outra área, volta-se à tela de escolha.
+  const current = findNav(location.pathname);
+  const area = current?.group ?? NAV_GROUPS[0];
+  const breadcrumb = [
+    { label: area.label, href: groupHome(area) },
+    { label: current?.item.label ?? area.items[0].label },
+  ];
+  const mobileItems = [{ path: '/', label: 'Trocar de área' }, ...area.items];
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -84,7 +77,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <MobileMenu
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
-        items={navItems}
+        items={mobileItems}
         isActive={isActive}
       />
       <div style={{ display: 'flex', height: '100vh', background: surface.app, overflow: 'hidden' }}>
@@ -104,7 +97,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         }}>
           {/* Logo */}
           <div style={{ padding: '16px 12px', borderBottom: `1px solid ${surface.divider}` }}>
-            <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <Link to="/" title="Escolher outra área" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
               <div style={{
                 width: '34px', height: '34px', borderRadius: '9px',
                 background: surface.elevated, border: `1px solid ${surface.borderStrong}`,
@@ -125,7 +118,24 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
           {/* Nav */}
           <nav style={{ flex: 1, padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {navItems.map((item) => (
+            <Link
+              to="/"
+              title="Trocar de área"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', marginBottom: '8px',
+                borderRadius: '8px', textDecoration: 'none', color: text.tertiary, fontSize: '12px', fontWeight: 600,
+                border: `1px dashed ${surface.borderStrong}`, justifyContent: sidebarOpen ? 'flex-start' : 'center',
+              }}
+            >
+              <LayoutGrid size={15} strokeWidth={1.75} />
+              {sidebarOpen && <span>Trocar de área</span>}
+            </Link>
+            {sidebarOpen && (
+              <div style={{ padding: '6px 12px 4px', fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: text.tertiary }}>
+                {area.label}
+              </div>
+            )}
+            {area.items.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
@@ -212,7 +222,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <Menu size={20} />
               </button>
             )}
-            {!isMobile && <Breadcrumb items={[{ label: currentLabel }]} />}
+            {!isMobile && <Breadcrumb items={breadcrumb} />}
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
               <PeriodSelector compact={isMobile} />
               {!isMobile && <SearchBar onSearchClick={() => setCommandOpen(true)} />}

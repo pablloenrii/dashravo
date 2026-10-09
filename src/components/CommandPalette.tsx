@@ -53,6 +53,27 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       action: () => navigate('/finance'),
     },
     {
+      id: 'insights',
+      title: 'Ir para Insights',
+      description: 'MRR, ARR, churn, NRR, LTV e CAC',
+      category: 'Navegação',
+      action: () => navigate('/insights'),
+    },
+    {
+      id: 'dre',
+      title: 'Ir para DRE',
+      description: 'Demonstração do resultado mensal',
+      category: 'Navegação',
+      action: () => navigate('/dre'),
+    },
+    {
+      id: 'areas',
+      title: 'Trocar de área',
+      description: 'Gestão, Comercial ou Financeiro',
+      category: 'Navegação',
+      action: () => navigate('/'),
+    },
+    {
       id: 'goals',
       title: 'Ir para Goals',
       description: 'Acompanhar KPIs',

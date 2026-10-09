@@ -8,6 +8,7 @@ import { LogOut } from 'lucide-react';
 import { signOut, DEMO_MODE } from '@/services/auth';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
+import { Logo } from '@/components/Logo';
 import { NAV_GROUPS, groupHome } from '@/config/navigation';
 
 export function AreasPage() {
@@ -16,16 +17,9 @@ export function AreasPage() {
   return (
     <div style={{ minHeight: '100vh', background: surface.app, display: 'flex', flexDirection: 'column' }}>
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '34px', height: '34px', borderRadius: '9px', background: surface.elevated,
-            border: `1px solid ${surface.borderStrong}`, display: 'flex', alignItems: 'center',
-            justifyContent: 'center', color: text.white, fontWeight: 700, fontSize: '17px',
-          }}>R</div>
-          <div>
-            <div style={{ fontSize: '16px', fontWeight: 700, color: chart.light, lineHeight: 1.1 }}>RAVO</div>
-            <div style={{ fontSize: '11px', color: text.dim, fontWeight: 500 }}>{DEMO_MODE ? 'DADOS DE EXEMPLO' : 'INTELLIGENCE'}</div>
-          </div>
+        <div style={{ color: text.primary, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <Logo variant="full" height={30} color="currentColor" />
+          <div style={{ fontSize: '10.5px', color: text.dim, fontWeight: 500, letterSpacing: '0.06em' }}>{DEMO_MODE ? 'DADOS DE EXEMPLO' : 'INTELLIGENCE'}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <ThemeToggle />

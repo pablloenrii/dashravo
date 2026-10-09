@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { signIn, DEMO_MODE } from '@/services/auth';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
+import { Logo } from '@/components/Logo';
 
 export default function LoginPage() {
   const { chart, text, surface, semantic, soft } = useThemeTokens();
@@ -48,15 +49,12 @@ export default function LoginPage() {
         border: `1px solid ${surface.border}`, borderRadius: '16px',
         padding: '40px 32px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
-          <div style={{
-            width: '42px', height: '42px', borderRadius: '11px', background: chart.light,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, fontSize: '22px', color: surface.app,
-          }}>R</div>
-          <div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: text.white, letterSpacing: '-0.02em' }}>RAVO OS</div>
-            <div style={{ fontSize: '12px', color: text.secondary }}>Central de Operações Estratégicas</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', marginBottom: '32px' }}>
+          <div style={{ color: text.primary }}>
+            <Logo variant="full" height={44} color="currentColor" />
+          </div>
+          <div style={{ fontSize: '12px', color: text.secondary, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Central de Operações Estratégicas
           </div>
         </div>
 

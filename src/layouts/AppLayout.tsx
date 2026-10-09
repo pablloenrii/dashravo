@@ -12,6 +12,7 @@ import { NotificationsPanel } from '@/components/NotificationsPanel';
 import { PeriodSelector } from '@/components/PeriodSelector';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useThemeTokens } from '@/hooks/useThemeTokens';
+import { Logo } from '@/components/Logo';
 import { NAV_GROUPS, findNav, groupHome } from '@/config/navigation';
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -98,21 +99,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {/* Logo */}
           <div style={{ padding: '16px 12px', borderBottom: `1px solid ${surface.divider}` }}>
             <Link to="/" title="Escolher outra área" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-              <div style={{
-                width: '34px', height: '34px', borderRadius: '9px',
-                background: surface.elevated, border: `1px solid ${surface.borderStrong}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: text.white, fontWeight: 700, fontSize: '17px',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
-              }}>R</div>
-              {sidebarOpen && (
-                <div>
-                  <h1 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: chart.light }}>RAVO</h1>
-                  <p style={{ margin: 0, fontSize: '11px', color: text.dim, fontWeight: '500' }}>
+              <div style={{ color: text.primary, display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', alignItems: sidebarOpen ? 'flex-start' : 'center' }}>
+                <Logo variant={sidebarOpen ? 'full' : 'symbol'} height={sidebarOpen ? 28 : 30} color="currentColor" />
+                {sidebarOpen && (
+                  <p style={{ margin: 0, fontSize: '10.5px', color: text.dim, fontWeight: 500, letterSpacing: '0.06em' }}>
                     {DEMO_MODE ? 'DADOS DE EXEMPLO' : 'INTELLIGENCE'}
                   </p>
-                </div>
-              )}
+                )}
+              </div>
             </Link>
           </div>
 
